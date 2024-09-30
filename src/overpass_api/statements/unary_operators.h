@@ -124,7 +124,7 @@ public:
   static std::string stmt_operator() { return "!"; }
   static std::string stmt_name() { return "eval-not"; }
 
-  Evaluator_Not(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Not(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Prefix_Operator_Syntax< Evaluator_Not >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;
@@ -152,7 +152,7 @@ public:
   static std::string stmt_operator() { return "-"; }
   static std::string stmt_name() { return "eval-negate"; }
 
-  Evaluator_Negate(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Negate(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Prefix_Operator_Syntax< Evaluator_Negate >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;

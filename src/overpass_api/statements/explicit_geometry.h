@@ -79,9 +79,9 @@ private:
 class Evaluator_Point : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Point >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Point >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Point >("eval-point") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Point >("eval-point") {}
   };
   static Statement_Maker statement_maker;
 
@@ -106,8 +106,7 @@ public:
         + (lon ? lon->dump_compact_ql("") : "") + ")";
   }
 
-  Evaluator_Point(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Point(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-point"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);
@@ -182,9 +181,9 @@ private:
 class Evaluator_Linestring : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Linestring >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Linestring >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Linestring >("eval-linestring") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Linestring >("eval-linestring") {}
   };
   static Statement_Maker statement_maker;
 
@@ -211,8 +210,7 @@ public:
     return result + ")";
   }
 
-  Evaluator_Linestring(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Linestring(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-linestring"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);
@@ -296,9 +294,9 @@ private:
 class Evaluator_Polygon : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Polygon >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Polygon >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Polygon >("eval-polygon") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Polygon >("eval-polygon") {}
   };
   static Statement_Maker statement_maker;
 
@@ -325,8 +323,7 @@ public:
     return result + ")";
   }
 
-  Evaluator_Polygon(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Polygon(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-polygon"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);

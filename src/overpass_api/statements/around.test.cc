@@ -43,9 +43,9 @@ void perform_around_print(uint pattern_size, std::string radius, uint64 global_n
   {
     Resource_Manager rman(transaction, &global_settings);
     Id_Query_Statement(0, Attr()("type", "node")("ref", to_string(
-        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs(), global_settings).execute(rman);
-    Around_Statement(0, Attr()("radius", radius).kvs(), global_settings).execute(rman);
-    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
+        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs()).execute(rman);
+    Around_Statement(0, Attr()("radius", radius).kvs()).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs()).execute(rman);
   }
   catch (File_Error e)
   {
@@ -71,9 +71,9 @@ void perform_coord_print(uint pattern_size, std::string radius, uint64 global_no
       buf<<std::setprecision(14)<<(-0.2 + 0.2/pattern_size);
       std::string lon = buf.str();
 
-      Around_Statement(0, Attr()("radius", radius)("lat", lat)("lon", lon).kvs(), global_settings).execute(rman);
+      Around_Statement(0, Attr()("radius", radius)("lat", lat)("lon", lon).kvs()).execute(rman);
     }
-    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs()).execute(rman);
   }
   catch (File_Error e)
   {
@@ -93,9 +93,8 @@ void perform_polyline_print(uint pattern_size, std::string polyline,
     std::string radius = to_string(200000./pattern_size);
 
     Resource_Manager rman(transaction, &global_settings);
-    Around_Statement(0, Attr()("radius", radius)("polyline", polyline).kvs(),
-                     global_settings).execute(rman);
-    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
+    Around_Statement(0, Attr()("radius", radius)("polyline", polyline).kvs()).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs()).execute(rman);
   }
   catch (File_Error e)
   {
@@ -116,16 +115,13 @@ void perform_polyline_in_query_print(uint pattern_size,
   {
     Resource_Manager rman(transaction, &global_settings);
     Query_Statement query(0, Attr()("type", type).kvs(), global_settings);
-    stmt_cont.add_stmt(new Around_Statement(0, Attr()("radius", radius)("polyline", polyline).kvs(),
-        global_settings), &query);
-    Statement* stmt = stmt_cont.add_stmt(new Filter_Statement(0, Attr().kvs(),
-        global_settings), &query);
-    stmt = stmt_cont.add_stmt(new Evaluator_Less(0, Attr().kvs(), global_settings), stmt);
-    stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), stmt);
-    stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", to_string(pattern_size*pattern_size/2)).kvs(),
-        global_settings), stmt);
+    stmt_cont.add_stmt(new Around_Statement(0, Attr()("radius", radius)("polyline", polyline).kvs()), &query);
+    Statement* stmt = stmt_cont.add_stmt(new Filter_Statement(0, Attr().kvs()), &query);
+    stmt = stmt_cont.add_stmt(new Evaluator_Less(0, Attr().kvs()), stmt);
+    stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), stmt);
+    stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", to_string(pattern_size*pattern_size/2)).kvs()), stmt);
     query.execute(rman);
-    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs()).execute(rman);
   }
   catch (File_Error e)
   {
@@ -165,32 +161,32 @@ int main(int argc, char* args[])
   {
     Resource_Manager rman(transaction, &global_settings);
     Id_Query_Statement(0, Attr()("type", "node")("into", "foo")("ref", to_string(
-        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs(), global_settings).execute(rman);
-    Around_Statement(0, Attr()("radius", "200.1")("from", "foo").kvs(), global_settings).execute(rman);
-    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
+        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs()).execute(rman);
+    Around_Statement(0, Attr()("radius", "200.1")("from", "foo").kvs()).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs()).execute(rman);
   }
   if ((test_to_execute == "") || (test_to_execute == "5"))
   {
     Resource_Manager rman(transaction, &global_settings);
     Id_Query_Statement(0, Attr()("type", "node")("ref", to_string(
-        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs(), global_settings).execute(rman);
-    Around_Statement(0, Attr()("radius", "200.1")("into", "foo").kvs(), global_settings).execute(rman);
-    Print_Statement(0, Attr()("order", "id")("from", "foo").kvs(), global_settings).execute(rman);
+        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs()).execute(rman);
+    Around_Statement(0, Attr()("radius", "200.1")("into", "foo").kvs()).execute(rman);
+    Print_Statement(0, Attr()("order", "id")("from", "foo").kvs()).execute(rman);
   }
   if ((test_to_execute == "") || (test_to_execute == "6"))
   {
     Resource_Manager rman(transaction, &global_settings);
     Statement_Container stmt_cont(global_settings);
     {
-      Union_Statement stmt1(0, Attr().kvs(), global_settings);
+      Union_Statement stmt1(0, Attr().kvs());
       stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "node")("ref", to_string(
-          2*pattern_size*pattern_size + 1 + global_node_offset)).kvs(), global_settings), &stmt1);
+          2*pattern_size*pattern_size + 1 + global_node_offset)).kvs()), &stmt1);
       stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "node")("ref", to_string(
-          3*pattern_size*pattern_size + global_node_offset)).kvs(), global_settings), &stmt1);
+          3*pattern_size*pattern_size + global_node_offset)).kvs()), &stmt1);
       stmt1.execute(rman);
     }
-    Around_Statement(0, Attr()("radius", "200.1").kvs(), global_settings).execute(rman);
-    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
+    Around_Statement(0, Attr()("radius", "200.1").kvs()).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs()).execute(rman);
   }
 
   if ((test_to_execute == "") || (test_to_execute == "7"))

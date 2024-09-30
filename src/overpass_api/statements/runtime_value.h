@@ -46,9 +46,9 @@ As opposed to most other situations, it is mandatory to explicitly state the set
 class Evaluator_Set_Key : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Key >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Set_Key >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Set_Key >("eval-set-key") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Set_Key >("eval-set-key") {}
   };
   static Statement_Maker statement_maker;
 
@@ -60,8 +60,7 @@ public:
   };
   static Evaluator_Maker evaluator_maker;
 
-  Evaluator_Set_Key(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings);// : Evaluator(line_number_) {}
+  Evaluator_Set_Key(int line_number_, const std::map< std::string, std::string >& input_attributes);
 
   virtual std::string dump_xml(const std::string& indent) const
   {

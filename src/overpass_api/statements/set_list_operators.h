@@ -48,9 +48,9 @@ This means that the order of list elements does no matter.
 */
 
 template< typename Evaluator_ >
-struct Unary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
+struct Unary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker_2< Evaluator_ >
 {
-  Unary_Set_List_Operator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+  Unary_Set_List_Operator_Statement_Maker() : Generic_Statement_Maker_2< Evaluator_ >(Evaluator_::stmt_name()) {}
 };
 
 
@@ -65,7 +65,7 @@ struct Unary_Set_List_Operator_Evaluator_Maker : public Statement::Evaluator_Mak
       return 0;
 
     std::map< std::string, std::string > attributes;
-    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes);
     if (result)
     {
       Statement* rhs = stmt_factory.create_evaluator(
@@ -113,9 +113,9 @@ struct Evaluator_Unary_Set_List_Operator_Syntax : public Evaluator_Unary_Functio
 
 
 template< typename Evaluator_ >
-struct Binary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
+struct Binary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker_2< Evaluator_ >
 {
-  Binary_Set_List_Operator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+  Binary_Set_List_Operator_Statement_Maker() : Generic_Statement_Maker_2< Evaluator_ >(Evaluator_::stmt_name()) {}
 };
 
 
@@ -130,7 +130,7 @@ struct Binary_Set_List_Operator_Evaluator_Maker : public Statement::Evaluator_Ma
       return 0;
 
     std::map< std::string, std::string > attributes;
-    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes);
     if (result)
     {
       if (tree_it.rhs()->token == "," && tree_it.rhs()->lhs && tree_it.rhs()->rhs)
@@ -226,7 +226,7 @@ public:
   static std::string stmt_func_name() { return "lrs_in"; }
   static std::string stmt_name() { return "eval-lrs-in"; }
 
-  Evaluator_Lrs_In(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Lrs_In(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Binary_Set_List_Operator_Syntax< Evaluator_Lrs_In >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& first_result, const std::string& second_result) const;
@@ -241,7 +241,7 @@ public:
   static std::string stmt_func_name() { return "lrs_isect"; }
   static std::string stmt_name() { return "eval-lrs-isect"; }
 
-  Evaluator_Lrs_Isect(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Lrs_Isect(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Binary_Set_List_Operator_Syntax< Evaluator_Lrs_Isect >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& first_result, const std::string& second_result) const;
@@ -256,7 +256,7 @@ public:
   static std::string stmt_func_name() { return "lrs_union"; }
   static std::string stmt_name() { return "eval-lrs-union"; }
 
-  Evaluator_Lrs_Union(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Lrs_Union(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Binary_Set_List_Operator_Syntax< Evaluator_Lrs_Union >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& first_result, const std::string& second_result) const;
@@ -289,7 +289,7 @@ public:
   static std::string stmt_func_name() { return "lrs_max"; }
   static std::string stmt_name() { return "eval-lrs-max"; }
 
-  Evaluator_Lrs_Max(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Lrs_Max(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Unary_Set_List_Operator_Syntax< Evaluator_Lrs_Max >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;
@@ -304,7 +304,7 @@ public:
   static std::string stmt_func_name() { return "lrs_min"; }
   static std::string stmt_name() { return "eval-lrs-min"; }
 
-  Evaluator_Lrs_Min(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Lrs_Min(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Unary_Set_List_Operator_Syntax< Evaluator_Lrs_Min >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;

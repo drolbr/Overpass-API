@@ -40,7 +40,7 @@
 
 bool Query_Statement::area_query_exists_ = false;
 
-Generic_Statement_Maker< Query_Statement > Query_Statement::statement_maker("query");
+Generic_Statement_Maker_3< Query_Statement > Query_Statement::statement_maker("query");
 
 Query_Statement::Query_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
@@ -1294,10 +1294,10 @@ void Query_Statement::execute(Resource_Manager& rman)
 
 //-----------------------------------------------------------------------------
 
-Generic_Statement_Maker< Has_Kv_Statement > Has_Kv_Statement::statement_maker("has-kv");
+Generic_Statement_Maker_2< Has_Kv_Statement > Has_Kv_Statement::statement_maker("has-kv");
 
 Has_Kv_Statement::Has_Kv_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Statement(line_number_), regex(0), key_regex(0), straight(true), case_sensitive(false)
 {
   std::map< std::string, std::string > attributes;

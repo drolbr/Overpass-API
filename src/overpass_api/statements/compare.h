@@ -85,14 +85,13 @@ resp.
 class Compare_Statement : public Output_Statement
 {
 public:
-  Compare_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                     Parsed_Query& global_settings);
+  Compare_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
   virtual ~Compare_Statement();
   virtual std::string get_name() const { return "compare"; }
   virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman);
 
-  static Generic_Statement_Maker< Compare_Statement > statement_maker;
+  static Generic_Statement_Maker_2< Compare_Statement > statement_maker;
 
   virtual std::string dump_xml(const std::string& indent) const
   {

@@ -65,22 +65,22 @@ int main(int argc, char* args[])
 	Resource_Manager rman(transaction, &global_settings);
 
 	const char* attributes[] = { 0 };
-	Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	Difference_Statement stmt(0, convert_c_pairs(attributes));
 
 	std::string buf = to_string_(size * size);
 	const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
-	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
 	stmt.add_statement(&stmt1, "");
 
         buf = to_string_(2 + global_node_offset);
         const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
         stmt.add_statement(&stmt2, "");
 
 	stmt.execute(rman);
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -101,22 +101,22 @@ int main(int argc, char* args[])
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+        Difference_Statement stmt(0, convert_c_pairs(attributes));
 
         std::string buf = to_string_(2 + global_node_offset);
         const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
         stmt.add_statement(&stmt1, "");
 
         buf = to_string_(size * size);
         const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
         stmt.add_statement(&stmt2, "");
 
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+          Print_Statement stmt(0, convert_c_pairs(attributes));
           stmt.execute(rman);
         }
       }
@@ -137,22 +137,22 @@ int main(int argc, char* args[])
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+        Difference_Statement stmt(0, convert_c_pairs(attributes));
 
         std::string buf = to_string_(2 + global_node_offset);
         const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
         stmt.add_statement(&stmt1, "");
 
         buf = to_string_(2 + global_node_offset);
         const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
         stmt.add_statement(&stmt2, "");
 
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+          Print_Statement stmt(0, convert_c_pairs(attributes));
           stmt.execute(rman);
         }
       }
@@ -173,20 +173,20 @@ int main(int argc, char* args[])
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+        Difference_Statement stmt(0, convert_c_pairs(attributes));
 
         const char* attributes1[] = { "type", "way", "lower", "1", "upper", "4", 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
         stmt.add_statement(&stmt1, "");
 
         const char* attributes2[] = { "type", "way", "lower", "2", "upper", "3", 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
         stmt.add_statement(&stmt2, "");
 
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+          Print_Statement stmt(0, convert_c_pairs(attributes));
           stmt.execute(rman);
         }
       }
@@ -195,20 +195,20 @@ int main(int argc, char* args[])
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+        Difference_Statement stmt(0, convert_c_pairs(attributes));
 
         const char* attributes1[] = { "type", "relation", "lower", "1", "upper", "4", 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
         stmt.add_statement(&stmt1, "");
 
         const char* attributes2[] = { "type", "relation", "lower", "2", "upper", "3", 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
         stmt.add_statement(&stmt2, "");
 
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+          Print_Statement stmt(0, convert_c_pairs(attributes));
           stmt.execute(rman);
         }
       }
@@ -229,20 +229,20 @@ int main(int argc, char* args[])
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { "into", "A", 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+        Difference_Statement stmt(0, convert_c_pairs(attributes));
 
         const char* attributes1[] = { "type", "way", "lower", "1", "upper", "4", "into", "B", 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
         stmt.add_statement(&stmt1, "");
 
         const char* attributes2[] = { "type", "way", "lower", "2", "upper", "3", "into", "C", 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
         stmt.add_statement(&stmt2, "");
 
         stmt.execute(rman);
         {
           const char* attributes[] = { "from", "A", 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+          Print_Statement stmt(0, convert_c_pairs(attributes));
           stmt.execute(rman);
         }
       }
@@ -263,24 +263,24 @@ int main(int argc, char* args[])
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes0[] = { "type", "way", "ref", "1", 0 };
-        Id_Query_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
+        Id_Query_Statement stmt0(0, convert_c_pairs(attributes0));
         stmt0.execute(rman);
 
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+        Difference_Statement stmt(0, convert_c_pairs(attributes));
 
         const char* attributes1[] = { 0 };
-        Item_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+        Item_Statement stmt1(0, convert_c_pairs(attributes1));
         stmt.add_statement(&stmt1, "");
 
         const char* attributes2[] = { "type", "way", "ref", "2", 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
         stmt.add_statement(&stmt2, "");
 
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+          Print_Statement stmt(0, convert_c_pairs(attributes));
           stmt.execute(rman);
         }
       }

@@ -29,15 +29,14 @@
 class Id_Query_Statement : public Output_Statement
 {
   public:
-    Id_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                       Parsed_Query& global_settings);
+    Id_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual std::string get_name() const { return "id-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Id_Query_Statement();
 
-    struct Statement_Maker : public Generic_Statement_Maker< Id_Query_Statement >
+    struct Statement_Maker : public Generic_Statement_Maker_2< Id_Query_Statement >
     {
-      Statement_Maker() : Generic_Statement_Maker< Id_Query_Statement >("id-query") {}
+      Statement_Maker() : Generic_Statement_Maker_2< Id_Query_Statement >("id-query") {}
     };
     static Statement_Maker statement_maker;
 

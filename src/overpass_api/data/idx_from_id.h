@@ -19,6 +19,7 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__IDX_FROM_ID_H
 #define DE__OSM3S___OVERPASS_API__DATA__IDX_FROM_ID_H
 
+#include "../dispatch/resource_manager.h"
 #include "filenames.h"
 #include "request_context.h"
 

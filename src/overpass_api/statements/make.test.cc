@@ -39,13 +39,13 @@
 
 Statement* add_prop_stmt(const std::string& value, Statement* parent, Statement_Container& stmt_cont)
 {
-  return stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("k", value).kvs(), parent);
+  return stmt_cont.create_stmt_2< Set_Prop_Statement >(Attr()("k", value).kvs(), parent);
 }
 
 
 Statement* add_fixed_stmt(const std::string& value, Statement* parent, Statement_Container& stmt_cont)
 {
-  return stmt_cont.create_stmt< Evaluator_Fixed >(Attr()("v", value).kvs(), parent);
+  return stmt_cont.create_stmt_2< Evaluator_Fixed >(Attr()("v", value).kvs(), parent);
 }
 
 
@@ -54,13 +54,13 @@ void attribute_test(Parsed_Query& global_settings, Transaction& transaction,
 {
   Resource_Manager rman(transaction, &global_settings);
 
-  Make_Statement stmt(0, Attr()("into", into)("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("into", into)("type", type).kvs());
   stmt.execute(rman);
 
   if (into == "_")
-    Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+    Print_Statement(0, Attr().kvs()).execute(rman);
   else
-    Print_Statement(0, Attr()("from", "target").kvs(), global_settings).execute(rman);
+    Print_Statement(0, Attr()("from", "target").kvs()).execute(rman);
 }
 
 
@@ -70,7 +70,7 @@ void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt(key1, &stmt, stmt_cont);
   add_fixed_stmt(value1, subs, stmt_cont);
@@ -82,7 +82,7 @@ void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
   }
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -93,82 +93,71 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Statement_Container stmt_cont(global_settings);
 
   {
-    Union_Statement union_(0, (from == "" ? Attr() : Attr()("into", from)).kvs(), global_settings);
+    Union_Statement union_(0, (from == "" ? Attr() : Attr()("into", from)).kvs());
 
-    Id_Query_Statement stmt1(0, Attr()("type", "node")("ref", to_string(ref + global_node_offset)).kvs(),
-                             global_settings);
+    Id_Query_Statement stmt1(0, Attr()("type", "node")("ref", to_string(ref + global_node_offset)).kvs());
     union_.add_statement(&stmt1, "");
 
-    Id_Query_Statement stmt2(0, Attr()("type", "way")("ref", to_string(ref)).kvs(), global_settings);
+    Id_Query_Statement stmt2(0, Attr()("type", "way")("ref", to_string(ref)).kvs());
     union_.add_statement(&stmt2, "");
 
-    Id_Query_Statement stmt3(0, Attr()("type", "relation")("ref", to_string(ref)).kvs(), global_settings);
+    Id_Query_Statement stmt3(0, Attr()("type", "relation")("ref", to_string(ref)).kvs());
     union_.add_statement(&stmt3, "");
 
-    Make_Statement stmt4(0, Attr()("type", "foo").kvs(), global_settings);
+    Make_Statement stmt4(0, Attr()("type", "foo").kvs());
     union_.add_statement(&stmt4, "");
 
     union_.execute(rman);
   }
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("nodes", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
-      (from == "" ? Attr() : Attr()("from", from))("type", "nodes").kvs(),
-      global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from))("type", "nodes").kvs()), subs);
 
   subs = add_prop_stmt("ways", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
-      (from == "" ? Attr() : Attr()("from", from))("type", "ways").kvs(),
-      global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from))("type", "ways").kvs()), subs);
 
   subs = add_prop_stmt("relations", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
-      (from == "" ? Attr() : Attr()("from", from))("type", "relations").kvs(),
-      global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from))("type", "relations").kvs()), subs);
 
   subs = add_prop_stmt("deriveds", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
-      (from == "" ? Attr() : Attr()("from", from))("type", "deriveds").kvs(),
-      global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from))("type", "deriveds").kvs()), subs);
 
   subs = add_prop_stmt("nwr", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
-      (from == "" ? Attr() : Attr()("from", from))("type", "nwr").kvs(),
-      global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from))("type", "nwr").kvs()), subs);
 
   subs = add_prop_stmt("nw", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
-      (from == "" ? Attr() : Attr()("from", from))("type", "nw").kvs(),
-      global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from))("type", "nw").kvs()), subs);
 
   subs = add_prop_stmt("wr", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
-      (from == "" ? Attr() : Attr()("from", from))("type", "wr").kvs(),
-      global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from))("type", "wr").kvs()), subs);
 
   subs = add_prop_stmt("nr", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
-      (from == "" ? Attr() : Attr()("from", from))("type", "nr").kvs(),
-      global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from))("type", "nr").kvs()), subs);
 
   subs = add_prop_stmt("tags", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Sum_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(),
-      global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Properties_Count(0, Attr()("type", "tags").kvs(), global_settings),
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Properties_Count(0, Attr()("type", "tags").kvs()),
                             subs);
 
   subs = add_prop_stmt("members", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Sum_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(),
-      global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Properties_Count(0, Attr()("type", "members").kvs(), global_settings),
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Properties_Count(0, Attr()("type", "members").kvs()),
                             subs);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -179,15 +168,15 @@ void pair_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt(key, &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Pair(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Pair(0, Attr().kvs()), subs);
   add_fixed_stmt(value1, subs, stmt_cont);
   add_fixed_stmt(value2, subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -197,16 +186,16 @@ void triple_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt(key, &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Ternary_Evaluator(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Ternary_Evaluator(0, Attr().kvs()), subs);
   add_fixed_stmt(condition, subs, stmt_cont);
   add_fixed_stmt(value1, subs, stmt_cont);
   add_fixed_stmt(value2, subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -217,14 +206,14 @@ void prefix_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt(key, &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Prefix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Prefix(0, Attr().kvs()), subs);
   add_fixed_stmt(value, subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -232,17 +221,17 @@ void prepare_value_test(Parsed_Query& global_settings, Resource_Manager& rman,
     std::string from, uint64 ref1, uint64 ref2, uint64 global_node_offset)
 {
   Statement_Container stmt_cont(global_settings);
-  Union_Statement union_(0, (from == "" ? Attr() : Attr()("into", from)).kvs(), global_settings);
+  Union_Statement union_(0, (from == "" ? Attr() : Attr()("into", from)).kvs());
 
   stmt_cont.add_stmt(new Id_Query_Statement(0,
-      Attr()("type", "node")("ref", to_string(ref1 + global_node_offset)).kvs(), global_settings), &union_);
+      Attr()("type", "node")("ref", to_string(ref1 + global_node_offset)).kvs()), &union_);
   stmt_cont.add_stmt(new Id_Query_Statement(0,
-      Attr()("type", "way")("ref", to_string(ref1)).kvs(), global_settings), &union_);
+      Attr()("type", "way")("ref", to_string(ref1)).kvs()), &union_);
   stmt_cont.add_stmt(new Id_Query_Statement(0,
-      Attr()("type", "relation")("ref", to_string(ref1)).kvs(), global_settings), &union_);
+      Attr()("type", "relation")("ref", to_string(ref1)).kvs()), &union_);
   if (ref1 != ref2)
     stmt_cont.add_stmt(new Id_Query_Statement(0,
-        Attr()("type", "node")("ref", to_string(ref2 + global_node_offset)).kvs(), global_settings), &union_);
+        Attr()("type", "node")("ref", to_string(ref2 + global_node_offset)).kvs()), &union_);
 
   union_.execute(rman);
 }
@@ -255,34 +244,34 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   prepare_value_test(global_settings, rman, from, ref, ref, global_node_offset);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("node_key", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Union_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key").kvs()), subs);
 
   subs = add_prop_stmt("way_key", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Union_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key").kvs()), subs);
 
   subs = add_prop_stmt("relation_key", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Union_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key").kvs()), subs);
 
   subs = add_prop_stmt("unused_key", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Union_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key").kvs()), subs);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -293,34 +282,34 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   prepare_value_test(global_settings, rman, from, ref1, ref2, global_node_offset);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("node_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Min_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs()), subs);
 
   subs = add_prop_stmt("way_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Min_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs()), subs);
 
   subs = add_prop_stmt("relation_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Min_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs()), subs);
 
   subs = add_prop_stmt("unused_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Min_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs()), subs);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -331,34 +320,34 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   prepare_value_test(global_settings, rman, from, ref1, ref2, global_node_offset);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("node_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs()), subs);
 
   subs = add_prop_stmt("way_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs()), subs);
 
   subs = add_prop_stmt("relation_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs()), subs);
 
   subs = add_prop_stmt("unused_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs()), subs);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -369,34 +358,34 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   prepare_value_test(global_settings, rman, from, ref1, ref2, global_node_offset);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("node_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs()), subs);
 
   subs = add_prop_stmt("way_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs()), subs);
 
   subs = add_prop_stmt("relation_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs()), subs);
 
   subs = add_prop_stmt("unused_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
-      (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs(), global_settings), subs);
+      (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs()), subs);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -409,9 +398,9 @@ void generic_key_test(Parsed_Query& global_settings, Transaction& transaction,
   prepare_value_test(global_settings, rman, from, ref1, ref2, global_node_offset);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(
+  Statement* subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(
       Attr()("keytype", "generic")("from", from).kvs(), &stmt);
 
   if (set_value_const)
@@ -419,16 +408,16 @@ void generic_key_test(Parsed_Query& global_settings, Transaction& transaction,
   else
   {
     subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
-        (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-    subs = stmt_cont.add_stmt(new Evaluator_Generic(0, Attr().kvs(), global_settings), subs);
+        (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+    subs = stmt_cont.add_stmt(new Evaluator_Generic(0, Attr().kvs()), subs);
   }
 
   if (exclude_a_key)
-    subs = stmt_cont.create_stmt< Set_Prop_Statement >(
+    subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(
       Attr()("keytype", "tag")("k", "way_key").kvs(), &stmt);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -440,28 +429,25 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
 
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("id", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
-      from == "_" ? Attr().kvs() : Attr()("from", from).kvs(),
-      global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), subs);
+      from == "_" ? Attr().kvs() : Attr()("from", from).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), subs);
 
   subs = add_prop_stmt("type", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
-      from == "_" ? Attr().kvs() : Attr()("from", from).kvs(),
-      global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Type(0, Attr().kvs(), global_settings), subs);
+      from == "_" ? Attr().kvs() : Attr()("from", from).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Type(0, Attr().kvs()), subs);
 
   subs = add_prop_stmt("is_closed", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
-      from == "_" ? Attr().kvs() : Attr()("from", from).kvs(),
-      global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Closed(0, Attr().kvs(), global_settings), subs);
+      from == "_" ? Attr().kvs() : Attr()("from", from).kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Closed(0, Attr().kvs()), subs);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -471,46 +457,46 @@ void number_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("nan", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Number(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Number(0, Attr().kvs()), subs);
   add_fixed_stmt("-.", subs, stmt_cont);
 
   subs = add_prop_stmt("three", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Number(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Number(0, Attr().kvs()), subs);
   add_fixed_stmt("3.", subs, stmt_cont);
 
   subs = add_prop_stmt("one_trillion", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Number(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Number(0, Attr().kvs()), subs);
   add_fixed_stmt("1e12", subs, stmt_cont);
 
   subs = add_prop_stmt("minus_fourty-two", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Number(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Number(0, Attr().kvs()), subs);
   add_fixed_stmt("-42", subs, stmt_cont);
 
   subs = add_prop_stmt("is_nan", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs()), subs);
   add_fixed_stmt("-.", subs, stmt_cont);
 
   subs = add_prop_stmt("is_three", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs()), subs);
   add_fixed_stmt("3.", subs, stmt_cont);
 
   subs = add_prop_stmt("is_one_trillion", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs()), subs);
   add_fixed_stmt("1e12", subs, stmt_cont);
 
   subs = add_prop_stmt("is_minus_fourty-two", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs()), subs);
   add_fixed_stmt("-42", subs, stmt_cont);
 
   subs = add_prop_stmt("empty_isnt_num", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Num(0, Attr().kvs()), subs);
   add_fixed_stmt("", subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -520,46 +506,46 @@ void date_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("year_only", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("2006", subs, stmt_cont);
 
   subs = add_prop_stmt("year_month_day", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("2012-09-13", subs, stmt_cont);
 
   subs = add_prop_stmt("full_iso", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("2013-01-02T12:30:45Z", subs, stmt_cont);
 
   subs = add_prop_stmt("nonsense", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("christmas_day", subs, stmt_cont);
 
   subs = add_prop_stmt("is_year", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("2006", subs, stmt_cont);
 
   subs = add_prop_stmt("is_year_month_day", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("2012-09-13", subs, stmt_cont);
 
   subs = add_prop_stmt("is_full_iso", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("2013-01-02T12:30:45Z", subs, stmt_cont);
 
   subs = add_prop_stmt("is_nonsense", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("christmas_day", subs, stmt_cont);
 
   subs = add_prop_stmt("empty_isnt_date", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Date(0, Attr().kvs()), subs);
   add_fixed_stmt("", subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -569,46 +555,46 @@ void suffix_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("empty", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("", subs, stmt_cont);
 
   subs = add_prop_stmt("pure", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("1e100", subs, stmt_cont);
 
   subs = add_prop_stmt("unit", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("5.5m", subs, stmt_cont);
 
   subs = add_prop_stmt("whitespace", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("200 ", subs, stmt_cont);
 
   subs = add_prop_stmt("whitespace_and_unit", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("40 m/s", subs, stmt_cont);
 
   subs = add_prop_stmt("second_number", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("4 2", subs, stmt_cont);
 
   subs = add_prop_stmt("comma_sep_number", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("3,14", subs, stmt_cont);
 
   subs = add_prop_stmt("possible_exp", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("1e", subs, stmt_cont);
 
   subs = add_prop_stmt("misc", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Suffix(0, Attr().kvs()), subs);
   add_fixed_stmt("9 3/4", subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -618,38 +604,38 @@ void abs_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("nan", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs()), subs);
   add_fixed_stmt("-.", subs, stmt_cont);
 
   subs = add_prop_stmt("pi", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs()), subs);
   add_fixed_stmt("3.14", subs, stmt_cont);
 
   subs = add_prop_stmt("minus_pi", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs()), subs);
   add_fixed_stmt("-3.14", subs, stmt_cont);
 
   subs = add_prop_stmt("one_trillion", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs()), subs);
   add_fixed_stmt("1e12", subs, stmt_cont);
 
   subs = add_prop_stmt("minus_one_trillion", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs()), subs);
   add_fixed_stmt("-1e12", subs, stmt_cont);
 
   subs = add_prop_stmt("fourty-two", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs()), subs);
   add_fixed_stmt("42", subs, stmt_cont);
 
   subs = add_prop_stmt("minus_fourty-two", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs()), subs);
   add_fixed_stmt("-42", subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -659,305 +645,305 @@ void lrs_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = add_prop_stmt("lrs_in_1_positive", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("a", subs, stmt_cont);
   add_fixed_stmt("a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_1_negative", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("z", subs, stmt_cont);
   add_fixed_stmt("a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_2_positive_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("a", subs, stmt_cont);
   add_fixed_stmt("a;b", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_2_positive_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("b", subs, stmt_cont);
   add_fixed_stmt("a;b", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_2_negative", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("z", subs, stmt_cont);
   add_fixed_stmt("a;b", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_3_positive_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("a  ", subs, stmt_cont);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_3_positive_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("b", subs, stmt_cont);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_3_positive_3", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("  c", subs, stmt_cont);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_3_negative", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("z", subs, stmt_cont);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_space_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("", subs, stmt_cont);
   add_fixed_stmt("a;  ;c", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_space_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("  ", subs, stmt_cont);
   add_fixed_stmt("a;;c", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_space_3", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("  ", subs, stmt_cont);
   add_fixed_stmt("\t", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_in_space_4", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_In(0, Attr().kvs()), subs);
   add_fixed_stmt("  ", subs, stmt_cont);
   add_fixed_stmt("", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_11", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt(" foo", subs, stmt_cont);
   add_fixed_stmt("foo ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_12", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("\t", subs, stmt_cont);
   add_fixed_stmt("\n", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_21", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
   add_fixed_stmt("b;a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_22", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a ; b", subs, stmt_cont);
   add_fixed_stmt("b ; a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_23", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt(" a;b ", subs, stmt_cont);
   add_fixed_stmt(" b;a ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_24", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;a", subs, stmt_cont);
   add_fixed_stmt("a;a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_31", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
   add_fixed_stmt("b;c;a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_32", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt(" a; b;c ", subs, stmt_cont);
   add_fixed_stmt(" c;a ;b ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_self_33", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;b", subs, stmt_cont);
   add_fixed_stmt("b;a;a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_zero_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
   add_fixed_stmt("c;d", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_zero_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
   add_fixed_stmt("", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_one_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
   add_fixed_stmt("d;a;e", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_one_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
   add_fixed_stmt("d;b;e", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_two_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
   add_fixed_stmt("c;d;b", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_isect_two_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Isect(0, Attr().kvs()), subs);
   add_fixed_stmt("a;;b", subs, stmt_cont);
   add_fixed_stmt("a; ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_11", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt(" foo", subs, stmt_cont);
   add_fixed_stmt("foo ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_12", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("\t", subs, stmt_cont);
   add_fixed_stmt("\n", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_21", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
   add_fixed_stmt("b;a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_22", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a ; b", subs, stmt_cont);
   add_fixed_stmt("b ; a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_23", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt(" a;b ", subs, stmt_cont);
   add_fixed_stmt(" b;a ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_24", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;a", subs, stmt_cont);
   add_fixed_stmt("a;a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_31", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
   add_fixed_stmt("b;c;a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_32", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt(" a; b;c ", subs, stmt_cont);
   add_fixed_stmt(" c;a ;b ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_self_33", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;b", subs, stmt_cont);
   add_fixed_stmt("b;a;a", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_disjoint_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
   add_fixed_stmt("c;d", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_zero_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
   add_fixed_stmt("", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_one_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
   add_fixed_stmt("d;a;e", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_one_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
   add_fixed_stmt("d;b;e", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_two_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
   add_fixed_stmt("c;d;b", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_union_two_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Union(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
   add_fixed_stmt("a; ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_one_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("  foo", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_one_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("foo  ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_one_3", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("1e3", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_one_4", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("100000000000000001", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_two_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_two_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("9;10", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_two_3", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("1e-2;1e-1", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_two_4", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("9 bis;10 bis", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_three_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_max_three_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Max(0, Attr().kvs()), subs);
   add_fixed_stmt(".;9;10", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_one_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("  foo", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_one_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("foo  ", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_one_3", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("1e3", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_one_4", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("100000000000000001", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_two_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_two_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("9;10", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_two_3", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("1e-2;1e-1", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_two_4", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("9 bis;10 bis", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_three_1", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("a;b;c", subs, stmt_cont);
 
   subs = add_prop_stmt("lrs_min_three_2", &stmt, stmt_cont);
-  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Lrs_Min(0, Attr().kvs()), subs);
   add_fixed_stmt("a;9;10", subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -969,23 +955,23 @@ void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
   if (ref > 0)
     prepare_value_test(global_settings, rman, from, ref, ref+1, global_node_offset);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
   Statement* subs = stmt_cont.add_stmt(
-      new Set_Prop_Statement(0, Attr()("keytype", "id").kvs(), global_settings), &stmt);
+      new Set_Prop_Statement(0, Attr()("keytype", "id").kvs()), &stmt);
 
   if (ref > 0)
   {
     subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
-        (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-    stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), subs);
+        (from == "" ? Attr() : Attr()("from", from)).kvs()), subs);
+    stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), subs);
   }
   else
     add_fixed_stmt("42", subs, stmt_cont);
 
   stmt.execute(rman);
 
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -996,17 +982,17 @@ void make_point_test(Parsed_Query& global_settings, Transaction& transaction,
   prepare_value_test(global_settings, rman, "_", ref, ref, global_node_offset);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
-  subs = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+  Statement* subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  subs = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs()), subs);
   if (lon.empty())
   {
     add_fixed_stmt(lat, subs, stmt_cont);
-    subs = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), subs);
+    subs = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs()), subs);
     add_fixed_stmt(".0000001", subs, stmt_cont);
-    subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), subs);
-    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), subs);
+    subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs()), subs);
+    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs()), subs);
   }
   else
   {
@@ -1015,14 +1001,14 @@ void make_point_test(Parsed_Query& global_settings, Transaction& transaction,
   }
 
   stmt.execute(rman);
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
 void add_point(const std::string& lat, const std::string& lon,
     Statement* parent, Statement_Container& stmt_cont)
 {
-  Statement* pt = stmt_cont.create_stmt< Evaluator_Point >(Attr().kvs(), parent);
+  Statement* pt = stmt_cont.create_stmt_2< Evaluator_Point >(Attr().kvs(), parent);
   add_fixed_stmt(lat, pt, stmt_cont);
   add_fixed_stmt(lon, pt, stmt_cont);
 }
@@ -1035,10 +1021,10 @@ void make_linestring_test(Parsed_Query& global_settings, Transaction& transactio
   prepare_value_test(global_settings, rman, "_", ref, ref, global_node_offset);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
-  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), subs);
+  Statement* subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs()), subs);
 
   if (num_points > 0)
     add_point("51.1", "7.1", subs, stmt_cont);
@@ -1049,16 +1035,16 @@ void make_linestring_test(Parsed_Query& global_settings, Transaction& transactio
 
   if (num_points > 3)
   {
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs()), subs);
     add_fixed_stmt("51.4", pt, stmt_cont);
-    subs = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), pt);
+    subs = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs()), pt);
     add_fixed_stmt(".0000001", subs, stmt_cont);
-    subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), subs);
-    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), subs);
+    subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs()), subs);
+    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs()), subs);
   }
 
   stmt.execute(rman);
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1069,11 +1055,11 @@ void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
   prepare_value_test(global_settings, rman, "_", ref, ref, global_node_offset);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
-  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  Statement* subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs()), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs()), poly);
 
   if (num_points > 0)
     add_point("41.01", "0.01", subs, stmt_cont);
@@ -1086,12 +1072,12 @@ void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
   {
     add_point("41.0", "0.001", subs, stmt_cont);
 
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs()), subs);
     add_fixed_stmt("41.0", pt, stmt_cont);
-    Statement* times = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), pt);
+    Statement* times = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs()), pt);
     add_fixed_stmt(".0000001", times, stmt_cont);
-    Statement* max = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), times);
-    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), max);
+    Statement* max = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs()), times);
+    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs()), max);
 
     add_point("41.0", "0.0", subs, stmt_cont);
   }
@@ -1100,14 +1086,14 @@ void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
 
   if (num_points > 5)
   {
-    subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+    subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs()), poly);
     add_point("41.031", "0.02", subs, stmt_cont);
     add_point("41.029", "0.019", subs, stmt_cont);
     add_point("41.029", "0.021", subs, stmt_cont);
   }
 
   stmt.execute(rman);
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1117,18 +1103,18 @@ void make_polygon_date_line_test(Parsed_Query& global_settings, Transaction& tra
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
-  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
+  Statement* subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs()), subs);
 
-  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs()), poly);
   add_point("45", "179.99", subs, stmt_cont);
   add_point("44.99", "-179.99", subs, stmt_cont);
   add_point("44.98", "179.99", subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1141,12 +1127,12 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings,
     const std::string& lat_5 = "", const std::string& lon_5 = "",
     const std::string& lat_6 = "", const std::string& lon_6 = "")
 {
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
-  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
+  Statement* subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs()), subs);
 
-  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs()), poly);
   add_point(lat_1, lon_1, subs, stmt_cont);
   add_point(lat_2, lon_2, subs, stmt_cont);
   add_point(lat_3, lon_3, subs, stmt_cont);
@@ -1157,7 +1143,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings,
     add_point(lat_6, lon_6, subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1165,23 +1151,23 @@ void make_polygon_intersection_test_2(Parsed_Query& global_settings,
     const std::string& lon_1, const std::string& lon_2, const std::string& lon_3, const std::string& lon_4,
     std::string type, Resource_Manager& rman, Statement_Container& stmt_cont)
 {
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
-  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
+  Statement* subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs()), subs);
 
-  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs()), poly);
   add_point("51.006", "7.0025", subs, stmt_cont);
   add_point("51.005", lon_1, subs, stmt_cont);
   add_point("51.005", lon_2, subs, stmt_cont);
 
-  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs()), poly);
   add_point("51.004", "7.0025", subs, stmt_cont);
   add_point("51.005", lon_3, subs, stmt_cont);
   add_point("51.005", lon_4, subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1347,32 +1333,32 @@ void gcat_test(Parsed_Query& global_settings, Transaction& transaction,
   prepare_value_test(global_settings, rman, "_", 8, 14, global_node_offset);
 
   Statement_Container stmt_cont(global_settings);
-  Union_Statement union_(0, Attr().kvs(), global_settings);
-  stmt_cont.add_stmt(new Item_Statement(0, Attr().kvs(), global_settings), &union_);
+  Union_Statement union_(0, Attr().kvs());
+  stmt_cont.add_stmt(new Item_Statement(0, Attr().kvs()), &union_);
   Statement* geom_source = stmt_cont.add_stmt(
-      new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+      new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
   geom_source = stmt_cont.add_stmt(
-      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
   Statement* lstr = stmt_cont.add_stmt(
-      new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
+      new Evaluator_Linestring(0, Attr().kvs()), geom_source);
   add_point("51.004", "7.0025", lstr, stmt_cont);
   add_point("51.005", "7.0025", lstr, stmt_cont);
   add_point("51.005", "7.0015", lstr, stmt_cont);
 
   union_.execute(rman);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs());
   stmt.add_statement(&stmt1, "");
-  Evaluator_Geom_Concat_Value stmt10(0, Attr().kvs(), global_settings);
+  Evaluator_Geom_Concat_Value stmt10(0, Attr().kvs());
   stmt1.add_statement(&stmt10, "");
-  Evaluator_Geometry stmt100(0, Attr().kvs(), global_settings);
+  Evaluator_Geometry stmt100(0, Attr().kvs());
   stmt10.add_statement(&stmt100, "");
 
   stmt.execute(rman);
 
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1382,18 +1368,18 @@ void center_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
-  Statement* center = stmt_cont.add_stmt(new Evaluator_Center(0, Attr().kvs(), global_settings), subs);
+  Statement* subs = stmt_cont.create_stmt_2< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* center = stmt_cont.add_stmt(new Evaluator_Center(0, Attr().kvs()), subs);
 
-  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), center);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs()), center);
   add_point(to_string(base_lat + 0.01), to_string(base_lon_1), subs, stmt_cont);
   add_point(to_string(base_lat), to_string(base_lon_2), subs, stmt_cont);
   add_point(to_string(base_lat - 0.01), to_string(base_lon_1), subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1403,39 +1389,39 @@ void trace_test_1(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
 
   Statement_Container stmt_cont(global_settings);
-  Union_Statement union_(0, Attr().kvs(), global_settings);
+  Union_Statement union_(0, Attr().kvs());
 
   Statement* geom_source = stmt_cont.add_stmt(
-      new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+      new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
   geom_source = stmt_cont.add_stmt(
-      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
   add_point("51.501", "7.0005", geom_source, stmt_cont);
 
   if (multiple)
   {
     geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     add_point("51.501", same ? "7.0005" : "7.0035", geom_source, stmt_cont);
   }
 
   union_.execute(rman);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs());
   stmt.add_statement(&stmt1, "");
-  Evaluator_Trace stmt10(0, Attr().kvs(), global_settings);
+  Evaluator_Trace stmt10(0, Attr().kvs());
   stmt1.add_statement(&stmt10, "");
-  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs(), global_settings);
+  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs());
   stmt10.add_statement(&stmt100, "");
-  Evaluator_Geometry stmt1000(0, Attr().kvs(), global_settings);
+  Evaluator_Geometry stmt1000(0, Attr().kvs());
   stmt100.add_statement(&stmt1000, "");
 
   stmt.execute(rman);
 
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1445,23 +1431,23 @@ void trace_test_2(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
 
   Statement_Container stmt_cont(global_settings);
-  Union_Statement union_(0, Attr().kvs(), global_settings);
+  Union_Statement union_(0, Attr().kvs());
 
   Statement* geom_source = stmt_cont.add_stmt(
-      new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+      new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
   geom_source = stmt_cont.add_stmt(
-      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
   Statement* lstr = stmt_cont.add_stmt(
-      new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
+      new Evaluator_Linestring(0, Attr().kvs()), geom_source);
   add_point("52.004", "7.0025", lstr, stmt_cont);
   add_point("52.005", "7.0025", lstr, stmt_cont);
 
   geom_source = stmt_cont.add_stmt(
-      new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+      new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
   geom_source = stmt_cont.add_stmt(
-      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
   lstr = stmt_cont.add_stmt(
-      new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
+      new Evaluator_Linestring(0, Attr().kvs()), geom_source);
 
   if (multiple)
   {
@@ -1481,20 +1467,20 @@ void trace_test_2(Parsed_Query& global_settings, Transaction& transaction,
 
   union_.execute(rman);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs());
   stmt.add_statement(&stmt1, "");
-  Evaluator_Trace stmt10(0, Attr().kvs(), global_settings);
+  Evaluator_Trace stmt10(0, Attr().kvs());
   stmt1.add_statement(&stmt10, "");
-  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs(), global_settings);
+  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs());
   stmt10.add_statement(&stmt100, "");
-  Evaluator_Geometry stmt1000(0, Attr().kvs(), global_settings);
+  Evaluator_Geometry stmt1000(0, Attr().kvs());
   stmt100.add_statement(&stmt1000, "");
 
   stmt.execute(rman);
 
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1504,16 +1490,16 @@ void hull_test_1(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
 
   Statement_Container stmt_cont(global_settings);
-  Union_Statement union_(0, Attr().kvs(), global_settings);
+  Union_Statement union_(0, Attr().kvs());
 
   if (test_level > 0)
   {
     Statement* geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     Statement* lstr = stmt_cont.add_stmt(
-        new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
+        new Evaluator_Linestring(0, Attr().kvs()), geom_source);
     add_point("51.", "6.999", lstr, stmt_cont);
     if (test_level > 1)
       add_point("50.999", "7.", lstr, stmt_cont);
@@ -1527,79 +1513,79 @@ void hull_test_1(Parsed_Query& global_settings, Transaction& transaction,
   if (test_level > 3)
   {
     Statement* geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     add_point("50.9993", "6.9993", geom_source, stmt_cont);
   }
 
   if (test_level > 4)
   {
     Statement* geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     add_point("50.9994", "7.0005", geom_source, stmt_cont);
 
     geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     add_point("50.9995", "7.0006", geom_source, stmt_cont);
   }
 
   if (test_level > 5)
   {
     Statement* geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     add_point("50.9991", "7.0009", geom_source, stmt_cont);
   }
 
   if (test_level > 6)
   {
     Statement* geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     add_point("51.", "6.9989", geom_source, stmt_cont);
   }
 
   if (test_level > 7)
   {
     Statement* geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     add_point("51.0005", "6.9989", geom_source, stmt_cont);
   }
 
   if (test_level > 8)
   {
     Statement* geom_source = stmt_cont.add_stmt(
-        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+        new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
     geom_source = stmt_cont.add_stmt(
-        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
     add_point("51.003", "6.9988", geom_source, stmt_cont);
   }
 
   union_.execute(rman);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs());
   stmt.add_statement(&stmt1, "");
-  Evaluator_Hull stmt10(0, Attr().kvs(), global_settings);
+  Evaluator_Hull stmt10(0, Attr().kvs());
   stmt1.add_statement(&stmt10, "");
-  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs(), global_settings);
+  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs());
   stmt10.add_statement(&stmt100, "");
-  Evaluator_Geometry stmt1000(0, Attr().kvs(), global_settings);
+  Evaluator_Geometry stmt1000(0, Attr().kvs());
   stmt100.add_statement(&stmt1000, "");
 
   stmt.execute(rman);
 
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1609,14 +1595,14 @@ void hull_test_2(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
 
   Statement_Container stmt_cont(global_settings);
-  Union_Statement union_(0, Attr().kvs(), global_settings);
+  Union_Statement union_(0, Attr().kvs());
 
   Statement* geom_source = stmt_cont.add_stmt(
-      new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+      new Make_Statement(0, Attr()("type", "geom-source").kvs()), &union_);
   geom_source = stmt_cont.add_stmt(
-      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs()), geom_source);
   Statement* lstr = stmt_cont.add_stmt(
-      new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
+      new Evaluator_Linestring(0, Attr().kvs()), geom_source);
   add_point("51.002", "-179.999", lstr, stmt_cont);
   add_point("51.", "179.998", lstr, stmt_cont);
   add_point("50.998", "179.999", lstr, stmt_cont);
@@ -1625,20 +1611,20 @@ void hull_test_2(Parsed_Query& global_settings, Transaction& transaction,
 
   union_.execute(rman);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs());
   stmt.add_statement(&stmt1, "");
-  Evaluator_Hull stmt10(0, Attr().kvs(), global_settings);
+  Evaluator_Hull stmt10(0, Attr().kvs());
   stmt1.add_statement(&stmt10, "");
-  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs(), global_settings);
+  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs());
   stmt10.add_statement(&stmt100, "");
-  Evaluator_Geometry stmt1000(0, Attr().kvs(), global_settings);
+  Evaluator_Geometry stmt1000(0, Attr().kvs());
   stmt100.add_statement(&stmt1000, "");
 
   stmt.execute(rman);
 
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 
@@ -1648,17 +1634,17 @@ void triple_geom_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
 
-  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+  Make_Statement stmt(0, Attr()("type", type).kvs());
 
-  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs());
   stmt.add_statement(&stmt1, "");
-  Statement* subs = stmt_cont.add_stmt(new Ternary_Evaluator(0, Attr().kvs(), global_settings), &stmt1);
+  Statement* subs = stmt_cont.add_stmt(new Ternary_Evaluator(0, Attr().kvs()), &stmt1);
   add_fixed_stmt(condition, subs, stmt_cont);
   add_point("51.5", "8.0", subs, stmt_cont);
   add_point("52.5", "10.0", subs, stmt_cont);
 
   stmt.execute(rman);
-  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs()).execute(rman);
 }
 
 

@@ -230,7 +230,7 @@ Statement* Polygon_Query_Statement::Criterion_Maker::create_criterion(const Toke
     std::map< std::string, std::string > attributes;
     attributes["bounds"] = decode_json(tree_it.rhs()->token, error_output);
     attributes["into"] = into;
-    return new Polygon_Query_Statement(line_nr, attributes, global_settings);
+    return new Polygon_Query_Statement(line_nr, attributes);
   }
 
   return 0;
@@ -259,7 +259,7 @@ bool covers_large_area(const std::vector< std::pair< double, double > >& edges)
 
 
 Polygon_Query_Statement::Polygon_Query_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;

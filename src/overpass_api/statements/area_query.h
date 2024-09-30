@@ -32,15 +32,14 @@
 class Area_Query_Statement : public Output_Statement
 {
   public:
-    Area_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                         Parsed_Query& global_settings);
+    Area_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual std::string get_name() const { return "area-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Area_Query_Statement();
 
-    struct Statement_Maker : public Generic_Statement_Maker< Area_Query_Statement >
+    struct Statement_Maker : public Generic_Statement_Maker_2< Area_Query_Statement >
     {
-      Statement_Maker() : Generic_Statement_Maker< Area_Query_Statement >("area-query") {}
+      Statement_Maker() : Generic_Statement_Maker_2< Area_Query_Statement >("area-query") {}
     };
     static Statement_Maker statement_maker;
 

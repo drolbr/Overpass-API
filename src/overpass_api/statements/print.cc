@@ -44,11 +44,11 @@ const unsigned int RELATION_FLUSH_SIZE = 512*1024;
 const unsigned int AREA_FLUSH_SIZE = 64*1024;
 
 
-Generic_Statement_Maker< Print_Statement > Print_Statement::statement_maker("print");
+Generic_Statement_Maker_2< Print_Statement > Print_Statement::statement_maker("print");
 
 
 Print_Statement::Print_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(std::numeric_limits< unsigned int >::max()),
       collection_print_target(0), diff_valid(true),
@@ -815,7 +815,7 @@ void Print_Statement::execute(Resource_Manager& rman)
     feature_action = Output_Handler::show_to;
 
   Extra_Data extra_data(rman, *this, *output_items, mode, feature_action, south, north, west, east);
-  Output_Handler& output_handler = *rman.get_global_settings().get_output_handler();
+  Output_Handler& output_handler = *dynamic_cast< Output_Handler* >(rman.get_global_settings().get_output_handler());
   uint32 element_count = 0;
 
   if (order == order_by_id)
@@ -915,7 +915,9 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
   const Diff_Set* input_diff_set = rman.get_diff_set(input);
   if (input_diff_set)
   {
-    print_diff_set(*input_diff_set, mode, rman.get_global_settings().get_output_handler(),
+    print_diff_set(
+        *input_diff_set, mode,
+        dynamic_cast< Output_Handler* >(rman.get_global_settings().get_output_handler()),
         rman.users(), relation_member_roles(*rman.get_transaction()), action == Diff_Action::collect_rhs_with_del);
     return;
   }
@@ -946,7 +948,9 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
     Diff_Set result = collection_print_target->compare_to_lhs(rman, *this, *input_set,
         south, north, west, east, action == Diff_Action::collect_rhs_with_del);
 
-    print_diff_set(result, mode, rman.get_global_settings().get_output_handler(),
+    print_diff_set(
+        result, mode,
+        dynamic_cast< Output_Handler* >(rman.get_global_settings().get_output_handler()),
         rman.users(), relation_member_roles(*rman.get_transaction()), action == Diff_Action::collect_rhs_with_del);
   }
 

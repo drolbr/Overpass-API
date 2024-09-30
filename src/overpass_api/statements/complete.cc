@@ -24,11 +24,11 @@
 #include "complete.h"
 
 
-Generic_Statement_Maker< Complete_Statement > Complete_Statement::statement_maker("complete");
+Generic_Statement_Maker_2< Complete_Statement > Complete_Statement::statement_maker("complete");
 
 
 Complete_Statement::Complete_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_), max_loop_num(4096)
 {
   std::map< std::string, std::string > attributes;

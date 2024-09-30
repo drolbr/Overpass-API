@@ -38,7 +38,7 @@ class Osm_Script_Statement : public Statement
     virtual std::string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);
 
-    static Generic_Statement_Maker< Osm_Script_Statement > statement_maker;
+    static Generic_Statement_Maker_3< Osm_Script_Statement > statement_maker;
 
     void set_factory(Statement::Factory* factory_) { factory = factory_; }
 

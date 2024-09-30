@@ -50,16 +50,15 @@ The whitespace is optional.
 class Filter_Statement : public Output_Statement
 {
   public:
-    Filter_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                         Parsed_Query& global_settings);
+    Filter_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual std::string get_name() const { return "filter"; }
     virtual void add_statement(Statement* statement, std::string text);
     virtual void execute(Resource_Manager& rman);
     virtual ~Filter_Statement();
 
-    struct Statement_Maker : public Generic_Statement_Maker< Filter_Statement >
+    struct Statement_Maker : public Generic_Statement_Maker_2< Filter_Statement >
     {
-      Statement_Maker() : Generic_Statement_Maker< Filter_Statement >("filter") {}
+      Statement_Maker() : Generic_Statement_Maker_2< Filter_Statement >("filter") {}
     };
     static Statement_Maker statement_maker;
 

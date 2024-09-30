@@ -28,11 +28,11 @@
 #include "for.h"
 
 
-Generic_Statement_Maker< For_Statement > For_Statement::statement_maker("for");
+Generic_Statement_Maker_2< For_Statement > For_Statement::statement_maker("for");
 
 
 For_Statement::For_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Statement(line_number_), evaluator(0)
 {
   std::map< std::string, std::string > attributes;

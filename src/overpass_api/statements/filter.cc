@@ -121,7 +121,7 @@ Statement* Filter_Statement::Criterion_Maker::create_criterion(const Token_Node_
   if (criterion)
   {
     std::map< std::string, std::string > attributes;
-    filter = new Filter_Statement(line_nr, attributes, global_settings);
+    filter = new Filter_Statement(line_nr, attributes);
     if (filter)
       filter->add_statement(criterion, "");
   }
@@ -131,7 +131,7 @@ Statement* Filter_Statement::Criterion_Maker::create_criterion(const Token_Node_
 
 
 Filter_Statement::Filter_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_), criterion(0)
 {
   std::map< std::string, std::string > attributes;

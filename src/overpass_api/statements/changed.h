@@ -30,15 +30,14 @@
 class Changed_Statement : public Output_Statement
 {
   public:
-    Changed_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                       Parsed_Query& global_settings);
+    Changed_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual std::string get_name() const { return "changed"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Changed_Statement();
 
-    struct Statement_Maker : public Generic_Statement_Maker< Changed_Statement >
+    struct Statement_Maker : public Generic_Statement_Maker_2< Changed_Statement >
     {
-      Statement_Maker() : Generic_Statement_Maker< Changed_Statement >("changed") {}
+      Statement_Maker() : Generic_Statement_Maker_2< Changed_Statement >("changed") {}
     };
     static Statement_Maker statement_maker;
 

@@ -29,12 +29,11 @@
 class Coord_Query_Statement : public Output_Statement
 {
   public:
-    Coord_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                          Parsed_Query& global_settings);
+    Coord_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual std::string get_name() const { return "coord-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Coord_Query_Statement() {}
-    static Generic_Statement_Maker< Coord_Query_Statement > statement_maker;
+    static Generic_Statement_Maker_2< Coord_Query_Statement > statement_maker;
 
     static int check_segment
         (uint32 a_lat, int32 a_lon, uint32 b_lat, int32 b_lon,

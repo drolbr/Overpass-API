@@ -185,7 +185,7 @@ struct Evaluator_Or : public Evaluator_Pair_Operator_Syntax< Evaluator_Or >
   static std::string stmt_operator() { return "||"; }
   static std::string stmt_name() { return "eval-or"; }
 
-  Evaluator_Or(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Or(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Or >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -215,7 +215,7 @@ struct Evaluator_And : public Evaluator_Pair_Operator_Syntax< Evaluator_And >
   static std::string stmt_operator() { return "&&"; }
   static std::string stmt_name() { return "eval-and"; }
 
-  Evaluator_And(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_And(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_And >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -250,7 +250,7 @@ struct Evaluator_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_Equal 
   static std::string stmt_operator() { return "=="; }
   static std::string stmt_name() { return "eval-equal"; }
 
-  Evaluator_Equal(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Equal(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Equal >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -264,7 +264,7 @@ struct Evaluator_Not_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_No
   static std::string stmt_operator() { return "!="; }
   static std::string stmt_name() { return "eval-not-equal"; }
 
-  Evaluator_Not_Equal(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Not_Equal(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Not_Equal >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -299,7 +299,7 @@ struct Evaluator_Less : public Evaluator_Pair_Operator_Syntax< Evaluator_Less >
   static std::string stmt_operator() { return "<"; }
   static std::string stmt_name() { return "eval-less"; }
 
-  Evaluator_Less(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Less(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Less >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -313,7 +313,7 @@ struct Evaluator_Less_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_L
   static std::string stmt_operator() { return "<="; }
   static std::string stmt_name() { return "eval-less-equal"; }
 
-  Evaluator_Less_Equal(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Less_Equal(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Less_Equal >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -327,7 +327,7 @@ struct Evaluator_Greater : public Evaluator_Pair_Operator_Syntax< Evaluator_Grea
   static std::string stmt_operator() { return ">"; }
   static std::string stmt_name() { return "eval-greater"; }
 
-  Evaluator_Greater(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Greater(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Greater >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -341,7 +341,7 @@ struct Evaluator_Greater_Equal : public Evaluator_Pair_Operator_Syntax< Evaluato
   static std::string stmt_operator() { return ">="; }
   static std::string stmt_name() { return "eval-greater-equal"; }
 
-  Evaluator_Greater_Equal(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Greater_Equal(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Greater_Equal >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -375,7 +375,7 @@ struct Evaluator_Plus : public Evaluator_Pair_Operator_Syntax< Evaluator_Plus >
   static std::string stmt_operator() { return "+"; }
   static std::string stmt_name() { return "eval-plus"; }
 
-  Evaluator_Plus(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Plus(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Plus >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -389,7 +389,7 @@ struct Evaluator_Minus : public Evaluator_Pair_Operator_Syntax< Evaluator_Minus 
   static std::string stmt_operator() { return "-"; }
   static std::string stmt_name() { return "eval-minus"; }
 
-  Evaluator_Minus(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Minus(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Minus >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -420,7 +420,7 @@ struct Evaluator_Times : public Evaluator_Pair_Operator_Syntax< Evaluator_Times 
   static std::string stmt_operator() { return "*"; }
   static std::string stmt_name() { return "eval-times"; }
 
-  Evaluator_Times(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Times(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Times >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
@@ -434,7 +434,7 @@ struct Evaluator_Divided : public Evaluator_Pair_Operator_Syntax< Evaluator_Divi
   static std::string stmt_operator() { return "/"; }
   static std::string stmt_name() { return "eval-divided-by"; }
 
-  Evaluator_Divided(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Divided(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Pair_Operator_Syntax< Evaluator_Divided >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;

@@ -25,7 +25,7 @@ Else_Statement::Statement_Maker Else_Statement::statement_maker;
 
 
 If_Statement::If_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Statement(line_number_), criterion(0), else_reached(false)
 {
   std::map< std::string, std::string > attributes;

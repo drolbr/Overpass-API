@@ -167,10 +167,9 @@ void Item_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
-Generic_Statement_Maker< Item_Statement > Item_Statement::statement_maker("item");
+Generic_Statement_Maker_2< Item_Statement > Item_Statement::statement_maker("item");
 
-Item_Statement::Item_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                               Parsed_Query& global_settings)
+Item_Statement::Item_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;

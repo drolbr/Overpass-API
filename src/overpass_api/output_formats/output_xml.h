@@ -28,14 +28,6 @@
 #include <vector>
 
 
-struct Csv_Settings
-{
-  std::vector< std::pair< std::string, bool > > keyfields;
-  bool with_headerline;
-  std::string separator;
-};
-
-
 class Output_XML : public Output_Handler
 {
 public:

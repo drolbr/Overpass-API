@@ -40,9 +40,9 @@ public:
   virtual void execute(Resource_Manager& rman);
   virtual ~User_Statement();
 
-  struct Statement_Maker : public Generic_Statement_Maker< User_Statement >
+  struct Statement_Maker : public Generic_Statement_Maker_3< User_Statement >
   {
-    Statement_Maker() : Generic_Statement_Maker< User_Statement >("user") {}
+    Statement_Maker() : Generic_Statement_Maker_3< User_Statement >("user") {}
   };
   static Statement_Maker statement_maker;
 

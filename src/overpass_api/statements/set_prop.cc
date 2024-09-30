@@ -35,7 +35,7 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
     std::map< std::string, std::string > attributes;
     attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
     attributes["keytype"] = "tag";
-    return new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);
+    return new Set_Prop_Statement(tree_it->line_col.first, attributes);
   }
 
   if (tree_context != Statement::generic && tree_context != Statement::in_convert)
@@ -98,7 +98,7 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
     attributes["k"] = decode_json(tree_it.lhs()->token, error_output);
     attributes["keytype"] = "tag";
   }
-  Statement* result = new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);
+  Statement* result = new Set_Prop_Statement(tree_it->line_col.first, attributes);
   if (result)
   {
     Statement* rhs = stmt_factory.create_evaluator(tree_it.rhs(),
@@ -114,7 +114,7 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
 
 
 Set_Prop_Statement::Set_Prop_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Statement(line_number_), key(0), mode(Set_Prop_Task::single_key), tag_value(0)
 {
   std::map< std::string, std::string > attributes;

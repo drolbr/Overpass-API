@@ -41,9 +41,9 @@ Their syntax is always
 */
 
 template< typename Evaluator_ >
-struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
+struct String_Endom_Statement_Maker : public Generic_Statement_Maker_2< Evaluator_ >
 {
-  String_Endom_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+  String_Endom_Statement_Maker() : Generic_Statement_Maker_2< Evaluator_ >(Evaluator_::stmt_name()) {}
 };
 
 
@@ -58,7 +58,7 @@ struct String_Endom_Evaluator_Maker : public Statement::Evaluator_Maker
       return 0;
 
     std::map< std::string, std::string > attributes;
-    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes);
     if (result)
     {
       Statement* rhs = stmt_factory.create_evaluator(
@@ -137,7 +137,7 @@ public:
   static std::string stmt_func_name() { return "number"; }
   static std::string stmt_name() { return "eval-number"; }
 
-  Evaluator_Number(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Number(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_String_Endom_Syntax< Evaluator_Number >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;
@@ -152,7 +152,7 @@ public:
   static std::string stmt_func_name() { return "is_number"; }
   static std::string stmt_name() { return "eval-is-number"; }
 
-  Evaluator_Is_Num(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Is_Num(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_String_Endom_Syntax< Evaluator_Is_Num >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;
@@ -167,7 +167,7 @@ public:
   static std::string stmt_func_name() { return "suffix"; }
   static std::string stmt_name() { return "eval-suffix"; }
 
-  Evaluator_Suffix(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Suffix(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_String_Endom_Syntax< Evaluator_Suffix >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;
@@ -194,7 +194,7 @@ public:
   static std::string stmt_func_name() { return "abs"; }
   static std::string stmt_name() { return "eval-abs"; }
 
-  Evaluator_Abs(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Abs(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_String_Endom_Syntax< Evaluator_Abs >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;
@@ -239,7 +239,7 @@ public:
   static std::string stmt_func_name() { return "date"; }
   static std::string stmt_name() { return "eval-date"; }
 
-  Evaluator_Date(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Date(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_String_Endom_Syntax< Evaluator_Date >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;
@@ -254,7 +254,7 @@ public:
   static std::string stmt_func_name() { return "is_date"; }
   static std::string stmt_name() { return "eval-is-date"; }
 
-  Evaluator_Is_Date(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Is_Date(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_String_Endom_Syntax< Evaluator_Is_Date >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;

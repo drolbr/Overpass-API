@@ -37,12 +37,12 @@ Statement* Evaluator_Set_Key::Evaluator_Maker::create_evaluator(
   std::map< std::string, std::string > attributes;
   attributes["from"] = tree_it.lhs()->token;
   attributes["key"] = tree_it.rhs()->token;
-  return new Evaluator_Set_Key(tree_it->line_col.first, attributes, global_settings);
+  return new Evaluator_Set_Key(tree_it->line_col.first, attributes);
 }
 
 
-Evaluator_Set_Key::Evaluator_Set_Key(int line_number_, const std::map< std::string, std::string >& input_attributes,
-    Parsed_Query& global_settings) : Evaluator(line_number_)
+Evaluator_Set_Key::Evaluator_Set_Key(int line_number_, const std::map< std::string, std::string >& input_attributes)
+    : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
   attributes["from"] = "_";

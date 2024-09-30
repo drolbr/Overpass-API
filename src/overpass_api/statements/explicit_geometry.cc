@@ -44,7 +44,7 @@ Statement* Evaluator_Point::Evaluator_Maker::create_evaluator(
     return 0;
 
   std::map< std::string, std::string > attributes;
-  Evaluator_Point* result = new Evaluator_Point(tree_it->line_col.first, attributes, global_settings);
+  Evaluator_Point* result = new Evaluator_Point(tree_it->line_col.first, attributes);
   if (tree_it.rhs()->token == "," && tree_it.rhs()->lhs && tree_it.rhs()->rhs)
   {
     Statement* first = stmt_factory.create_evaluator(
@@ -69,7 +69,7 @@ Statement* Evaluator_Point::Evaluator_Maker::create_evaluator(
 
 
 Evaluator_Point::Evaluator_Point
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_), lat(0), lon(0)
 {
   std::map< std::string, std::string > attributes;
@@ -152,7 +152,7 @@ Statement* Evaluator_Linestring::Evaluator_Maker::create_evaluator(
     return 0;
 
   std::map< std::string, std::string > attributes;
-  Evaluator_Linestring* result = new Evaluator_Linestring(tree_it->line_col.first, attributes, global_settings);
+  Evaluator_Linestring* result = new Evaluator_Linestring(tree_it->line_col.first, attributes);
 
   std::vector< Token_Node_Ptr > args;
   Token_Node_Ptr args_tree = tree_it.rhs();
@@ -186,7 +186,7 @@ Statement* Evaluator_Linestring::Evaluator_Maker::create_evaluator(
 
 
 Evaluator_Linestring::Evaluator_Linestring
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -257,7 +257,7 @@ Statement* Evaluator_Polygon::Evaluator_Maker::create_evaluator(
     return 0;
 
   std::map< std::string, std::string > attributes;
-  Evaluator_Polygon* result = new Evaluator_Polygon(tree_it->line_col.first, attributes, global_settings);
+  Evaluator_Polygon* result = new Evaluator_Polygon(tree_it->line_col.first, attributes);
 
   std::vector< Token_Node_Ptr > args;
   Token_Node_Ptr args_tree = tree_it.rhs();
@@ -291,7 +291,7 @@ Statement* Evaluator_Polygon::Evaluator_Maker::create_evaluator(
 
 
 Evaluator_Polygon::Evaluator_Polygon
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;

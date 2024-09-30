@@ -41,9 +41,9 @@ Their syntax is always
 */
 
 template< typename Evaluator_ >
-struct Geometry_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
+struct Geometry_Endom_Statement_Maker : public Generic_Statement_Maker_2< Evaluator_ >
 {
-  Geometry_Endom_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+  Geometry_Endom_Statement_Maker() : Generic_Statement_Maker_2< Evaluator_ >(Evaluator_::stmt_name()) {}
 };
 
 
@@ -58,7 +58,7 @@ struct Geometry_Endom_Evaluator_Maker : public Statement::Evaluator_Maker
       return 0;
 
     std::map< std::string, std::string > attributes;
-    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes);
     if (result)
     {
       Statement* rhs = stmt_factory.create_evaluator(
@@ -125,7 +125,7 @@ public:
   static std::string stmt_func_name() { return "center"; }
   static std::string stmt_name() { return "eval-center"; }
 
-  Evaluator_Center(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Center(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Geometry_Endom_Syntax< Evaluator_Center >(line_number_, input_attributes) {}
 
   virtual Opaque_Geometry* process(Opaque_Geometry* geom) const;
@@ -155,7 +155,7 @@ public:
   static std::string stmt_func_name() { return "trace"; }
   static std::string stmt_name() { return "eval-trace"; }
 
-  Evaluator_Trace(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Trace(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Geometry_Endom_Syntax< Evaluator_Trace >(line_number_, input_attributes) {}
 
   virtual Opaque_Geometry* process(Opaque_Geometry* geom) const;
@@ -182,7 +182,7 @@ public:
   static std::string stmt_func_name() { return "hull"; }
   static std::string stmt_name() { return "eval-hull"; }
 
-  Evaluator_Hull(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Hull(int line_number_, const std::map< std::string, std::string >& input_attributes)
       : Evaluator_Geometry_Endom_Syntax< Evaluator_Hull >(line_number_, input_attributes) {}
 
   virtual Opaque_Geometry* process(Opaque_Geometry* geom) const;

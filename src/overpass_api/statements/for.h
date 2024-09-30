@@ -84,15 +84,14 @@ Unlike for a usual evaluator, the sets are not mutually distinct in that case.
 class For_Statement : public Statement
 {
   public:
-    For_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                      Parsed_Query& global_settings);
+    For_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual void add_statement(Statement* statement, std::string text);
     virtual std::string get_name() const { return "for"; }
     virtual std::string get_result_name() const { return output; }
     virtual void execute(Resource_Manager& rman);
     virtual ~For_Statement() {}
 
-    static Generic_Statement_Maker< For_Statement > statement_maker;
+    static Generic_Statement_Maker_2< For_Statement > statement_maker;
 
     virtual std::string dump_xml(const std::string& indent) const
     {

@@ -32,15 +32,14 @@
 class Recurse_Statement : public Output_Statement
 {
   public:
-    Recurse_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                      Parsed_Query& global_settings);
+    Recurse_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes);
     virtual std::string get_name() const { return "recurse"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Recurse_Statement();
 
-    struct Statement_Maker : public Generic_Statement_Maker< Recurse_Statement >
+    struct Statement_Maker : public Generic_Statement_Maker_2< Recurse_Statement >
     {
-      Statement_Maker() : Generic_Statement_Maker< Recurse_Statement >("recurse") {}
+      Statement_Maker() : Generic_Statement_Maker_2< Recurse_Statement >("recurse") {}
     };
     static Statement_Maker statement_maker;
 

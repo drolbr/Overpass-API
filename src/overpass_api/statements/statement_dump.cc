@@ -17,6 +17,7 @@
  */
 
 #include "../frontend/output.h"
+#include "../frontend/output_handler.h"
 #include "statement_dump.h"
 #include "statement.h"
 
@@ -130,7 +131,8 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
       else if (it->first == "output")
       {
         if (stmt_factory.global_settings.get_output_handler())
-          result += "[out:" + it->second + stmt_factory.global_settings.get_output_handler()->dump_config() + "]";
+          result += "[out:" + it->second + 
+            dynamic_cast< Output_Handler* >(stmt_factory.global_settings.get_output_handler())->dump_config() + "]";
         else
           output_val = it->second;
       }
@@ -201,7 +203,8 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
       else if (it->first == "output")
       {
         if (stmt_factory.global_settings.get_output_handler())
-          result += "[out:" + it->second + stmt_factory.global_settings.get_output_handler()->dump_config() + "]";
+          result += "[out:" + it->second +
+            dynamic_cast< Output_Handler* >(stmt_factory.global_settings.get_output_handler())->dump_config() + "]";
         else
           output_val = it->second;
       }
@@ -271,7 +274,8 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
       else if (it->first == "output")
       {
         if (stmt_factory.global_settings.get_output_handler())
-          result += "[out:" + it->second + stmt_factory.global_settings.get_output_handler()->dump_config() + "]\n";
+          result += "[out:" + it->second +
+            dynamic_cast< Output_Handler* >(stmt_factory.global_settings.get_output_handler())->dump_config() + "]\n";
         else
           output_val = it->second;
       }

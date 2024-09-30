@@ -24,6 +24,7 @@
 #include "../core/datatypes.h"
 #include "../core/parsed_query.h"
 #include "../data/diff_set.h"
+#include "../data/request_context.h"
 #include "../data/user_data_cache.h"
 
 
@@ -105,7 +106,7 @@ private:
 };
 
 
-class Resource_Manager
+class Resource_Manager : public Request_Context_Iface
 {
 public:
   Resource_Manager(Transaction& transaction_, Parsed_Query* global_settings_ = 0, Watchdog_Callback* watchdog_ = 0,
@@ -115,7 +116,7 @@ public:
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
 		   Area_Usage_Listener* area_updater__);
 
-  ~Resource_Manager()
+  virtual ~Resource_Manager()
   {
     for (std::vector< Runtime_Stack_Frame* >::iterator it = runtime_stack.begin();
         it != runtime_stack.end(); ++it)
@@ -155,9 +156,9 @@ public:
 
   Parsed_Query& get_global_settings() const { return *global_settings; }
 
-  void log_and_display_error(std::string message);
+  virtual void log_and_display_error(const std::string& message);
 
-  bool health_check(const Statement& stmt, uint32 extra_time = 0, uint64 extra_space = 0);
+  virtual bool health_check(const Statement& stmt, uint32 extra_time = 0, uint64 extra_space = 0);
 
   void set_limits(uint32 max_allowed_time_, uint64 max_allowed_space_)
   {
@@ -165,13 +166,13 @@ public:
     max_allowed_space = max_allowed_space_;
   }
 
-  Transaction* get_transaction() { return transaction; }
+  virtual Transaction* get_transaction() { return transaction; }
   Transaction* get_area_transaction() { return area_transaction; }
 
-  uint64 get_desired_timestamp() const;
+  virtual uint64 get_desired_timestamp() const;
   Diff_Action::_ get_desired_action() const;
-  uint64 get_diff_from_timestamp() const;
-  uint64 get_diff_to_timestamp() const;
+  virtual uint64 get_diff_from_timestamp() const;
+  virtual uint64 get_diff_to_timestamp() const;
 
   void set_desired_timestamp(uint64 timestamp);
   void start_diff(uint64 comparison_timestamp, uint64 desired_timestamp);

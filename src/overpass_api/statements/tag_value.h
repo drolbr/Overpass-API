@@ -45,9 +45,9 @@ Its syntax is
 class Evaluator_Fixed : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Fixed >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Fixed >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Fixed >("eval-fixed") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Fixed >("eval-fixed") {}
   };
   static Statement_Maker statement_maker;
 
@@ -63,8 +63,7 @@ public:
   { return indent + "<eval-fixed v=\"" + escape_xml(value) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const;
 
-  Evaluator_Fixed(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Fixed(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-fixed"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -133,9 +132,9 @@ struct Id_Eval_Task : public Eval_Task
 class Evaluator_Id : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Id >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Id >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Id >("eval-id") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Id >("eval-id") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Id > evaluator_maker;
@@ -145,8 +144,7 @@ public:
   { return indent + "<eval-id/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "id()"; }
 
-  Evaluator_Id(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Id(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-id"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -185,9 +183,9 @@ struct Type_Eval_Task : public Eval_Task
 class Evaluator_Type : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Type >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Type >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Type >("eval-type") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Type >("eval-type") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Type > evaluator_maker;
@@ -196,8 +194,7 @@ public:
   virtual std::string dump_xml(const std::string& indent) const { return indent + "<eval-type/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "type()"; }
 
-  Evaluator_Type(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Type(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-type"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -268,9 +265,9 @@ private:
 class Evaluator_Value : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Value >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Value >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Value >("eval-value") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Value >("eval-value") {}
   };
   static Statement_Maker statement_maker;
 
@@ -291,8 +288,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("t[\"") + (rhs ? rhs->dump_compact_ql("") : "") + "\"]"; }
 
-  Evaluator_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Value(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual void add_statement(Statement* statement, std::string text);
   virtual std::string get_name() const { return "eval-value"; }
   virtual std::string get_result_name() const { return ""; }
@@ -343,9 +339,9 @@ private:
 class Evaluator_Is_Tag : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Is_Tag >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Is_Tag >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Is_Tag >("eval-is-tag") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Is_Tag >("eval-is-tag") {}
   };
   static Statement_Maker statement_maker;
 
@@ -362,8 +358,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("is_tag(\"") + escape_cstr(key) + "\")"; }
 
-  Evaluator_Is_Tag(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Is_Tag(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-is-tag"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -406,9 +401,9 @@ struct Generic_Eval_Task : public Eval_Task
 class Evaluator_Generic : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Generic >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Generic >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Generic >("eval-generic") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Generic >("eval-generic") {}
   };
   static Statement_Maker statement_maker;
 
@@ -424,8 +419,7 @@ public:
   { return indent + "<eval-generic/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "::"; }
 
-  Evaluator_Generic(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Generic(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-generic"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -486,9 +480,9 @@ struct All_Keys_Eval_Task : public Eval_Container_Task
 class Evaluator_All_Keys : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_All_Keys >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_All_Keys >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_All_Keys >("eval-all-keys") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_All_Keys >("eval-all-keys") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_All_Keys > evaluator_maker;
@@ -498,8 +492,7 @@ public:
   { return indent + "<eval-all-keys/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "keys()"; }
 
-  Evaluator_All_Keys(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_All_Keys(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-all-keys"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -576,9 +569,9 @@ struct Version_Eval_Task : public Eval_Task
 class Evaluator_Version : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Version >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Version >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Version >("eval-version") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Version >("eval-version") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Version > evaluator_maker;
@@ -589,8 +582,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "version(\"\")"; }
 
-  Evaluator_Version(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Version(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-version"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -632,9 +624,9 @@ struct Timestamp_Eval_Task : public Eval_Task
 class Evaluator_Timestamp : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Timestamp >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Timestamp >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Timestamp >("eval-timestamp") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Timestamp >("eval-timestamp") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Timestamp > evaluator_maker;
@@ -645,8 +637,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "timestamp(\"\")"; }
 
-  Evaluator_Timestamp(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Timestamp(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-timestamp"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -688,9 +679,9 @@ struct Changeset_Eval_Task : public Eval_Task
 class Evaluator_Changeset : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Changeset >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Changeset >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Changeset >("eval-changeset") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Changeset >("eval-changeset") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Changeset > evaluator_maker;
@@ -701,8 +692,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "changeset(\"\")"; }
 
-  Evaluator_Changeset(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Changeset(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-changeset"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -744,9 +734,9 @@ struct Uid_Eval_Task : public Eval_Task
 class Evaluator_Uid : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Uid >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Uid >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Uid >("eval-uid") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Uid >("eval-uid") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Uid > evaluator_maker;
@@ -757,8 +747,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "uid(\"\")"; }
 
-  Evaluator_Uid(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Uid(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-uid"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -800,9 +789,9 @@ struct User_Eval_Task : public Eval_Task
 class Evaluator_User : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_User >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_User >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_User >("eval-user") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_User >("eval-user") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_User > evaluator_maker;
@@ -813,8 +802,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "user(\"\")"; }
 
-  Evaluator_User(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_User(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-user"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -865,9 +853,9 @@ public:
   enum Members_Type { all, nodes, ways, relations };
   static std::string to_string(Members_Type types);
 
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Properties_Count >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Properties_Count >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Properties_Count >("eval-prop-count") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Properties_Count >("eval-prop-count") {}
   };
   static Statement_Maker statement_maker;
 
@@ -903,8 +891,7 @@ public:
         + (type_to_count != all ? to_string(type_to_count) : std::string("")) + ")";
   }
 
-  Evaluator_Properties_Count(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Properties_Count(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-prop-count"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}

@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         &error_output, parser_execute))
       return 0;
 
-    error_output.set_output_handler(global_settings.get_output_handler());
+    error_output.set_output_handler(dynamic_cast< Output_Handler* >(global_settings.get_output_handler()));
 
     Osm_Script_Statement* osm_script = 0;
     if (!get_statement_stack()->empty())

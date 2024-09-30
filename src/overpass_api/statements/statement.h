@@ -270,7 +270,22 @@ std::map< std::string, std::string > convert_c_pairs(const char** attr);
 
 
 template< class TStatement >
-class Generic_Statement_Maker : public Statement::Statement_Maker
+class Generic_Statement_Maker_2 : public Statement::Statement_Maker
+{
+  public:
+    virtual Statement* create_statement
+        (int line_number, const std::map< std::string, std::string >& attributes, Parsed_Query& global_settings)
+    {
+      return new TStatement(line_number, attributes);
+    }
+
+    Generic_Statement_Maker_2(const std::string& name) { Statement::maker_by_name()[name] = this; }
+    virtual ~Generic_Statement_Maker_2() {}
+};
+
+
+template< class TStatement >
+class Generic_Statement_Maker_3 : public Statement::Statement_Maker
 {
   public:
     virtual Statement* create_statement
@@ -279,8 +294,8 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
       return new TStatement(line_number, attributes, global_settings);
     }
 
-    Generic_Statement_Maker(const std::string& name) { Statement::maker_by_name()[name] = this; }
-    virtual ~Generic_Statement_Maker() {}
+    Generic_Statement_Maker_3(const std::string& name) { Statement::maker_by_name()[name] = this; }
+    virtual ~Generic_Statement_Maker_3() {}
 };
 
 

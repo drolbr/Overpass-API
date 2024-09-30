@@ -364,7 +364,7 @@ struct Element_Function_Maker : public Statement::Evaluator_Maker
         || !assert_element_in_context(error_output, tree_it, tree_context))
       return 0;
 
-    return new Evaluator_(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
+    return new Evaluator_(tree_it->line_col.first, std::map< std::string, std::string >());
   }
   Element_Function_Maker() { Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this); }
 };
@@ -381,16 +381,16 @@ struct Member_Function_Maker : public Statement::Evaluator_Maker
         || !assert_member_in_context(error_output, tree_it, tree_context))
       return 0;
 
-    return new Evaluator_(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
+    return new Evaluator_(tree_it->line_col.first, std::map< std::string, std::string >());
   }
   Member_Function_Maker() { Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this); }
 };
 
 
 template< typename Evaluator_ >
-struct Operator_Stmt_Maker : public Generic_Statement_Maker< Evaluator_ >
+struct Operator_Stmt_Maker : public Generic_Statement_Maker_2< Evaluator_ >
 {
-  Operator_Stmt_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+  Operator_Stmt_Maker() : Generic_Statement_Maker_2< Evaluator_ >(Evaluator_::stmt_name()) {}
 };
 
 
@@ -407,7 +407,7 @@ struct Operator_Eval_Maker : public Statement::Evaluator_Maker
       return 0;
 
     std::map< std::string, std::string > attributes;
-    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes);
     Evaluator_::add_substatements(result, Evaluator_::stmt_operator(), tree_it, tree_context,
         stmt_factory, error_output);
     return result;

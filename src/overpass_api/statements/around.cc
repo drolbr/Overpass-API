@@ -439,7 +439,7 @@ Statement* Around_Statement::Criterion_Maker::create_criterion(const Token_Node_
         attributes["polyline"] += it->first + "," + it->second + ",";
       attributes["polyline"].resize(attributes["polyline"].size()-1);
     }
-    return new Around_Statement(line_nr, attributes, global_settings);
+    return new Around_Statement(line_nr, attributes);
   }
   else if (error_output)
     error_output->add_parse_error("around requires the radius as first argument", line_nr);
@@ -449,7 +449,7 @@ Statement* Around_Statement::Criterion_Maker::create_criterion(const Token_Node_
 
 
 Around_Statement::Around_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;

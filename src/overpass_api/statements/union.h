@@ -29,14 +29,13 @@
 class Union_Statement : public Output_Statement
 {
   public:
-    Union_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                    Parsed_Query& global_settings);
+    Union_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes);
     virtual void add_statement(Statement* statement, std::string text);
     virtual std::string get_name() const { return "union"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Union_Statement() {}
 
-    static Generic_Statement_Maker< Union_Statement > statement_maker;
+    static Generic_Statement_Maker_2< Union_Statement > statement_maker;
 
     virtual std::string dump_xml(const std::string& indent) const
     {

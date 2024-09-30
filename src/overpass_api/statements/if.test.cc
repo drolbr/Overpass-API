@@ -44,21 +44,21 @@ void execute_base_test_case(const std::map< std::string, std::string >& id_attri
 {
   Statement_Container stmt_cont(global_settings);
 
-  Id_Query_Statement(0, id_attributes, global_settings).execute(rman);
+  Id_Query_Statement(0, id_attributes).execute(rman);
   {
-    If_Statement stmt(0, Attr().kvs(), global_settings);
+    If_Statement stmt(0, Attr().kvs());
     stmt.add_statement(&condition, "");
-    stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "way")("ref", "2").kvs(), global_settings), &stmt);
+    stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "way")("ref", "2").kvs()), &stmt);
 
     if (add_else)
     {
-      stmt_cont.add_stmt(new Else_Statement(0, Attr().kvs(), global_settings), &stmt);
-      stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "way")("ref", "4").kvs(), global_settings),
+      stmt_cont.add_stmt(new Else_Statement(0, Attr().kvs()), &stmt);
+      stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "way")("ref", "4").kvs()),
           &stmt);
     }
     stmt.execute(rman);
   }
-  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+  Print_Statement(0, Attr().kvs()).execute(rman);
 }
 
 
@@ -86,8 +86,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
-      Evaluator_Min_Value stmt0(0, Attr().kvs(), global_settings);
-      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), &stmt0);
+      Evaluator_Min_Value stmt0(0, Attr().kvs());
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), &stmt0);
 
       execute_base_test_case(Attr()("type", "way")("ref", "1").kvs(), stmt0, rman, global_settings, false);
     }
@@ -105,12 +105,12 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
-      Evaluator_Not_Equal stmt0(0, Attr().kvs(), global_settings);
+      Evaluator_Not_Equal stmt0(0, Attr().kvs());
 
       Statement* stmt01 =
-          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr().kvs(), global_settings), &stmt0);
-      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), stmt01);
-      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs(), global_settings), &stmt0);
+          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr().kvs()), &stmt0);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), stmt01);
+      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs()), &stmt0);
 
       execute_base_test_case(Attr()("type", "way")("ref", "1").kvs(), stmt0, rman, global_settings, false);
     }
@@ -128,8 +128,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
-      Evaluator_Min_Value stmt0(0, Attr()("from", "a").kvs(), global_settings);
-      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), &stmt0);
+      Evaluator_Min_Value stmt0(0, Attr()("from", "a").kvs());
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), &stmt0);
 
       execute_base_test_case(Attr()("type", "way")("ref", "1")("into", "a").kvs(), stmt0,
           rman, global_settings, false);
@@ -148,13 +148,13 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
-      Id_Query_Statement(0, Attr()("type", "way")("ref", "3").kvs(), global_settings).execute(rman);
+      Id_Query_Statement(0, Attr()("type", "way")("ref", "3").kvs()).execute(rman);
 
-      Evaluator_Not_Equal stmt0(0, Attr().kvs(), global_settings);
+      Evaluator_Not_Equal stmt0(0, Attr().kvs());
       Statement* stmt01 =
-          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr()("from", "a").kvs(), global_settings), &stmt0);
-      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), stmt01);
-      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs(), global_settings), &stmt0);
+          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr()("from", "a").kvs()), &stmt0);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), stmt01);
+      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs()), &stmt0);
 
       execute_base_test_case(Attr()("type", "way")("ref", "1")("into", "a").kvs(), stmt0,
           rman, global_settings, false);
@@ -173,8 +173,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
-      Evaluator_Min_Value stmt0(0, Attr().kvs(), global_settings);
-      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), &stmt0);
+      Evaluator_Min_Value stmt0(0, Attr().kvs());
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), &stmt0);
 
       execute_base_test_case(Attr()("type", "way")("ref", "1").kvs(), stmt0, rman, global_settings, true);
     }
@@ -192,12 +192,12 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
-      Evaluator_Not_Equal stmt0(0, Attr().kvs(), global_settings);
+      Evaluator_Not_Equal stmt0(0, Attr().kvs());
 
       Statement* stmt01 =
-          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr().kvs(), global_settings), &stmt0);
-      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), stmt01);
-      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs(), global_settings), &stmt0);
+          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr().kvs()), &stmt0);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs()), stmt01);
+      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs()), &stmt0);
 
       execute_base_test_case(Attr()("type", "way")("ref", "1").kvs(), stmt0, rman, global_settings, true);
     }

@@ -39,8 +39,8 @@ void perform_polygon_print(std::string bounds, Transaction& transaction)
     global_settings.set_output_handler(
         Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
     Resource_Manager rman(transaction, &global_settings);
-    Polygon_Query_Statement(0, { { "bounds", bounds } }, global_settings).execute(rman);
-    Print_Statement(0, { { "mode", "body" } , { "order", "id" } }, global_settings).execute(rman);
+    Polygon_Query_Statement(0, { { "bounds", bounds } }).execute(rman);
+    Print_Statement(0, { { "mode", "body" } , { "order", "id" } }).execute(rman);
   }
   catch (File_Error e)
   {
@@ -63,12 +63,12 @@ void perform_query_polygon_print(std::string bounds, std::string type, Transacti
     Statement_Container cont(global_settings);
     {
       Query_Statement stmt1(0, { { "type", type } }, global_settings);
-      cont.create_stmt< Polygon_Query_Statement >({ { "bounds", bounds } }, &stmt1);
+      cont.create_stmt_2< Polygon_Query_Statement >({ { "bounds", bounds } }, &stmt1);
       if (type == "node")
-        cont.create_stmt< Has_Kv_Statement >({ { "k", "node_key_5" } }, &stmt1);
+        cont.create_stmt_2< Has_Kv_Statement >({ { "k", "node_key_5" } }, &stmt1);
       stmt1.execute(rman);
     }
-    Print_Statement(0, { { "mode", "body" }, { "order", "id" } }, global_settings).execute(rman);
+    Print_Statement(0, { { "mode", "body" }, { "order", "id" } }).execute(rman);
   }
   catch (File_Error e)
   {

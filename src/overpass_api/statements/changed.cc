@@ -77,7 +77,7 @@ Statement* Changed_Statement::Criterion_Maker::create_criterion(const Token_Node
   std::map< std::string, std::string > attributes;
   attributes["since"] = since;
   attributes["until"] = until;
-  return new Changed_Statement(line_nr, attributes, global_settings);
+  return new Changed_Statement(line_nr, attributes);
 }
 
 
@@ -270,7 +270,7 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into)
 //-----------------------------------------------------------------------------
 
 Changed_Statement::Changed_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_), since(NOW), until(NOW), behave_trivial(false)
 {
   std::map< std::string, std::string > attributes;

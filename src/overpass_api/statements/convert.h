@@ -60,13 +60,12 @@ each of which must be one the following
 class Convert_Statement : public Output_Statement
 {
 public:
-  Convert_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                   Parsed_Query& global_settings);
+  Convert_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
   virtual std::string get_name() const { return "convert"; }
   virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman);
   virtual ~Convert_Statement();
-  static Generic_Statement_Maker< Convert_Statement > statement_maker;
+  static Generic_Statement_Maker_2< Convert_Statement > statement_maker;
 
   std::string get_source_name() const { return input; }
 

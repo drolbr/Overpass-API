@@ -57,7 +57,7 @@ void evaluate_grid(double south, double north, double west, double east,
 	std::string s_lat = v_lat.str();
 	std::string s_lon = v_lon.str();
 	const char* attributes[] = { "lat", s_lat.c_str(), "lon", s_lon.c_str(), 0 };
-	Coord_Query_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
+	Coord_Query_Statement stmt1(0, convert_c_pairs(attributes));
         stmt1.execute(rman);
       }
       uint area_count = 0;
@@ -74,7 +74,7 @@ void evaluate_grid(double south, double north, double west, double east,
 	areas_printed = true;
 
 	const char* attributes[] = { 0 };
-	Print_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
+	Print_Statement stmt1(0, convert_c_pairs(attributes));
 	stmt1.execute(rman);
       }
     }
@@ -115,41 +115,41 @@ int main(int argc, char* args[])
   {
     Statement_Container cont(global_settings);
     {
-      Union_Statement stmt3(0, {}, global_settings);
+      Union_Statement stmt3(0, {});
       {
-        Statement* stmt1 = cont.create_stmt< Query_Statement >({ { "type", "way" } }, &stmt3);
-        cont.create_stmt< Has_Kv_Statement >({ { "k", "triangle" } }, stmt1);
+        Statement* stmt1 = cont.create_stmt_3< Query_Statement >({ { "type", "way" } }, &stmt3);
+        cont.create_stmt_2< Has_Kv_Statement >({ { "k", "triangle" } }, stmt1);
       }
       {
-        Statement* stmt1 = cont.create_stmt< Query_Statement >({ { "type", "way" } }, &stmt3);
-        cont.create_stmt< Has_Kv_Statement >({ { "k", "shapes" } }, stmt1);
+        Statement* stmt1 = cont.create_stmt_3< Query_Statement >({ { "type", "way" } }, &stmt3);
+        cont.create_stmt_2< Has_Kv_Statement >({ { "k", "shapes" } }, stmt1);
       }
       stmt3.execute(rman);
     }
     {
-      Foreach_Statement stmt1(0, { { "into", "way" } }, global_settings);
+      Foreach_Statement stmt1(0, { { "into", "way" } });
       {
-        Statement* stmt2 = cont.create_stmt< Union_Statement >({}, &stmt1);
-        cont.create_stmt< Recurse_Statement >({ { "type", "way-node" }, { "from", "way" } }, stmt2);
-        cont.create_stmt< Item_Statement >({ { "set", "way" } }, stmt2);
+        Statement* stmt2 = cont.create_stmt_2< Union_Statement >({}, &stmt1);
+        cont.create_stmt_2< Recurse_Statement >({ { "type", "way-node" }, { "from", "way" } }, stmt2);
+        cont.create_stmt_2< Item_Statement >({ { "set", "way" } }, stmt2);
       }
-      cont.create_stmt< Make_Area_Statement >({ { "pivot", "way" } }, &stmt1);
+      cont.create_stmt_2< Make_Area_Statement >({ { "pivot", "way" } }, &stmt1);
       stmt1.execute(rman);
     }
 
     {
       Query_Statement stmt1(0, { { "type", "relation" } }, global_settings);
-      cont.create_stmt< Has_Kv_Statement >({ { "k", "multpoly" } }, &stmt1);
+      cont.create_stmt_2< Has_Kv_Statement >({ { "k", "multpoly" } }, &stmt1);
       stmt1.execute(rman);
     }
     {
-      Foreach_Statement stmt1(0, { { "into", "pivot" } }, global_settings);
+      Foreach_Statement stmt1(0, { { "into", "pivot" } });
       {
-        Statement* stmt2 = cont.create_stmt< Union_Statement >({}, &stmt1);
-        cont.create_stmt< Recurse_Statement >({ { "type", "relation-way" }, { "from", "pivot" } }, stmt2);
-        cont.create_stmt< Recurse_Statement >({ { "type", "way-node" } }, stmt2);
+        Statement* stmt2 = cont.create_stmt_2< Union_Statement >({}, &stmt1);
+        cont.create_stmt_2< Recurse_Statement >({ { "type", "relation-way" }, { "from", "pivot" } }, stmt2);
+        cont.create_stmt_2< Recurse_Statement >({ { "type", "way-node" } }, stmt2);
       }
-      cont.create_stmt< Make_Area_Statement >({ { "pivot", "pivot" } }, &stmt1);
+      cont.create_stmt_2< Make_Area_Statement >({ { "pivot", "pivot" } }, &stmt1);
       stmt1.execute(rman);
     }
   }
@@ -198,12 +198,12 @@ int main(int argc, char* args[])
   {
     {
       const char* attributes[] = { "ref", "2400000121", 0 };
-      Area_Query_Statement* stmt1 = new Area_Query_Statement(0, convert_c_pairs(attributes), global_settings);
+      Area_Query_Statement* stmt1 = new Area_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
   }

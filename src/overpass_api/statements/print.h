@@ -75,13 +75,13 @@ Default is no limit.
 class Print_Statement : public Statement
 {
   public:
-    Print_Statement(int line_number_, const std::map< std::string, std::string >& attributes, Parsed_Query& global_settings);
+    Print_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual std::string get_name() const { return "print"; }
     virtual std::string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Print_Statement();
 
-    static Generic_Statement_Maker< Print_Statement > statement_maker;
+    static Generic_Statement_Maker_2< Print_Statement > statement_maker;
 
     static std::string mode_string_xml(Output_Mode mode)
     {

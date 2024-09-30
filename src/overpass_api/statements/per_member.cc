@@ -39,7 +39,7 @@ Per_Member_Aggregator_Maker< Evaluator_Per_Member > Evaluator_Per_Member::evalua
 
 
 Evaluator_Per_Member::Evaluator_Per_Member
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Per_Member_Aggregator_Syntax< Evaluator_Per_Member >(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -118,7 +118,7 @@ Per_Member_Aggregator_Maker< Evaluator_Per_Vertex > Evaluator_Per_Vertex::evalua
 
 
 Evaluator_Per_Vertex::Evaluator_Per_Vertex
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Per_Member_Aggregator_Syntax< Evaluator_Per_Vertex >(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -175,7 +175,7 @@ Member_Function_Maker< Evaluator_Pos > Evaluator_Pos::evaluator_maker;
 
 
 Evaluator_Pos::Evaluator_Pos
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -189,7 +189,7 @@ Member_Function_Maker< Evaluator_Ref > Evaluator_Ref::evaluator_maker;
 
 
 Evaluator_Ref::Evaluator_Ref
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -203,7 +203,7 @@ Member_Function_Maker< Evaluator_Membertype > Evaluator_Membertype::evaluator_ma
 
 
 Evaluator_Membertype::Evaluator_Membertype
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -217,7 +217,7 @@ Member_Function_Maker< Evaluator_Role > Evaluator_Role::evaluator_maker;
 
 
 Evaluator_Role::Evaluator_Role
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -231,7 +231,7 @@ Member_Function_Maker< Evaluator_Angle > Evaluator_Angle::evaluator_maker;
 
 
 Evaluator_Angle::Evaluator_Angle
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;

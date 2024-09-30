@@ -63,17 +63,16 @@ where <Evaluator> is an evaulator and <List of Substatements> is a list of subst
 class If_Statement : public Statement
 {
 public:
-  If_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                     Parsed_Query& global_settings);
+  If_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
   virtual void add_statement(Statement* statement, std::string text);
   virtual std::string get_name() const { return "if"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman);
   virtual ~If_Statement() {}
 
-  struct Statement_Maker : public Generic_Statement_Maker< If_Statement >
+  struct Statement_Maker : public Generic_Statement_Maker_2< If_Statement >
   {
-    Statement_Maker() : Generic_Statement_Maker< If_Statement >("if") {}
+    Statement_Maker() : Generic_Statement_Maker_2< If_Statement >("if") {}
   };
   static Statement_Maker statement_maker;
 
@@ -146,15 +145,14 @@ private:
 class Else_Statement : public Statement
 {
 public:
-  Else_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                     Parsed_Query& global_settings) : Statement(line_number_) {}
+  Else_Statement(int line_number_, const std::map< std::string, std::string >& attributes) : Statement(line_number_) {}
   virtual std::string get_name() const { return "else"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
 
-  struct Statement_Maker : public Generic_Statement_Maker< Else_Statement >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Else_Statement >
   {
-    Statement_Maker() : Generic_Statement_Maker< Else_Statement >("else") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Else_Statement >("else") {}
   };
   static Statement_Maker statement_maker;
 

@@ -30,7 +30,7 @@
 Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uint64 id)
 {
   Parsed_Query global_settings;
-  Id_Query_Statement(1, { {"type", type}, {"ref", std::to_string(id)} }, global_settings).execute(rman);
+  Id_Query_Statement(1, { {"type", type}, {"ref", std::to_string(id)} }).execute(rman);
   return rman;
 }
 
@@ -44,7 +44,7 @@ Resource_Manager& perform_multi_id_query(Resource_Manager& rman, std::string typ
     attributes["ref_" + std::to_string(i)] = std::to_string(ids[i]);
 
   Parsed_Query global_settings;
-  Id_Query_Statement(1, attributes, global_settings).execute(rman);
+  Id_Query_Statement(1, attributes).execute(rman);
   return rman;
 }
 
@@ -86,8 +86,8 @@ int main(int argc, char* args[])
       }
       total_rman.swap_set("_", total);
 
-      Recurse_Statement(2, { { "type", "way-node" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-node" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -113,8 +113,8 @@ int main(int argc, char* args[])
       }
       total_rman.swap_set("_", total);
 
-      Recurse_Statement(2, { { "type", "way-node" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-node" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -127,8 +127,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", 1 + global_node_offset);
 
-      Recurse_Statement(2, { { "type", "node-way" } }, global_settings).execute(rman);
-      Print_Statement(3, {}, global_settings).execute(rman);
+      Recurse_Statement(2, { { "type", "node-way" } }).execute(rman);
+      Print_Statement(3, {}).execute(rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -141,8 +141,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", pattern_size*pattern_size + pattern_size*3/2 + 2 + global_node_offset);
 
-      Recurse_Statement(2, { { "type", "node-way" } }, global_settings).execute(rman);
-      Print_Statement(3, {}, global_settings).execute(rman);
+      Recurse_Statement(2, { { "type", "node-way" } }).execute(rman);
+      Print_Statement(3, {}).execute(rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -177,8 +177,8 @@ int main(int argc, char* args[])
       }
       total_rman.swap_set("_", total);
 
-      Recurse_Statement(2, { { "type", "node-way" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "node-way" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -202,8 +202,8 @@ int main(int argc, char* args[])
       }
       total_rman.swap_set("_", total);
 
-      Recurse_Statement(2, { { "type", "relation-node" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "relation-node" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -216,8 +216,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", 2 + global_node_offset);
 
-      Recurse_Statement(2, { { "type", "node-relation" } }, global_settings).execute(rman);
-      Print_Statement(3, {}, global_settings).execute(rman);
+      Recurse_Statement(2, { { "type", "node-relation" } }).execute(rman);
+      Print_Statement(3, {}).execute(rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -230,8 +230,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 8);
 
-      Recurse_Statement(2, { { "type", "relation-way" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "relation-way" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -244,8 +244,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "way", 1);
 
-      Recurse_Statement(2, { { "type", "way-relation" } }, global_settings).execute(rman);
-      Print_Statement(3, {}, global_settings).execute(rman);
+      Recurse_Statement(2, { { "type", "way-relation" } }).execute(rman);
+      Print_Statement(3, {}).execute(rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -258,8 +258,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 10);
 
-      Recurse_Statement(2, { { "type", "relation-relation" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "relation-relation" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -272,8 +272,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 2);
 
-      Recurse_Statement(2, { { "type", "relation-backwards" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "relation-backwards" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -286,8 +286,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
 
-      Recurse_Statement(2, { { "type", "down" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "down" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -300,8 +300,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 6);
 
-      Recurse_Statement(2, { { "type", "down" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "down" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -314,8 +314,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
 
-      Recurse_Statement(2,  { { "type", "down-rel" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2,  { { "type", "down-rel" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -328,8 +328,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 10);
 
-      Recurse_Statement(2, { { "type", "down-rel" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "down-rel" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -342,8 +342,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", pattern_size + 2 + global_node_offset);
 
-      Recurse_Statement(2, { { "type", "up" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "up" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -356,8 +356,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
 
-      Recurse_Statement(2, { { "type", "up" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "up" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -370,8 +370,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", 2 + global_node_offset);
 
-      Recurse_Statement(2, { { "type", "up-rel" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "up-rel" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -384,8 +384,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 2);
 
-      Recurse_Statement(2, { { "type", "up-rel" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "up-rel" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -398,9 +398,9 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
       {
-      Recurse_Statement(2, { { "type", "up-rel" } }, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "up-rel" } }).execute(total_rman);
       }
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -413,8 +413,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
 
-      Recurse_Statement(2, { { "type", "down" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "down" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -427,8 +427,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
 
-      Recurse_Statement(2, { { "type", "down-rel" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "down-rel" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -441,8 +441,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
 
-      Recurse_Statement(2, { { "type", "relation-node" }, { "role", "one" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "relation-node" }, { "role", "one" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -466,8 +466,8 @@ int main(int argc, char* args[])
       }
       total_rman.swap_set("_", total);
 
-      Recurse_Statement(2, { { "type", "node-relation" }, { "role", "zero" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "node-relation" }, { "role", "zero" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -480,8 +480,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 7);
 
-      Recurse_Statement(2, { { "type", "relation-way" }, { "role", "two" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "relation-way" }, { "role", "two" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -494,8 +494,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
 
-      Recurse_Statement(2, { { "type", "way-relation" }, { "role", "two" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-relation" }, { "role", "two" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -508,8 +508,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
 
-      Recurse_Statement(2, { {"type", "relation-relation"}, {"role", "one"} }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { {"type", "relation-relation"}, {"role", "one"} }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -533,8 +533,8 @@ int main(int argc, char* args[])
       }
       total_rman.swap_set("_", total);
 
-      Recurse_Statement(2, { {"type", "relation-backwards"}, {"role", "one"} }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { {"type", "relation-backwards"}, {"role", "one"} }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -547,8 +547,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
-      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "1" }, { "upper", "4" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "1" }, { "upper", "4" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -561,8 +561,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
-      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "2" }, { "upper", "2" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "2" }, { "upper", "2" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -575,8 +575,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
-      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "4" }, { "upper", "4" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "4" }, { "upper", "4" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -589,8 +589,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
-      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "1" }, { "upper", "4" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "1" }, { "upper", "4" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -603,8 +603,8 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
-      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "2" }, { "upper", "2" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "2" }, { "upper", "2" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -619,8 +619,8 @@ int main(int argc, char* args[])
           { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,
             pattern_size/2*(pattern_size-1), pattern_size/2*(pattern_size-1)+1 });
 
-      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "1" }, { "upper", "1" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "1" }, { "upper", "1" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -635,8 +635,8 @@ int main(int argc, char* args[])
           { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,
             pattern_size/2*(pattern_size-1), pattern_size/2*(pattern_size-1)+1 });
 
-      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "2" }, { "upper", "2" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "2" }, { "upper", "2" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
@@ -651,8 +651,8 @@ int main(int argc, char* args[])
           { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,
             pattern_size/2*(pattern_size-1), pattern_size/2*(pattern_size-1)+1 });
 
-      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "3" }, { "upper", "65536" } }, global_settings).execute(total_rman);
-      Print_Statement(3, {}, global_settings).execute(total_rman);
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "3" }, { "upper", "65536" } }).execute(total_rman);
+      Print_Statement(3, {}).execute(total_rman);
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }

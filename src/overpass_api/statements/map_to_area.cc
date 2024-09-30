@@ -21,12 +21,12 @@
 #include "map_to_area.h"
 
 
-Generic_Statement_Maker< Map_To_Area_Statement > Map_To_Area_Statement::statement_maker("map-to-area");
+Generic_Statement_Maker_2< Map_To_Area_Statement > Map_To_Area_Statement::statement_maker("map-to-area");
 
 bool Map_To_Area_Statement::is_used_ = false;
 
 Map_To_Area_Statement::Map_To_Area_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   is_used_ = true;

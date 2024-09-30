@@ -206,7 +206,7 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
     else if (error_output)
       error_output->add_parse_error("A recursion of type '" + type + "' cannot have restrictions.", line_nr);
   }
-  return new Recurse_Statement(line_nr, attributes, global_settings);
+  return new Recurse_Statement(line_nr, attributes);
 }
 
 
@@ -241,7 +241,7 @@ Statement* Recurse_Statement::Criterion_Maker_2::create_criterion(const Token_No
   else
     return 0;
 
-  return new Recurse_Statement(line_nr, attributes, global_settings);
+  return new Recurse_Statement(line_nr, attributes);
 }
 
 
@@ -997,7 +997,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 //-----------------------------------------------------------------------------
 
 Recurse_Statement::Recurse_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_), restrict_to_role(false), lower(1), upper(0)
 {
   std::map< std::string, std::string > attributes;

@@ -95,14 +95,13 @@ resp.
 class Complete_Statement : public Output_Statement
 {
 public:
-  Complete_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                     Parsed_Query& global_settings);
+  Complete_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
   virtual void add_statement(Statement* statement, std::string text);
   virtual std::string get_name() const { return "complete"; }
   virtual void execute(Resource_Manager& rman);
   virtual ~Complete_Statement() {}
 
-  static Generic_Statement_Maker< Complete_Statement > statement_maker;
+  static Generic_Statement_Maker_2< Complete_Statement > statement_maker;
 
   virtual std::string dump_xml(const std::string& indent) const
   {

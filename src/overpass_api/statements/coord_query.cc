@@ -37,10 +37,10 @@
 
 bool Coord_Query_Statement::is_used_ = false;
 
-Generic_Statement_Maker< Coord_Query_Statement > Coord_Query_Statement::statement_maker("coord-query");
+Generic_Statement_Maker_2< Coord_Query_Statement > Coord_Query_Statement::statement_maker("coord-query");
 
 Coord_Query_Statement::Coord_Query_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   is_used_ = true;

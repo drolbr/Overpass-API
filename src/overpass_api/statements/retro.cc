@@ -20,11 +20,10 @@
 #include "retro.h"
 
 
-Generic_Statement_Maker< Retro_Statement > Retro_Statement::statement_maker("retro");
+Generic_Statement_Maker_2< Retro_Statement > Retro_Statement::statement_maker("retro");
 
 
-Retro_Statement::Retro_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+Retro_Statement::Retro_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Statement(line_number_), timestamp(0)
 {
   std::map< std::string, std::string > attributes;

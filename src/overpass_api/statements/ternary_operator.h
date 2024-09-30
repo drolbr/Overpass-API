@@ -120,8 +120,8 @@ struct Ternary_Evaluator : public Evaluator
   static std::string stmt_operator() { return "?"; }
   static std::string stmt_name() { return "eval-ternary"; }
 
-  Ternary_Evaluator(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings) : Evaluator(line_number_), condition(0), lhs(0), rhs(0),
+  Ternary_Evaluator(int line_number_, const std::map< std::string, std::string >& input_attributes)
+      : Evaluator(line_number_), condition(0), lhs(0), rhs(0),
       return_type_(Statement::string)
   {
     std::map< std::string, std::string > attributes;

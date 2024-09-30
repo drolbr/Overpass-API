@@ -27,7 +27,7 @@
 #include "print.h"
 
 
-Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_maker("osm-script");
+Generic_Statement_Maker_3< Osm_Script_Statement > Osm_Script_Statement::statement_maker("osm-script");
 
 
 int64 eval_number_with_suffix(const std::string& arg)
@@ -195,8 +195,12 @@ Osm_Script_Statement::Osm_Script_Statement
     comparison_timestamp = Timestamp(attributes["from"]).timestamp;
     if (comparison_timestamp == 0)
       add_static_error("The attribute \"from\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".");
-    else if (global_settings.get_output_handler() && !global_settings.get_output_handler()->supports_diff())
-      add_static_error("The selected output format does not support the diff or adiff mode.");
+    else
+    {
+      auto handler = dynamic_cast< Output_Handler* >(global_settings.get_output_handler());
+      if (handler && !handler->supports_diff())
+        add_static_error("The selected output format does not support the diff or adiff mode.");
+    }
   }
 
   if (attributes["augmented"] != "")
@@ -236,7 +240,12 @@ void Osm_Script_Statement::add_statement(Statement* statement, std::string text)
 void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
   rman.set_limits(max_allowed_time, max_allowed_space);
-  rman.get_global_settings().trigger_print_bounds();
+  if (rman.get_global_settings().get_global_bbox_limitation().valid())
+  {
+    auto handler = dynamic_cast< Output_Handler* >(rman.get_global_settings().get_output_handler());
+    if (handler)
+      handler->print_global_bbox(rman.get_global_settings().get_global_bbox_limitation());
+  }
 
   if (comparison_timestamp > 0)
   {

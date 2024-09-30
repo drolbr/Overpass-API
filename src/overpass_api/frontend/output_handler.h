@@ -22,6 +22,7 @@
 
 #include "../core/datatypes.h"
 #include "../core/geometry.h"
+#include "../core/parsed_query.h"
 #include "../core/type_meta.h"
 
 
@@ -49,7 +50,7 @@ struct Output_Mode
 const std::string& member_type_name(uint32 type);
 
 
-class Output_Handler
+class Output_Handler : public Output_Handler_Params
 {
 public:
   enum Feature_Action { keep, show_from, show_to, modify, push_away, pull_in, erase, create };

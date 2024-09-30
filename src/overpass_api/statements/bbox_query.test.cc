@@ -39,8 +39,8 @@ void perform_bbox_print(std::string south, std::string north, std::string west, 
     // of only one bbox.
     Resource_Manager rman(transaction, &global_settings);
     Bbox_Query_Statement(
-        0, { { "s", south }, { "n", north }, { "w", west }, { "e", east } }, global_settings).execute(rman);
-    Print_Statement(0, { { "mode", "body" }, { "order", "id" } }, global_settings).execute(rman);
+        0, { { "s", south }, { "n", north }, { "w", west }, { "e", east } }).execute(rman);
+    Print_Statement(0, { { "mode", "body" }, { "order", "id" } }).execute(rman);
   }
   catch (File_Error e)
   {

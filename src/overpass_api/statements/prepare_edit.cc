@@ -19,11 +19,11 @@
 #include "prepare_edit.h"
 
 
-Generic_Statement_Maker< Prepare_Edit > Prepare_Edit::statement_maker("prepare-edit");
+Generic_Statement_Maker_2< Prepare_Edit > Prepare_Edit::statement_maker("prepare-edit");
 
 
 Prepare_Edit::Prepare_Edit
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;

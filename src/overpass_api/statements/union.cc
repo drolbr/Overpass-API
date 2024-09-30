@@ -29,11 +29,10 @@
 #include "union.h"
 
 
-Generic_Statement_Maker< Union_Statement > Union_Statement::statement_maker("union");
+Generic_Statement_Maker_2< Union_Statement > Union_Statement::statement_maker("union");
 
 
-Union_Statement::Union_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+Union_Statement::Union_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;

@@ -19,16 +19,32 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__REQUEST_CONTEXT_H
 #define DE__OSM3S___OVERPASS_API__DATA__REQUEST_CONTEXT_H
 
-#include "../dispatch/resource_manager.h"
+
+#include "../../template_db/transaction.h"
+
+#include <string>
 
 
 class Statement;
 
 
+struct Request_Context_Iface
+{
+  virtual void log_and_display_error(const std::string& message) = 0;  
+  virtual bool health_check(const Statement& stmt, uint32 extra_time = 0, uint64 extra_space = 0) = 0;
+  virtual Transaction* get_transaction() = 0;
+  virtual uint64 get_desired_timestamp() const = 0;
+  virtual uint64 get_diff_from_timestamp() const = 0;
+  virtual uint64 get_diff_to_timestamp() const = 0;
+  
+  virtual ~Request_Context_Iface() {}
+};
+
+
 class Health_Guard
 {
 public:
-  Health_Guard(const Statement* stmt_, Resource_Manager& rman_) : stmt(stmt_), rman(rman_) {}
+  Health_Guard(const Statement* stmt_, Request_Context_Iface& rman_) : stmt(stmt_), rman(rman_) {}
 
   void log_and_display_error(const std::string& message) const { rman.log_and_display_error(message); }
   bool check(uint32 extra_time = 0, uint64 extra_space = 0)
@@ -36,14 +52,14 @@ public:
 
 private:
   const Statement* stmt;
-  Resource_Manager& rman;
+  Request_Context_Iface& rman;
 };
 
 
 class Request_Context
 {
 public:
-  Request_Context(const Statement* stmt_, Resource_Manager& rman_) : stmt(stmt_), rman(rman_) {}
+  Request_Context(const Statement* stmt_, Request_Context_Iface& rman_) : stmt(stmt_), rman(rman_) {}
 
   Health_Guard get_health_guard() { return Health_Guard(stmt, rman); }
   uint64 get_desired_timestamp() const { return rman.get_desired_timestamp(); }
@@ -56,7 +72,7 @@ public:
 
 private:
   const Statement* stmt;
-  Resource_Manager& rman;
+  Request_Context_Iface& rman;
 };
 
 

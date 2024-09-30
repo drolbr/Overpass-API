@@ -21,11 +21,11 @@
 #include "../data/meta_by_ref.h"
 
 
-Generic_Statement_Maker< Timeline_Statement > Timeline_Statement::statement_maker("timeline");
+Generic_Statement_Maker_2< Timeline_Statement > Timeline_Statement::statement_maker("timeline");
 
 
 Timeline_Statement::Timeline_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;

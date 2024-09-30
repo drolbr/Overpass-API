@@ -40,7 +40,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uin
   attributes[3] = id_.c_str();
   attributes[4] = 0;
 
-  Id_Query_Statement stmt(1, convert_c_pairs(attributes), global_settings);
+  Id_Query_Statement stmt(1, convert_c_pairs(attributes));
   stmt.execute(rman);
 
   return rman;
@@ -83,7 +83,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -94,7 +94,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "way", i);
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -105,7 +105,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "relation", i);
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -128,7 +128,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { "mode", "skeleton", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -139,7 +139,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "way", i);
 	{
 	  const char* attributes[] = { "mode", "skeleton", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -150,7 +150,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "relation", i);
 	{
 	  const char* attributes[] = { "mode", "skeleton", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -173,7 +173,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { "mode", "ids_only", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -184,7 +184,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "way", i);
 	{
 	  const char* attributes[] = { "mode", "ids_only", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -195,7 +195,7 @@ int main(int argc, char* args[])
 	perform_id_query(rman, "relation", i);
 	{
 	  const char* attributes[] = { "mode", "ids_only", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(2, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -240,7 +240,7 @@ int main(int argc, char* args[])
       total_rman.swap_set("_", total);
       {
 	const char* attributes[] = { "order", "id", 0 };
-	Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	Print_Statement stmt(2, convert_c_pairs(attributes));
 	stmt.execute(total_rman);
       }
     }
@@ -284,7 +284,7 @@ int main(int argc, char* args[])
       total_rman.swap_set("_", total);
       {
 	const char* attributes[] = { "order", "quadtile", 0 };
-	Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
+	Print_Statement stmt(2, convert_c_pairs(attributes));
 	stmt.execute(total_rman);
       }
     }

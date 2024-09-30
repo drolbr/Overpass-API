@@ -36,7 +36,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uin
   std::ostringstream buf("");
   buf<<id;
 
-  Id_Query_Statement(1, Attr()("type", type)("ref", buf.str()).kvs(), global_settings).execute(rman);
+  Id_Query_Statement(1, Attr()("type", type)("ref", buf.str()).kvs()).execute(rman);
 
   return rman;
 }
@@ -115,8 +115,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
 
-      Foreach_Statement stmt(0, Attr().kvs(), global_settings);
-      stmt_cont.add_stmt(new Print_Statement(0, Attr().kvs(), global_settings), &stmt);
+      Foreach_Statement stmt(0, Attr().kvs());
+      stmt_cont.add_stmt(new Print_Statement(0, Attr().kvs()), &stmt);
       stmt.execute(rman);
     }
     if ((test_to_execute == "") || (test_to_execute == "2"))
@@ -125,8 +125,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
 
-      Foreach_Statement(0, Attr().kvs(), global_settings).execute(rman);
-      Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+      Foreach_Statement(0, Attr().kvs()).execute(rman);
+      Print_Statement(0, Attr().kvs()).execute(rman);
     }
     if ((test_to_execute == "") || (test_to_execute == "3"))
     {
@@ -134,8 +134,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
 
-      Foreach_Statement stmt(0, Attr()("from", "A")("into", "B").kvs(), global_settings);
-      stmt_cont.add_stmt(new Print_Statement(0, Attr()("from", "B").kvs(), global_settings), &stmt);
+      Foreach_Statement stmt(0, Attr()("from", "A")("into", "B").kvs());
+      stmt_cont.add_stmt(new Print_Statement(0, Attr()("from", "B").kvs()), &stmt);
       stmt.execute(rman);
     }
     if ((test_to_execute == "") || (test_to_execute == "4"))
@@ -144,8 +144,8 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
 
-      Foreach_Statement(0, Attr()("from", "A")("into", "B").kvs(), global_settings).execute(rman);
-      Print_Statement(0, Attr()("from", "A").kvs(), global_settings).execute(rman);
+      Foreach_Statement(0, Attr()("from", "A")("into", "B").kvs()).execute(rman);
+      Print_Statement(0, Attr()("from", "A").kvs()).execute(rman);
     }
   }
   catch (File_Error e)

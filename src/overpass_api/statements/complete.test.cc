@@ -45,21 +45,21 @@ void fill_set_with_all_types(Resource_Manager& rman, uint64 global_node_offset,
     Parsed_Query& global_settings, const std::string& set_name)
 {
   const char* attributes[] = { "into", set_name.c_str(), 0 };
-  Union_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+  Union_Statement stmt(0, convert_c_pairs(attributes));
 
   std::string buf1 = to_string_(1 + global_node_offset);
   const char* attributes1[] = { "type", "node", "ref", buf1.c_str(), 0 };
-  Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+  Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
   stmt.add_statement(&stmt1, "");
 
   std::string buf2 = to_string_(2);
   const char* attributes2[] = { "type", "way", "ref", buf2.c_str(), 0 };
-  Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+  Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
   stmt.add_statement(&stmt2, "");
 
   std::string buf3 = to_string_(3);
   const char* attributes3[] = { "type", "relation", "ref", buf3.c_str(), 0 };
-  Id_Query_Statement stmt3(0, convert_c_pairs(attributes3), global_settings);
+  Id_Query_Statement stmt3(0, convert_c_pairs(attributes3));
   stmt.add_statement(&stmt3, "");
 
   stmt.execute(rman);
@@ -98,12 +98,12 @@ int main(int argc, char* args[])
 
 	{
 	  const char* attributes[] = { "from", "a", "into", "b", 0 };
-	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Complete_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
 	{
 	  const char* attributes[] = { "from", "b", 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -128,12 +128,12 @@ int main(int argc, char* args[])
 
 	{
 	  const char* attributes[] = { 0 };
-	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Complete_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -158,18 +158,18 @@ int main(int argc, char* args[])
 
 	{
 	  const char* attributes[] = { "from", "a", "into", "b", 0 };
-	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Complete_Statement stmt(0, convert_c_pairs(attributes));
 
           std::string buf1 = to_string_(global_node_offset);
           const char* attributes1[] = { "type", "node", "ref", buf1.c_str(), "into", "a", 0 };
-          Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+          Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
           stmt.add_statement(&stmt1, "");
 
 	  stmt.execute(rman);
 	}
 	{
 	  const char* attributes[] = { "from", "b", 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -194,18 +194,18 @@ int main(int argc, char* args[])
 
 	{
 	  const char* attributes[] = { 0 };
-	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Complete_Statement stmt(0, convert_c_pairs(attributes));
 
           std::string buf1 = to_string_(global_node_offset);
           const char* attributes1[] = { "type", "node", "ref", buf1.c_str(), 0 };
-          Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+          Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
           stmt.add_statement(&stmt1, "");
 
 	  stmt.execute(rman);
 	}
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -230,32 +230,32 @@ int main(int argc, char* args[])
 
 	{
 	  const char* attributes[] = { "into", "b", 0 };
-	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Complete_Statement stmt(0, convert_c_pairs(attributes));
 
           const char* attributes0[] = { 0 };
-          Union_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
+          Union_Statement stmt0(0, convert_c_pairs(attributes0));
           stmt.add_statement(&stmt0, "");
 
           std::string buf1 = to_string_(1 + global_node_offset);
           const char* attributes1[] = { "type", "node", "ref", buf1.c_str(), 0 };
-          Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+          Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
           stmt0.add_statement(&stmt1, "");
 
           std::string buf2 = to_string_(2);
           const char* attributes2[] = { "type", "way", "ref", buf2.c_str(), 0 };
-          Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+          Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
           stmt0.add_statement(&stmt2, "");
 
           std::string buf3 = to_string_(3);
           const char* attributes3[] = { "type", "relation", "ref", buf3.c_str(), 0 };
-          Id_Query_Statement stmt3(0, convert_c_pairs(attributes3), global_settings);
+          Id_Query_Statement stmt3(0, convert_c_pairs(attributes3));
           stmt0.add_statement(&stmt3, "");
 
 	  stmt.execute(rman);
 	}
 	{
 	  const char* attributes[] = { "from", "b", 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -280,22 +280,22 @@ int main(int argc, char* args[])
 
 	{
 	  const char* attributes[] = { 0 };
-	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Complete_Statement stmt(0, convert_c_pairs(attributes));
 
 	  const char* attributes0[] = { 0 };
-	  Print_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
+	  Print_Statement stmt0(0, convert_c_pairs(attributes0));
           stmt.add_statement(&stmt0, "");
 
           std::string buf1 = to_string_(4 + global_node_offset);
           const char* attributes1[] = { "type", "node", "ref", buf1.c_str(), 0 };
-          Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+          Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
           stmt.add_statement(&stmt1, "");
 
 	  stmt.execute(rman);
 	}
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }
@@ -320,14 +320,14 @@ int main(int argc, char* args[])
 
 	{
 	  const char* attributes[] = { 0 };
-	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Complete_Statement stmt(0, convert_c_pairs(attributes));
 
 	  const char* attributes0[] = { 0 };
-	  Print_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
+	  Print_Statement stmt0(0, convert_c_pairs(attributes0));
           stmt.add_statement(&stmt0, "");
 
           const char* attributes1[] = { "type", "way-node", 0 };
-          Recurse_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+          Recurse_Statement stmt1(0, convert_c_pairs(attributes1));
           stmt.add_statement(&stmt1, "");
 
           const char* attributes2[] = { "type", "way", 0 };
@@ -335,20 +335,20 @@ int main(int argc, char* args[])
           stmt.add_statement(&stmt2, "");
 
           const char* attributes21[] = { "type", "node-way", 0 };
-          Recurse_Statement stmt21(0, convert_c_pairs(attributes21), global_settings);
+          Recurse_Statement stmt21(0, convert_c_pairs(attributes21));
           stmt2.add_statement(&stmt21, "");
 
           std::string north = to_string_(51. + 10./pattern_size);
           std::string east = to_string_(7. + 10./pattern_size);
           const char* attributes22[] = { "s", "51.0", "w", "7.0", "n", north.c_str(), "e", east.c_str(), 0 };
-          Bbox_Query_Statement stmt22(0, convert_c_pairs(attributes22), global_settings);
+          Bbox_Query_Statement stmt22(0, convert_c_pairs(attributes22));
           stmt2.add_statement(&stmt22, "");
 
 	  stmt.execute(rman);
 	}
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+	  Print_Statement stmt(0, convert_c_pairs(attributes));
 	  stmt.execute(rman);
 	}
       }

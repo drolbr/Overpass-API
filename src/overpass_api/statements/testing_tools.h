@@ -56,7 +56,13 @@ struct Statement_Container
   Parsed_Query& global_settings() { return *global_settings_; }
 
   template< typename NewStatement >
-  Statement* create_stmt(const std::map< std::string, std::string >& attributes, Statement* parent)
+  Statement* create_stmt_2(const std::map< std::string, std::string >& attributes, Statement* parent)
+  {
+    return add_stmt(new NewStatement(0, attributes), parent);
+  }
+
+  template< typename NewStatement >
+  Statement* create_stmt_3(const std::map< std::string, std::string >& attributes, Statement* parent)
   {
     return add_stmt(new NewStatement(0, attributes, *global_settings_), parent);
   }

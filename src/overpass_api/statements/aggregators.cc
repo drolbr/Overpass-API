@@ -22,9 +22,7 @@
 
 
 Evaluator_Aggregator::Evaluator_Aggregator
-    (const std::string& func_name, int line_number_,
-     const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings)
+    (const std::string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_), rhs(0)
 {
   std::map< std::string, std::string > attributes;
@@ -422,7 +420,7 @@ Statement* Evaluator_Set_Count::Evaluator_Maker::create_evaluator(
 
   Objects to_count;
   if (try_parse_object_type(attributes["type"], to_count))
-    return new Evaluator_Set_Count(tree_it->line_col.first, attributes, global_settings);
+    return new Evaluator_Set_Count(tree_it->line_col.first, attributes);
   else if (error_output)
     error_output->add_parse_error(
         "\"count\" accepts only one of \"nodes\", \"ways\", \"relations\", \"deriveds\","
@@ -456,7 +454,7 @@ std::string Evaluator_Set_Count::to_string(Evaluator_Set_Count::Objects objects)
 
 
 Evaluator_Set_Count::Evaluator_Set_Count
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;

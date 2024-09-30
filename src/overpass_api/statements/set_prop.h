@@ -157,9 +157,9 @@ private:
 class Set_Prop_Statement : public Statement
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Set_Prop_Statement >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Set_Prop_Statement >
   {
-    Statement_Maker() : Generic_Statement_Maker< Set_Prop_Statement >("set-prop") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Set_Prop_Statement >("set-prop") {}
   };
   static Statement_Maker statement_maker;
 
@@ -179,8 +179,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const;
   virtual std::string dump_pretty_ql(const std::string&) const { return dump_compact_ql(""); }
 
-  Set_Prop_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Set_Prop_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "set-prop"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);

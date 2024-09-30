@@ -60,12 +60,11 @@ resp.
 class Timeline_Statement : public Output_Statement
 {
 public:
-  Timeline_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                     Parsed_Query& global_settings);
+  Timeline_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
   virtual std::string get_name() const { return "timeline"; }
   virtual void execute(Resource_Manager& rman);
 
-  static Generic_Statement_Maker< Timeline_Statement > statement_maker;
+  static Generic_Statement_Maker_2< Timeline_Statement > statement_maker;
 
   static std::string to_string(int type)
   {

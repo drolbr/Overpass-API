@@ -71,7 +71,7 @@ Statement* Id_Query_Statement::Criterion_Maker::create_criterion(const Token_Nod
     attributes[id.str()] = ref[i];
   }
 
-  return new Id_Query_Statement(line_nr, attributes, global_settings);
+  return new Id_Query_Statement(line_nr, attributes);
 }
 
 
@@ -239,7 +239,7 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
 //-----------------------------------------------------------------------------
 
 Id_Query_Statement::Id_Query_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;

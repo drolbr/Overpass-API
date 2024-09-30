@@ -415,12 +415,12 @@ Statement* Area_Query_Statement::Criterion_Maker::create_criterion(const Token_N
   attributes["from"] = from;
   attributes["into"] = into;
   attributes["ref"] = ref;
-  return new Area_Query_Statement(line_nr, attributes, global_settings);
+  return new Area_Query_Statement(line_nr, attributes);
 }
 
 
 Area_Query_Statement::Area_Query_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_), area_blocks_req_filled(false)
 {
   is_used_ = true;

@@ -31,16 +31,15 @@
 class Newer_Statement : public Statement
 {
 public:
-  Newer_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                    Parsed_Query& global_settings);
+  Newer_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "newer"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman);
   virtual ~Newer_Statement();
 
-  struct Statement_Maker : public Generic_Statement_Maker< Newer_Statement >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Newer_Statement >
   {
-    Statement_Maker() : Generic_Statement_Maker< Newer_Statement >("newer") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Newer_Statement >("newer") {}
   };
   static Statement_Maker statement_maker;
 

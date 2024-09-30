@@ -61,8 +61,7 @@ struct Evaluator_Aggregator : public Evaluator
 
 
   Evaluator_Aggregator(const std::string& func_name,
-      int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings);
+      int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman) {}
 
@@ -84,9 +83,9 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
 
 
 template< typename Evaluator_ >
-struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
+struct Aggregator_Statement_Maker : public Generic_Statement_Maker_2< Evaluator_ >
 {
-  Aggregator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+  Aggregator_Statement_Maker() : Generic_Statement_Maker_2< Evaluator_ >(Evaluator_::stmt_name()) {}
 };
 
 
@@ -103,7 +102,7 @@ struct Aggregator_Evaluator_Maker : Statement::Evaluator_Maker
         attributes["from"], input_set))
       return 0;
 
-    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes);
     if (result)
     {
       Statement* rhs = stmt_factory.create_evaluator(
@@ -128,9 +127,8 @@ struct Aggregator_Evaluator_Maker : Statement::Evaluator_Maker
 template< typename Evaluator_ >
 struct Evaluator_Aggregator_Syntax : public Evaluator_Aggregator
 {
-  Evaluator_Aggregator_Syntax(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings)
-      : Evaluator_Aggregator(Evaluator_::stmt_name(), line_number_, input_attributes, global_settings) {}
+  Evaluator_Aggregator_Syntax(int line_number_, const std::map< std::string, std::string >& input_attributes)
+      : Evaluator_Aggregator(Evaluator_::stmt_name(), line_number_, input_attributes) {}
 
   virtual std::string dump_xml(const std::string& indent) const
   {
@@ -187,9 +185,8 @@ public:
   static std::string stmt_name() { return "eval-union"; }
   static Statement::Eval_Return_Type argument_type() { return Statement::string; };
 
-  Evaluator_Union_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings)
-      : Evaluator_Aggregator_Syntax< Evaluator_Union_Value >(line_number_, input_attributes, global_settings) {}
+  Evaluator_Union_Value(int line_number_, const std::map< std::string, std::string >& input_attributes)
+      : Evaluator_Aggregator_Syntax< Evaluator_Union_Value >(line_number_, input_attributes) {}
 
   struct Aggregator : Value_Aggregator
   {
@@ -211,9 +208,8 @@ public:
   static std::string stmt_name() { return "eval-set"; }
   static Statement::Eval_Return_Type argument_type() { return Statement::string; };
 
-  Evaluator_Set_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings)
-      : Evaluator_Aggregator_Syntax< Evaluator_Set_Value >(line_number_, input_attributes, global_settings) {}
+  Evaluator_Set_Value(int line_number_, const std::map< std::string, std::string >& input_attributes)
+      : Evaluator_Aggregator_Syntax< Evaluator_Set_Value >(line_number_, input_attributes) {}
 
   struct Aggregator : Value_Aggregator
   {
@@ -261,9 +257,8 @@ public:
   static std::string stmt_name() { return "eval-min"; }
   static Statement::Eval_Return_Type argument_type() { return Statement::string; };
 
-  Evaluator_Min_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings)
-      : Evaluator_Aggregator_Syntax< Evaluator_Min_Value >(line_number_, input_attributes, global_settings) {}
+  Evaluator_Min_Value(int line_number_, const std::map< std::string, std::string >& input_attributes)
+      : Evaluator_Aggregator_Syntax< Evaluator_Min_Value >(line_number_, input_attributes) {}
 
   struct Aggregator : Value_Aggregator
   {
@@ -290,9 +285,8 @@ public:
   static std::string stmt_name() { return "eval-umax"; }
   static Statement::Eval_Return_Type argument_type() { return Statement::string; };
 
-  Evaluator_Max_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings)
-      : Evaluator_Aggregator_Syntax< Evaluator_Max_Value >(line_number_, input_attributes, global_settings) {}
+  Evaluator_Max_Value(int line_number_, const std::map< std::string, std::string >& input_attributes)
+      : Evaluator_Aggregator_Syntax< Evaluator_Max_Value >(line_number_, input_attributes) {}
 
   struct Aggregator : Value_Aggregator
   {
@@ -334,9 +328,8 @@ public:
   static std::string stmt_name() { return "eval-sum"; }
   static Statement::Eval_Return_Type argument_type() { return Statement::string; };
 
-  Evaluator_Sum_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings)
-      : Evaluator_Aggregator_Syntax< Evaluator_Sum_Value >(line_number_, input_attributes, global_settings) {}
+  Evaluator_Sum_Value(int line_number_, const std::map< std::string, std::string >& input_attributes)
+      : Evaluator_Aggregator_Syntax< Evaluator_Sum_Value >(line_number_, input_attributes) {}
 
   struct Aggregator : Value_Aggregator
   {
@@ -388,9 +381,9 @@ public:
   static std::string to_string(Objects objects);
   static bool try_parse_object_type(const std::string& input, Evaluator_Set_Count::Objects& result);
 
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Count >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Set_Count >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Set_Count >("eval-set-count") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Set_Count >("eval-set-count") {}
   };
   static Statement_Maker statement_maker;
 
@@ -407,8 +400,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return (input != "_" ? input + "." : "") + "count(" + to_string(to_count) + ")"; }
 
-  Evaluator_Set_Count(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Set_Count(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-set-count"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -450,10 +442,8 @@ public:
   static std::string stmt_name() { return "eval-geom-concat"; }
   static Statement::Eval_Return_Type argument_type() { return Statement::geometry; };
 
-  Evaluator_Geom_Concat_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings)
-      : Evaluator_Aggregator_Syntax< Evaluator_Geom_Concat_Value >(
-          line_number_, input_attributes, global_settings) {}
+  Evaluator_Geom_Concat_Value(int line_number_, const std::map< std::string, std::string >& input_attributes)
+      : Evaluator_Aggregator_Syntax< Evaluator_Geom_Concat_Value >(line_number_, input_attributes) {}
 
   struct Aggregator : Geometry_Aggregator
   {

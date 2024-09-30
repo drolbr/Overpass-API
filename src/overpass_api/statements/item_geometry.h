@@ -74,9 +74,9 @@ struct Is_Closed_Eval_Task : public Eval_Task
 class Evaluator_Is_Closed : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Is_Closed >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Is_Closed >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Is_Closed >("eval-is-closed") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Is_Closed >("eval-is-closed") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Is_Closed > evaluator_maker;
@@ -85,8 +85,7 @@ public:
   virtual std::string dump_xml(const std::string& indent) const { return indent + "<eval-is-closed/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "is_closed()"; }
 
-  Evaluator_Is_Closed(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Is_Closed(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-is-closed"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -138,9 +137,9 @@ struct Geometry_Geometry_Task : Eval_Geometry_Task
 class Evaluator_Geometry : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Geometry >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Geometry >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Geometry >("eval-geometry") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Geometry >("eval-geometry") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Geometry > evaluator_maker;
@@ -151,8 +150,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "geom(\"\")"; }
 
-  Evaluator_Geometry(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Geometry(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-geometry"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -209,9 +207,9 @@ struct Length_Eval_Task : public Eval_Task
 class Evaluator_Length : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Length >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Length >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Length >("eval-length") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Length >("eval-length") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Length > evaluator_maker;
@@ -222,8 +220,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "length()"; }
 
-  Evaluator_Length(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Length(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-length"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -288,9 +285,9 @@ struct Latitude_Eval_Task : public Eval_Task
 class Evaluator_Latitude : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Latitude >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Latitude >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Latitude >("eval-lat") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Latitude >("eval-lat") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Latitude > evaluator_maker;
@@ -301,8 +298,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "lat()"; }
 
-  Evaluator_Latitude(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Latitude(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-lat"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
@@ -352,9 +348,9 @@ struct Longitude_Eval_Task : public Eval_Task
 class Evaluator_Longitude : public Evaluator
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Longitude >
+  struct Statement_Maker : public Generic_Statement_Maker_2< Evaluator_Longitude >
   {
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Longitude >("eval-lon") {}
+    Statement_Maker() : Generic_Statement_Maker_2< Evaluator_Longitude >("eval-lon") {}
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Longitude > evaluator_maker;
@@ -365,8 +361,7 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return "lon()"; }
 
-  Evaluator_Longitude(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Longitude(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-lon"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}

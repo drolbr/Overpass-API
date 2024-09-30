@@ -22,10 +22,10 @@
 #include "set_prop.h"
 
 
-Generic_Statement_Maker< Make_Statement > Make_Statement::statement_maker("make");
+Generic_Statement_Maker_2< Make_Statement > Make_Statement::statement_maker("make");
 
 Make_Statement::Make_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_), geom_evaluator(0), id_evaluator(0), multi_evaluator(0)
 {
   std::map< std::string, std::string > attributes;

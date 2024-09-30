@@ -79,7 +79,7 @@ class Query_Statement : public Output_Statement
     virtual std::string get_name() const { return "query"; }
     virtual void execute(Resource_Manager& rman);
 
-    static Generic_Statement_Maker< Query_Statement > statement_maker;
+    static Generic_Statement_Maker_3< Query_Statement > statement_maker;
 
     static bool area_query_exists() { return area_query_exists_; }
 
@@ -202,14 +202,13 @@ class Query_Statement : public Output_Statement
 class Has_Kv_Statement : public Statement
 {
   public:
-    Has_Kv_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
-                     Parsed_Query& global_settings);
+    Has_Kv_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes);
     virtual std::string get_name() const { return "has-kv"; }
     virtual std::string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman) {}
     virtual ~Has_Kv_Statement();
 
-    static Generic_Statement_Maker< Has_Kv_Statement > statement_maker;
+    static Generic_Statement_Maker_2< Has_Kv_Statement > statement_maker;
 
     std::string get_key() const { return key_regex ? "" : key; }
     Regular_Expression* get_key_regex() { return key_regex; }

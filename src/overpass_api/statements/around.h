@@ -56,15 +56,14 @@ struct Prepared_Point
 class Around_Statement : public Output_Statement
 {
   public:
-    Around_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                     Parsed_Query& global_settings);
+    Around_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual std::string get_name() const { return "around"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Around_Statement();
 
-    struct Statement_Maker : public Generic_Statement_Maker< Around_Statement >
+    struct Statement_Maker : public Generic_Statement_Maker_2< Around_Statement >
     {
-      Statement_Maker() : Generic_Statement_Maker< Around_Statement >("around") {}
+      Statement_Maker() : Generic_Statement_Maker_2< Around_Statement >("around") {}
     };
     static Statement_Maker statement_maker;
 

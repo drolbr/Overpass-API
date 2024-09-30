@@ -26,7 +26,7 @@ Element_Function_Maker< Evaluator_Is_Closed > Evaluator_Is_Closed::evaluator_mak
 
 
 Evaluator_Is_Closed::Evaluator_Is_Closed
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -43,7 +43,7 @@ Element_Function_Maker< Evaluator_Geometry > Evaluator_Geometry::evaluator_maker
 
 
 Evaluator_Geometry::Evaluator_Geometry
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -59,7 +59,7 @@ Element_Function_Maker< Evaluator_Length > Evaluator_Length::evaluator_maker;
 
 
 Evaluator_Length::Evaluator_Length
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -75,7 +75,7 @@ Element_Function_Maker< Evaluator_Latitude > Evaluator_Latitude::evaluator_maker
 
 
 Evaluator_Latitude::Evaluator_Latitude
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -88,7 +88,7 @@ Element_Function_Maker< Evaluator_Longitude > Evaluator_Longitude::evaluator_mak
 
 
 Evaluator_Longitude::Evaluator_Longitude
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;

@@ -31,12 +31,11 @@
 class Prepare_Edit : public Output_Statement
 {
 public:
-  Prepare_Edit(int line_number_, const std::map< std::string, std::string >& attributes,
-                   Parsed_Query& global_settings);
+  Prepare_Edit(int line_number_, const std::map< std::string, std::string >& attributes);
   virtual std::string get_name() const { return "prepare-edit"; }
   virtual void execute(Resource_Manager& rman);
   virtual ~Prepare_Edit();
-  static Generic_Statement_Maker< Prepare_Edit > statement_maker;
+  static Generic_Statement_Maker_2< Prepare_Edit > statement_maker;
 
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<prepare-edit" + dump_xml_result_name() + " type=\"" + type + "\"/>\n"; }

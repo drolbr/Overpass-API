@@ -141,7 +141,7 @@ Statement* Newer_Statement::Criterion_Maker::create_criterion(const Token_Node_P
   {
     std::map< std::string, std::string > attributes;
     attributes["than"] = decode_json(tree_it.rhs()->token, error_output);
-    return new Newer_Statement(line_nr, attributes, global_settings);
+    return new Newer_Statement(line_nr, attributes);
   }
 
   return 0;
@@ -149,7 +149,7 @@ Statement* Newer_Statement::Criterion_Maker::create_criterion(const Token_Node_P
 
 
 Newer_Statement::Newer_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Statement(line_number_), than_timestamp(0)
 {
   std::map< std::string, std::string > attributes;

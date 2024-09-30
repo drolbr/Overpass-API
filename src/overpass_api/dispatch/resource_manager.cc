@@ -620,7 +620,7 @@ void Resource_Manager::count_loop()
 }
 
 
-void Resource_Manager::log_and_display_error(std::string message)
+void Resource_Manager::log_and_display_error(const std::string& message)
 {
   if (error_output)
     error_output->runtime_error(message);

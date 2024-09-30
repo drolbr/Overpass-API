@@ -30,13 +30,12 @@
 class Item_Statement : public Output_Statement
 {
   public:
-    Item_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
-                   Parsed_Query& global_settings);
+    Item_Statement(int line_number_, const std::map< std::string, std::string >& attributes);
     virtual std::string get_name() const { return "item"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Item_Statement();
 
-    static Generic_Statement_Maker< Item_Statement > statement_maker;
+    static Generic_Statement_Maker_2< Item_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
 

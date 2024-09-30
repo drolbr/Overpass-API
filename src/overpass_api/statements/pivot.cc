@@ -43,7 +43,7 @@ Statement* Pivot_Statement::Criterion_Maker::create_criterion(const Token_Node_P
   std::map< std::string, std::string > attributes;
   attributes["from"] = from;
   attributes["into"] = into;
-  return new Pivot_Statement(line_nr, attributes, global_settings);
+  return new Pivot_Statement(line_nr, attributes);
 }
 
 
@@ -290,7 +290,7 @@ void Pivot_Constraint::filter(Resource_Manager& rman, Set& into)
 //-----------------------------------------------------------------------------
 
 Pivot_Statement::Pivot_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;

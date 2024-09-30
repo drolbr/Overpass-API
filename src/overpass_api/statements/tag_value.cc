@@ -46,12 +46,11 @@ Statement* Evaluator_Fixed::Evaluator_Maker::create_evaluator(
 
   std::map< std::string, std::string > attributes;
   attributes["v"] = decode_json(tree_it->token, error_output);
-  return new Evaluator_Fixed(tree_it->line_col.first, attributes, global_settings);
+  return new Evaluator_Fixed(tree_it->line_col.first, attributes);
 }
 
 
-Evaluator_Fixed::Evaluator_Fixed
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+Evaluator_Fixed::Evaluator_Fixed(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -85,8 +84,7 @@ Evaluator_Id::Statement_Maker Evaluator_Id::statement_maker;
 Element_Function_Maker< Evaluator_Id > Evaluator_Id::evaluator_maker;
 
 
-Evaluator_Id::Evaluator_Id
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+Evaluator_Id::Evaluator_Id(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -101,8 +99,7 @@ Evaluator_Type::Statement_Maker Evaluator_Type::statement_maker;
 Element_Function_Maker< Evaluator_Type > Evaluator_Type::evaluator_maker;
 
 
-Evaluator_Type::Evaluator_Type
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+Evaluator_Type::Evaluator_Type(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -156,7 +153,7 @@ Statement* Evaluator_Value::Evaluator_Maker::create_evaluator(
   }
 
   std::map< std::string, std::string > attributes;
-  Statement* result = new Evaluator_Value(tree_it->line_col.first, attributes, global_settings);
+  Statement* result = new Evaluator_Value(tree_it->line_col.first, attributes);
   if (result)
   {
     Statement* rhs = stmt_factory.create_evaluator(
@@ -171,8 +168,7 @@ Statement* Evaluator_Value::Evaluator_Maker::create_evaluator(
 }
 
 
-Evaluator_Value::Evaluator_Value
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+Evaluator_Value::Evaluator_Value(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_), rhs(0)
 {
   std::map< std::string, std::string > attributes;
@@ -301,12 +297,11 @@ Statement* Evaluator_Is_Tag::Evaluator_Maker::create_evaluator(
   }
   std::map< std::string, std::string > attributes;
   attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
-  return new Evaluator_Is_Tag(tree_it->line_col.first, attributes, global_settings);
+  return new Evaluator_Is_Tag(tree_it->line_col.first, attributes);
 }
 
 
-Evaluator_Is_Tag::Evaluator_Is_Tag
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+Evaluator_Is_Tag::Evaluator_Is_Tag(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -344,7 +339,7 @@ std::vector< std::string > all_keys(const std::vector< std::pair< std::string, s
 
 
 Evaluator_All_Keys::Evaluator_All_Keys
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -359,8 +354,7 @@ Evaluator_Version::Statement_Maker Evaluator_Version::statement_maker;
 Element_Function_Maker< Evaluator_Version > Evaluator_Version::evaluator_maker;
 
 
-Evaluator_Version::Evaluator_Version
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+Evaluator_Version::Evaluator_Version(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -373,7 +367,7 @@ Element_Function_Maker< Evaluator_Timestamp > Evaluator_Timestamp::evaluator_mak
 
 
 Evaluator_Timestamp::Evaluator_Timestamp
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -386,7 +380,7 @@ Element_Function_Maker< Evaluator_Changeset > Evaluator_Changeset::evaluator_mak
 
 
 Evaluator_Changeset::Evaluator_Changeset
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -399,7 +393,7 @@ Element_Function_Maker< Evaluator_Uid > Evaluator_Uid::evaluator_maker;
 
 
 Evaluator_Uid::Evaluator_Uid
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -412,7 +406,7 @@ Element_Function_Maker< Evaluator_User > Evaluator_User::evaluator_maker;
 
 
 Evaluator_User::Evaluator_User
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -434,12 +428,12 @@ Statement* Evaluator_Generic::Evaluator_Maker::create_evaluator(
   if (tree_it->lhs || tree_it->rhs)
     return 0;
   std::map< std::string, std::string > attributes;
-  return new Evaluator_Generic(tree_it->line_col.first, attributes, global_settings);
+  return new Evaluator_Generic(tree_it->line_col.first, attributes);
 }
 
 
 Evaluator_Generic::Evaluator_Generic
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -539,7 +533,7 @@ Statement* Evaluator_Properties_Count::Evaluator_Maker::create_evaluator(
       return 0;
   }
 
-  return new Evaluator_Properties_Count(tree_it->line_col.first, attributes, global_settings);
+  return new Evaluator_Properties_Count(tree_it->line_col.first, attributes);
 }
 
 
@@ -574,7 +568,7 @@ std::string Evaluator_Properties_Count::to_string(Evaluator_Properties_Count::Me
 
 
 Evaluator_Properties_Count::Evaluator_Properties_Count
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator(line_number_), to_count(nothing), type_to_count(all)
 {
   std::map< std::string, std::string > attributes;
