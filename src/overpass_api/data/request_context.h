@@ -21,6 +21,7 @@
 
 
 #include "../../template_db/transaction.h"
+#include "../core/datatypes.h"
 
 #include <string>
 
@@ -74,6 +75,17 @@ private:
   const Statement* stmt;
   Request_Context_Iface& rman;
 };
+
+
+uint64 eval_map(const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations);
+
+uint64 eval_map(const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations);
+
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Area_Skeleton > >& areas);
 
 
 #endif

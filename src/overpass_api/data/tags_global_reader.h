@@ -28,11 +28,11 @@
 #include "../../template_db/block_backend.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
-#include "../statements/statement.h"
-#include "../dispatch/resource_manager.h"
+#include "constraints.h"
 #include "filenames.h"
 #include "filter_by_tags.h"
 #include "regular_expression.h"
+#include "request_context.h"
 
 
 template < typename T >
@@ -224,10 +224,10 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_regkregv(
     std::vector< std::pair< Regular_Expression*, Regular_Expression* > >::const_iterator krit, uint64 timestamp,
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
     Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db,
-    Resource_Manager& rman, const Statement& stmt)
+    Request_Context& context)
 {
   std::map< Id_Type, std::map< std::string, std::pair< uint64, Uint31_Index > > > timestamp_per_id;
-  Ranges< Tag_Index_Global > ranges = get_regk_req< Skeleton >(krit->first, rman, stmt);
+  Ranges< Tag_Index_Global > ranges = get_regk_req< Skeleton >(krit->first, context);
 
   std::string last_key = void_tag_value();
   bool matches = false;
@@ -393,18 +393,17 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
     const std::vector< std::pair< std::string, Regular_Expression* > >& key_regexes,
     const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_regexes,
     const File_Properties& file_prop, const File_Properties& attic_file_prop,
-    Resource_Manager& rman, const Statement& stmt,
+    Request_Context& context,
     uint64 timestamp, Query_Filter_Strategy check_keys_late, bool& result_valid)
 {
   if (key_values.empty() && keys.empty() && key_regexes.empty() && regkey_regexes.empty())
     return std::vector< std::pair< Id_Type, Uint31_Index > >();
 
-  Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db(context.data_index(&file_prop));
   Optional< Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > > > attic_tags_db
       (timestamp == NOW ? 0 :
         new Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >
-        (rman.get_transaction()->data_index(&attic_file_prop)));
+        (context.data_index(&attic_file_prop)));
 
   // Handle simple Key-Value pairs
   std::vector< std::pair< Id_Type, Uint31_Index > > new_ids;
@@ -433,7 +432,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
         return new_ids;
     }
 
-    rman.health_check(stmt);
+    context.get_health_guard().check();
   }
 
   if (check_keys_late != prefer_ranges)
@@ -454,7 +453,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
       if (!filtered)
         return new_ids;
 
-      rman.health_check(stmt);
+      context.get_health_guard().check();
     }
 
     // Handle Key-Regular-Expression-Value pairs
@@ -474,7 +473,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
       if (!filtered)
         return new_ids;
 
-      rman.health_check(stmt);
+      context.get_health_guard().check();
     }
 
     // Handle Regular-Key-Regular-Expression-Value pairs
@@ -483,19 +482,19 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
     {
       if (timestamp == NOW)
       {
-        Ranges< Tag_Index_Global > ranges = get_regk_req< Skeleton >(it->first, rman, stmt);
+        Ranges< Tag_Index_Global > ranges = get_regk_req< Skeleton >(it->first, context);
         filter_id_list(
             new_ids, filtered, tags_db.range_begin(ranges), tags_db.range_end(),
             *it->first, *it->second, check_keys_late == ids_useful);
       }
       else
-	filter_id_list(new_ids, filtered, collect_attic_regkregv< Skeleton, Id_Type >(
-	    it, timestamp, tags_db, *attic_tags_db.obj, rman, stmt),
+	filter_id_list(new_ids, filtered,
+            collect_attic_regkregv< Skeleton, Id_Type >(it, timestamp, tags_db, *attic_tags_db.obj, context),
             check_keys_late == ids_useful);
       if (!filtered)
         return new_ids;
 
-      rman.health_check(stmt);
+      context.get_health_guard().check();
     }
   }
 
@@ -510,14 +509,13 @@ std::vector< Id_Type > collect_ids(
     const std::vector< std::pair< std::string, std::string > >& key_values,
     const std::vector< std::pair< std::string, Regular_Expression* > >& key_regexes,
     const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_regexes,
-    const File_Properties& file_prop, Resource_Manager& rman, const Statement& stmt,
+    const File_Properties& file_prop, Request_Context& context,
     Query_Filter_Strategy check_keys_late)
 {
   if (key_values.empty() && keys.empty() && key_regexes.empty() && regkey_regexes.empty())
     return std::vector< Id_Type >();
 
-  Block_Backend< Tag_Index_Global, Id_Type > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+  Block_Backend< Tag_Index_Global, Id_Type > tags_db(context.data_index(&file_prop));
 
   // Handle simple Key-Value pairs
   std::vector< Id_Type > new_ids;
@@ -530,7 +528,7 @@ std::vector< Id_Type > collect_ids(
     filter_id_list(new_ids, filtered,
 	tags_db.range_begin(tag_req), tags_db.range_end(), Trivial_Regex(), Trivial_Regex());
 
-    rman.health_check(stmt);
+    context.get_health_guard().check();
   }
 
   if (check_keys_late != prefer_ranges)
@@ -543,7 +541,7 @@ std::vector< Id_Type > collect_ids(
 	  tags_db.range_begin(ranges), tags_db.range_end(),
 	      Trivial_Regex(), Trivial_Regex());
 
-      rman.health_check(stmt);
+      context.get_health_guard().check();
     }
 
     // Handle Key-Regular-Expression-Value pairs
@@ -554,7 +552,7 @@ std::vector< Id_Type > collect_ids(
       filter_id_list(new_ids, filtered, tags_db.range_begin(ranges), tags_db.range_end(),
           Trivial_Regex(), *krit->second);
 
-      rman.health_check(stmt);
+      context.get_health_guard().check();
     }
 
     // Handle Key-Regular-Expression-Value pairs
@@ -564,7 +562,7 @@ std::vector< Id_Type > collect_ids(
       filter_id_list(new_ids, filtered,
 	  tags_db.flat_begin(), tags_db.flat_end(), *it->first, *it->second);
 
-      rman.health_check(stmt);
+      context.get_health_guard().check();
     }
   }
 
@@ -611,17 +609,16 @@ void filter_non_ids(
     const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_nregexes,
     std::vector< std::pair< Id_Type, Uint31_Index > >& ids,
     const File_Properties& file_prop, const File_Properties& attic_file_prop,
-    Resource_Manager& rman, const Statement& stmt, uint64 timestamp)
+    Request_Context& context, uint64 timestamp)
 {
   if (key_nvalues.empty() && key_nregexes.empty())
     return;
 
-  Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db(context.data_index(&file_prop));
   Optional< Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > > > attic_tags_db
       (timestamp == NOW ? 0 :
         new Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >
-        (rman.get_transaction()->data_index(&attic_file_prop)));
+        (context.data_index(&attic_file_prop)));
   Id_Remover< Id_Type > idr(ids);
 
   // Handle Key-Non-Value pairs
@@ -643,7 +640,7 @@ void filter_non_ids(
           it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
         idr.remove(it->first);
     }
-    rman.health_check(stmt);
+    context.get_health_guard().check();
   }
 
   // Handle Key-Regular-Expression-Non-Value pairs
@@ -668,7 +665,7 @@ void filter_non_ids(
           it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
         idr.remove(it->first);
     }
-    rman.health_check(stmt);
+    context.get_health_guard().check();
   }
 }
 
@@ -678,17 +675,16 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_non_ids(
     const std::vector< std::pair< std::string, std::string > >& key_nvalues,
     const std::vector< std::pair< std::string, Regular_Expression* > >& key_nregexes,
     const File_Properties& file_prop, const File_Properties& attic_file_prop,
-    Resource_Manager& rman, const Statement& stmt, uint64 timestamp)
+    Request_Context& context, uint64 timestamp)
 {
   if (key_nvalues.empty() && key_nregexes.empty())
     return std::vector< std::pair< Id_Type, Uint31_Index > >();
 
-  Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db(context.data_index(&file_prop));
   Optional< Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > > > attic_tags_db
       (timestamp == NOW ? 0 :
         new Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >
-        (rman.get_transaction()->data_index(&attic_file_prop)));
+        (context.data_index(&attic_file_prop)));
 
   std::vector< std::pair< Id_Type, Uint31_Index > > new_ids;
 
@@ -711,7 +707,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_non_ids(
           it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
         new_ids.push_back(std::make_pair(it->first, it->second.second));
     }
-    rman.health_check(stmt);
+    context.get_health_guard().check();
   }
 
   // Handle Key-Regular-Expression-Non-Value pairs
@@ -736,7 +732,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_non_ids(
           it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
         new_ids.push_back(std::make_pair(it->first, it->second.second));
     }
-    rman.health_check(stmt);
+    context.get_health_guard().check();
   }
 
   sort(new_ids.begin(), new_ids.end());
@@ -750,13 +746,12 @@ template< class Id_Type >
 std::vector< Id_Type > collect_non_ids(
     const std::vector< std::pair< std::string, std::string > >& key_nvalues,
     const std::vector< std::pair< std::string, Regular_Expression* > >& key_nregexes,
-    const File_Properties& file_prop, Resource_Manager& rman, const Statement& stmt)
+    const File_Properties& file_prop, Request_Context& context)
 {
   if (key_nvalues.empty() && key_nregexes.empty())
     return std::vector< Id_Type >();
 
-  Block_Backend< Tag_Index_Global, Id_Type > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+  Block_Backend< Tag_Index_Global, Id_Type > tags_db(context.data_index(&file_prop));
 
   std::vector< Id_Type > new_ids;
 
@@ -771,7 +766,7 @@ std::vector< Id_Type > collect_non_ids(
         new_ids.push_back(it2.object());
     }
 
-    rman.health_check(stmt);
+    context.get_health_guard().check();
   }
 
   // Handle Key-Regular-Expression-Non-Value pairs
@@ -785,7 +780,7 @@ std::vector< Id_Type > collect_non_ids(
         new_ids.push_back(it2.object());
     }
 
-    rman.health_check(stmt);
+    context.get_health_guard().check();
   }
 
   sort(new_ids.begin(), new_ids.end());
@@ -806,7 +801,7 @@ void progress_1(
     const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_nregexes,
     Id_Constraint< Id_Type >& ids, std::vector< Index >& range_vec,
     uint64 timestamp, Query_Filter_Strategy& check_keys_late,
-    Resource_Manager& rman, const Statement& stmt)
+    Request_Context& context)
 {
   File_Properties* file_prop = current_global_tags_file_properties< Skeleton >();
   File_Properties* attic_file_prop = attic_global_tags_file_properties< Skeleton >();
@@ -821,14 +816,14 @@ void progress_1(
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_ids< Skeleton, Id_Type >(
             keys, key_values, key_regexes, regkey_regexes,
-            *file_prop, *attic_file_prop, rman, stmt, timestamp, check_keys_late, result_valid);
+            *file_prop, *attic_file_prop, context, timestamp, check_keys_late, result_valid);
     if (check_keys_late == ids_useful && !result_valid)
       check_keys_late = prefer_ranges;
     ids.invert = !result_valid;
 
     if (!key_nvalues.empty() || (check_keys_late != prefer_ranges && !key_nregexes.empty()))
       filter_non_ids< Id_Type >(
-          key_nvalues, key_nregexes, regkey_nregexes, id_idxs, *file_prop, *attic_file_prop, rman, stmt, timestamp);
+          key_nvalues, key_nregexes, regkey_nregexes, id_idxs, *file_prop, *attic_file_prop, context, timestamp);
 
     for (auto it = id_idxs.begin(); it != id_idxs.end(); ++it)
     {
@@ -840,7 +835,7 @@ void progress_1(
   {
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_non_ids< Id_Type >(
-            key_nvalues, key_nregexes, *file_prop, *attic_file_prop, rman, stmt, timestamp);
+            key_nvalues, key_nregexes, *file_prop, *attic_file_prop, context, timestamp);
     for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = id_idxs.begin();
         it != id_idxs.end(); ++it)
       ids.ids.push_back(it->first);
@@ -858,7 +853,7 @@ void progress_1(
     const std::vector< std::pair< std::string, Regular_Expression* > >& key_nregexes,
     const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_nregexes,
     Id_Constraint< Id_Type >& ids, Query_Filter_Strategy check_keys_late,
-    Resource_Manager& rman, const Statement& stmt)
+    Request_Context& context)
 {
   if (!key_values.empty()
       || (check_keys_late != prefer_ranges
@@ -867,11 +862,11 @@ void progress_1(
     ids.invert = false;
     collect_ids< Id_Type >(
         keys, key_values, key_regexes, regkey_regexes,
-        *area_settings().AREA_TAGS_GLOBAL, rman, stmt, check_keys_late).swap(ids.ids);
+        *area_settings().AREA_TAGS_GLOBAL, context, check_keys_late).swap(ids.ids);
     if (!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
     {
       std::vector< Id_Type > non_ids = collect_non_ids< Id_Type >(
-          key_nvalues, key_nregexes, *area_settings().AREA_TAGS_GLOBAL, rman, stmt);
+          key_nvalues, key_nregexes, *area_settings().AREA_TAGS_GLOBAL, context);
       std::vector< Id_Type > diff_ids(ids.ids.size(), Id_Type());
       diff_ids.erase(set_difference(ids.ids.begin(), ids.ids.end(), non_ids.begin(), non_ids.end(),
                      diff_ids.begin()), diff_ids.end());
@@ -880,7 +875,7 @@ void progress_1(
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
       && check_keys_late != prefer_ranges)
-    collect_non_ids< Id_Type >(key_nvalues, key_nregexes, *area_settings().AREA_TAGS_GLOBAL, rman, stmt).swap(ids.ids);
+    collect_non_ids< Id_Type >(key_nvalues, key_nregexes, *area_settings().AREA_TAGS_GLOBAL, context).swap(ids.ids);
 }
 
 

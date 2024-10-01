@@ -16,9 +16,10 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../core/settings.h"
+#include "../frontend/output_handler.h"
 #include "diff_set.h"
 #include "geometry_from_quad_coords.h"
-#include "../frontend/output_handler.h"
 
 
 Set Diff_Set::make_from_set() const

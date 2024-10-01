@@ -26,10 +26,9 @@ Relation_Geometry_Store::~Relation_Geometry_Store()
 }
 
 
-Relation_Geometry_Store::Relation_Geometry_Store
-    (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-     const Statement& query, Resource_Manager& rman,
-     double south_, double north_, double west_, double east_)
+Relation_Geometry_Store::Relation_Geometry_Store(
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations, Request_Context& context,
+    double south_, double north_, double west_, double east_)
     : way_geometry_store(0), south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
   if (relations.empty())
@@ -38,7 +37,6 @@ Relation_Geometry_Store::Relation_Geometry_Store
     north = 0;
     south = 1;
   }
-  Request_Context context(&query, rman);
 
   Ranges< Uint32_Index > node_ranges(south <= north
       ? get_ranges_32(south_, north_, west_, east_) : Ranges< Uint32_Index >::global());
@@ -62,7 +60,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
   Timeless< Uint31_Index, Way_Skeleton > way_members
       = relation_way_members(context, relations, {}, way_ranges, {}, true);
 
-  way_geometry_store = new Way_Geometry_Store(way_members.get_current(), query, rman);
+  way_geometry_store = new Way_Geometry_Store(way_members.get_current(), context);
 
   // Order way ids by id.
   for (const auto& i : way_members.get_current())
@@ -74,10 +72,9 @@ Relation_Geometry_Store::Relation_Geometry_Store
 }
 
 
-Relation_Geometry_Store::Relation_Geometry_Store
-    (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const Statement& query, Resource_Manager& rman,
-     double south_, double north_, double west_, double east_)
+Relation_Geometry_Store::Relation_Geometry_Store(
+    const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations, Request_Context& context,
+    double south_, double north_, double west_, double east_)
     : way_geometry_store(0), south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
   if (relations.empty())
@@ -86,7 +83,6 @@ Relation_Geometry_Store::Relation_Geometry_Store
     north = 0;
     south = 1;
   }
-  Request_Context context(&query, rman);
 
   Ranges< Uint32_Index > node_ranges(south <= north
       ? get_ranges_32(south_, north_, west_, east_) : Ranges< Uint32_Index >::global());
@@ -117,9 +113,9 @@ Relation_Geometry_Store::Relation_Geometry_Store
           way_ranges, {}, true);
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_by_idx;
   keep_matching_skeletons(ways_by_idx, ways_by_idx_pair.get_current(), ways_by_idx_pair.get_attic(),
-      rman.get_desired_timestamp());
+      context.get_desired_timestamp());
 
-  way_geometry_store = new Way_Geometry_Store(ways_by_idx, query, rman);
+  way_geometry_store = new Way_Geometry_Store(ways_by_idx, context);
 
   for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::iterator it = ways_by_idx.begin();
       it != ways_by_idx.end(); ++it)

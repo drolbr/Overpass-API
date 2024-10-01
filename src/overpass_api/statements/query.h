@@ -27,14 +27,6 @@
 #include "statement.h"
 
 
-const int QUERY_NODE = 1;
-const int QUERY_WAY = 2;
-const int QUERY_CLOSED_WAY = 4;
-const int QUERY_RELATION = 8;
-const int QUERY_DERIVED = 16;
-const int QUERY_AREA = 32;
-
-
 class Regular_Expression;
 class Bbox_Query_Statement;
 

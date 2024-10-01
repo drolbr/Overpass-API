@@ -22,6 +22,7 @@
 #include "../core/datatypes.h"
 #include "../core/geometry.h"
 #include "collect_members.h"
+#include "request_context.h"
 #include "way_geometry_store.h"
 
 
@@ -35,7 +36,7 @@ struct Bbox_Filter
   bool matches(const std::vector< Quad_Coord >& way_geometry) const;
 
   void filter(Set& into) const;
-  void filter(const Statement& query, Resource_Manager& rman, Set& into) const;
+  void filter(Request_Context& context, Set& into) const;
 
 private:
   Bbox_Double bbox;

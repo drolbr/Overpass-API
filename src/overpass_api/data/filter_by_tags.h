@@ -21,6 +21,7 @@
 
 
 #include "regular_expression.h"
+#include "request_context.h"
 
 
 Ranges< Tag_Index_Global > get_kv_req(const std::string& key, const std::string& value)
@@ -38,20 +39,18 @@ Ranges< Tag_Index_Global > get_k_req(const std::string& key)
 
 
 template< typename Skeleton >
-Ranges< Tag_Index_Global > get_regk_req(Regular_Expression* key, Resource_Manager& rman, const Statement& stmt)
+Ranges< Tag_Index_Global > get_regk_req(Regular_Expression* key, Request_Context& context)
 {
   Ranges< Tag_Index_Global > result;
 
-  Block_Backend< Uint32_Index, String_Object > db
-      (rman.get_transaction()->data_index(key_file_properties< Skeleton >()));
-  for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
-       it(db.flat_begin()); !(it == db.flat_end()); ++it)
+  Block_Backend< Uint32_Index, String_Object > db(context.data_index(key_file_properties< Skeleton >()));
+  for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
   {
     if (key->matches(it.object().val()))
       result.push_back({ it.object().val(), "" }, { it.object().val() + (char)0, "" });
   }
   result.sort();
-  rman.health_check(stmt);
+  context.get_health_guard().check();
 
   return result;
 }

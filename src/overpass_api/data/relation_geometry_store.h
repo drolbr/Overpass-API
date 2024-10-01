@@ -19,6 +19,8 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__RELATION_GEOMETRY_STORE_H
 #define DE__OSM3S___OVERPASS_API__DATA__RELATION_GEOMETRY_STORE_H
 
+
+#include "request_context.h"
 #include "way_geometry_store.h"
 
 #include <map>
@@ -28,13 +30,11 @@
 class Relation_Geometry_Store
 {
 public:
-  Relation_Geometry_Store
-      (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-      const Statement& query, Resource_Manager& rman,
+  Relation_Geometry_Store(
+      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations, Request_Context& context,
       double south_ = 1., double north_ = 0., double west_ = 0., double east_ = 0.);
   Relation_Geometry_Store
-      (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-      const Statement& query, Resource_Manager& rman,
+      (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations, Request_Context& context,
       double south_ = 1., double north_ = 0., double west_ = 0., double east_ = 0.);
 
   ~Relation_Geometry_Store();

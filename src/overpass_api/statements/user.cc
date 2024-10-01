@@ -180,6 +180,7 @@ void calc_ranges_both
 
 void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
+  Request_Context context(&query, rman);
   std::set< Uint32_Index > user_ids = user->get_ids(*rman.get_transaction());
 
   if (user->get_criterion() == User_Statement::last)
@@ -208,15 +209,15 @@ void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 
     if (!into.nodes.empty() || !into.attic_nodes.empty())
       Timeless< Uint32_Index, Node_Skeleton >{ into.nodes, into.attic_nodes }.filter_by_id(
-          touched_ids_by_users< Uint32_Index, Node_Skeleton >(rman, node_ranges, user_ids))
+          touched_ids_by_users< Uint32_Index, Node_Skeleton >(context, node_ranges, user_ids))
           .swap(into.nodes, into.attic_nodes);
     if (!into.ways.empty() || !into.attic_ways.empty())
       Timeless< Uint31_Index, Way_Skeleton >{ into.ways, into.attic_ways }.filter_by_id(
-          touched_ids_by_users< Uint31_Index, Way_Skeleton >(rman, other_ranges, user_ids))
+          touched_ids_by_users< Uint31_Index, Way_Skeleton >(context, other_ranges, user_ids))
           .swap(into.ways, into.attic_ways);
     if (!into.nodes.empty() || !into.attic_nodes.empty())
       Timeless< Uint31_Index, Relation_Skeleton >{ into.relations, into.attic_relations }.filter_by_id(
-          touched_ids_by_users< Uint31_Index, Relation_Skeleton >(rman, other_ranges, user_ids))
+          touched_ids_by_users< Uint31_Index, Relation_Skeleton >(context, other_ranges, user_ids))
           .swap(into.relations, into.attic_relations);
   }
 
@@ -400,13 +401,14 @@ bool User_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >&
 
 bool User_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
 {
+  Request_Context context(nullptr, rman);
   if (user->get_criterion() == User_Statement::touched)
   {
     Ranges< Uint32_Index > node_ranges;
     calc_ranges_32(node_ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
 
     touched_ids_by_users< Uint32_Index, Node_Skeleton >(
-        rman, node_ranges, user->get_ids(*rman.get_transaction())).swap(ids);
+        context, node_ranges, user->get_ids(*rman.get_transaction())).swap(ids);
     return true;
   }
   return false;
@@ -415,13 +417,14 @@ bool User_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node_Ske
 
 bool User_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids)
 {
+  Request_Context context(nullptr, rman);
   if (user->get_criterion() == User_Statement::touched)
   {
     Ranges< Uint31_Index > other_ranges;
     calc_ranges_31(other_ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
 
     touched_ids_by_users< Uint31_Index, Way_Skeleton >(
-        rman, other_ranges, user->get_ids(*rman.get_transaction())).swap(ids);
+        context, other_ranges, user->get_ids(*rman.get_transaction())).swap(ids);
     return true;
   }
   return false;
@@ -430,13 +433,14 @@ bool User_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_Skele
 
 bool User_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
 {
+  Request_Context context(nullptr, rman);
   if (user->get_criterion() == User_Statement::touched)
   {
     Ranges< Uint31_Index > other_ranges;
     calc_ranges_31(other_ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
 
     touched_ids_by_users< Uint31_Index, Relation_Skeleton >(
-        rman, other_ranges, user->get_ids(*rman.get_transaction())).swap(ids);
+        context, other_ranges, user->get_ids(*rman.get_transaction())).swap(ids);
     return true;
   }
   return false;
@@ -481,7 +485,7 @@ void User_Statement::execute(Resource_Manager& rman)
     Bbox_Filter filter(*bbox_limitation);
     filter.filter(into);
     constraint.filter(*this, rman, into);
-    filter.filter(*this, rman, into);
+    filter.filter(context, into);
   }
   else
     constraint.filter(*this, rman, into);

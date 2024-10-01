@@ -122,13 +122,13 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 
 template< typename Node_Skeleton >
 std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
-    const Set* potential_areas, bool accept_border, const Statement& stmt, Resource_Manager& rman,
+    const Set* potential_areas, bool accept_border, Request_Context& context,
     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes)
 {
   if (!potential_areas)
     return std::map< Uint32_Index, std::vector< Node_Skeleton > >();
 
-  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, context);
   std::map< Uint32_Index, std::vector< Node_Skeleton > > result;
 
   for (typename std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator iit = nodes.begin();
@@ -185,11 +185,12 @@ std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_contained_in(
 {
   if (!potential_areas)
     return std::map< Uint31_Index, std::vector< Way_Skeleton > >();
+  Request_Context context(&stmt, rman);
 
-  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, context);
   std::map< Uint31_Index, std::vector< Way_Skeleton > > result;
 
-  Tilewise_Way_Iterator twi(ways, std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >(), stmt, rman);
+  Tilewise_Way_Iterator twi(ways, std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >(), context);
   while (!twi.is_end())
   {
     while (!tai.is_end() && tai.get_idx() < twi.get_idx())
@@ -225,11 +226,12 @@ std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_contained_in
 {
   if (!potential_areas)
     return std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >();
+  Request_Context context(&stmt, rman);
 
-  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, context);
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > result;
 
-  Tilewise_Way_Iterator twi(std::map< Uint31_Index, std::vector< Way_Skeleton > >(), ways, stmt, rman);
+  Tilewise_Way_Iterator twi(std::map< Uint31_Index, std::vector< Way_Skeleton > >(), ways, context);
   while (!twi.is_end())
   {
     while (!tai.is_end() && tai.get_idx() < twi.get_idx())
@@ -261,6 +263,7 @@ std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_contained_in
 
 void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
+  Request_Context context(&query, rman);
   std::set< Uint31_Index > area_blocks_req;
   const Set* input = rman.get_set(area->get_input());
   if (area->areas_from_input())
@@ -274,7 +277,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   //Process nodes
   {
     std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_in_wr_areas
-        = nodes_contained_in(input, true, query, rman, into.nodes);
+        = nodes_contained_in(input, true, context, into.nodes);
     indexed_set_difference(into.nodes, nodes_in_wr_areas);
     area->collect_nodes(into.nodes, area_blocks_req, true, rman);
     indexed_set_union(into.nodes, nodes_in_wr_areas);
@@ -285,13 +288,12 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_in_wr_areas
         = ways_contained_in(input, query, rman, into.ways);
     indexed_set_difference(into.ways, ways_in_wr_areas);
-    area->collect_ways(Way_Geometry_Store(into.ways, query, rman),
+    area->collect_ways(Way_Geometry_Store(into.ways, context),
         into.ways, area_blocks_req, false, query, rman);
     indexed_set_union(into.ways, ways_in_wr_areas);
   }
 
   //Process relations
-  Request_Context context(&query, rman);
 
   // Retrieve all nodes referred by the relations.
   Ranges< Uint32_Index > node_ranges;
@@ -304,7 +306,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   // filter for those nodes that are in one of the areas
   {
     std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_in_wr_areas
-        = nodes_contained_in(input, false, query, rman, current_node_members);
+        = nodes_contained_in(input, false, context, current_node_members);
     indexed_set_difference(current_node_members, nodes_in_wr_areas);
     area->collect_nodes(current_node_members, area_blocks_req, false, rman);
     indexed_set_union(current_node_members, nodes_in_wr_areas);
@@ -323,7 +325,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_in_wr_areas
         = ways_contained_in(input, query, rman, current_way_members);
     indexed_set_difference(current_way_members, ways_in_wr_areas);
-    area->collect_ways(Way_Geometry_Store(current_way_members, query, rman),
+    area->collect_ways(Way_Geometry_Store(current_way_members, context),
         current_way_members, area_blocks_req, false, query, rman);
     indexed_set_union(current_way_members, ways_in_wr_areas);
   }
@@ -336,7 +338,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   if (!into.attic_nodes.empty())
   {
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > nodes_in_wr_areas
-        = nodes_contained_in(input, true, query, rman, into.attic_nodes);
+        = nodes_contained_in(input, true, context, into.attic_nodes);
     indexed_set_difference(into.attic_nodes, nodes_in_wr_areas);
     area->collect_nodes(into.attic_nodes, area_blocks_req, true, rman);
     indexed_set_union(into.attic_nodes, nodes_in_wr_areas);
@@ -348,7 +350,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_in_wr_areas
         = ways_contained_in(input, query, rman, into.attic_ways);
     indexed_set_difference(into.attic_ways, ways_in_wr_areas);
-    area->collect_ways(Way_Geometry_Store(into.attic_ways, query, rman),
+    area->collect_ways(Way_Geometry_Store(into.attic_ways, context),
         into.attic_ways, area_blocks_req, false, query, rman);
     indexed_set_union(into.attic_ways, ways_in_wr_areas);
   }
@@ -359,7 +361,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     // filter for those nodes that are in one of the areas
     {
       std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > nodes_in_wr_areas
-          = nodes_contained_in(input, false, query, rman, attic_node_members);
+          = nodes_contained_in(input, false, context, attic_node_members);
       indexed_set_difference(attic_node_members, nodes_in_wr_areas);
       area->collect_nodes(attic_node_members, area_blocks_req, false, rman);
       indexed_set_union(attic_node_members, nodes_in_wr_areas);
@@ -370,7 +372,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_in_wr_areas
           = ways_contained_in(input, query, rman, attic_way_members);
       indexed_set_difference(attic_way_members, ways_in_wr_areas);
-      area->collect_ways(Way_Geometry_Store(attic_way_members, query, rman),
+      area->collect_ways(Way_Geometry_Store(attic_way_members, context),
           attic_way_members, area_blocks_req, false, query, rman);
       indexed_set_union(attic_way_members, ways_in_wr_areas);
     }
@@ -540,14 +542,15 @@ Query_Filter_Strategy Area_Constraint::delivers_data(Resource_Manager& rman)
     // Count the indicies of the input areas
     int counter = 0;
 
-    for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = input->areas.begin();
-         it != input->areas.end(); ++it)
+    for (auto it = input->areas.begin(); it != input->areas.end(); ++it)
     {
-      for (std::vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
         counter += it2->used_indices.size();
+      if (counter > 12)
+        return ids_useful;
     }
 
-    return (counter <= 12) ? prefer_ranges : ids_useful;
+    return prefer_ranges;
   }
 }
 

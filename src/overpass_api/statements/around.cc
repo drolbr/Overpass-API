@@ -127,7 +127,7 @@ class Around_Constraint : public Query_Constraint
   public:
     Around_Constraint(Around_Statement& around_) : around(&around_), ranges_used(false) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman)
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override
     { return (around->get_radius() < 2000) ? prefer_ranges : ids_useful; }
 
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
@@ -317,13 +317,13 @@ void filter_relations_expensive(const Around_Statement& around,
 
 void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
+  Request_Context context(&query, rman);
   const Set* input = rman.get_set(around->get_source_name());
   around->calc_lat_lons(input ? *input : Set(), *around, rman);
 
   filter_nodes_expensive(*around, into.nodes);
-  filter_ways_expensive(*around, Way_Geometry_Store(into.ways, query, rman), into.ways);
+  filter_ways_expensive(*around, Way_Geometry_Store(into.ways, context), into.ways);
 
-  Request_Context context(&query, rman);
   {
     //Process relations
 
@@ -347,14 +347,14 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 
     // Retrieve all nodes referred by the ways.
     filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_.get_current(), query, rman), into.relations);
+        Way_Geometry_Store(way_members_.get_current(), context), into.relations);
   }
 
   if (!into.attic_nodes.empty())
     filter_nodes_expensive(*around, into.attic_nodes);
 
   if (!into.attic_ways.empty())
-    filter_ways_expensive(*around, Way_Geometry_Store(into.attic_ways, query, rman), into.attic_ways);
+    filter_ways_expensive(*around, Way_Geometry_Store(into.attic_ways, context), into.attic_ways);
 
   if (!into.attic_relations.empty())
   {
@@ -377,7 +377,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
         = order_attic_by_id(way_members_, Order_By_Way_Id());
 
     filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_, query, rman), into.attic_relations);
+        Way_Geometry_Store(way_members_, context), into.attic_relations);
   }
 
   //TODO: areas
@@ -843,7 +843,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   Request_Context context(&query, rman);
 
   add_nodes(input.nodes);
-  add_ways(input.ways, Way_Geometry_Store(input.ways, query, rman));
+  add_ways(input.ways, Way_Geometry_Store(input.ways, context));
 
   // Retrieve all node and way members referred by the relations.
   add_nodes(relation_node_members(context, input.relations, {}, Ranges< Uint32_Index >::global(), {}, true)
@@ -852,12 +852,12 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   // Retrieve all ways referred by the relations.
   Timeless< Uint31_Index, Way_Skeleton > way_members
       = relation_way_members(context, input.relations, {}, Ranges< Uint31_Index >::global(), {}, true);
-  add_ways(way_members.get_current(), Way_Geometry_Store(way_members.get_current(), query, rman));
+  add_ways(way_members.get_current(), Way_Geometry_Store(way_members.get_current(), context));
 
   if (rman.get_desired_timestamp() != NOW)
   {
     add_nodes(input.attic_nodes);
-    add_ways(input.attic_ways, Way_Geometry_Store(input.attic_ways, query, rman));
+    add_ways(input.attic_ways, Way_Geometry_Store(input.attic_ways, context));
 
     // Retrieve all node and way members referred by the relations.
     add_nodes(relation_node_members(
@@ -866,7 +866,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members
         = relation_way_members(context, input.attic_relations, Ranges< Uint31_Index >::global());
-    add_ways(way_members, Way_Geometry_Store(way_members, query, rman));
+    add_ways(way_members, Way_Geometry_Store(way_members, context));
   }
 }
 

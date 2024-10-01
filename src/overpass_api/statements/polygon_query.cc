@@ -37,7 +37,7 @@
 class Polygon_Constraint : public Query_Constraint
 {
   public:
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman);
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override;
 
     Polygon_Constraint(Polygon_Query_Statement& polygon_) : polygon(&polygon_) {}
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
@@ -98,11 +98,11 @@ void Polygon_Constraint::filter(Resource_Manager& rman, Set& into)
 
 void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
+  Request_Context context(&query, rman);
   //Process ways
-  polygon->collect_ways(into.ways, Way_Geometry_Store(into.ways, query, rman), true, query, rman);
+  polygon->collect_ways(into.ways, Way_Geometry_Store(into.ways, context), true, query, rman);
 
   //Process relations
-  Request_Context context(&query, rman);
 
   // Retrieve all nodes referred by the relations.
   Ranges< Uint32_Index > node_ranges;
@@ -126,9 +126,9 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
       .swap(current_way_members, attic_way_members);
 
   polygon->collect_ways(
-      current_way_members, Way_Geometry_Store(current_way_members, query, rman), false, query, rman);
+      current_way_members, Way_Geometry_Store(current_way_members, context), false, query, rman);
   polygon->collect_ways(
-      attic_way_members, Way_Geometry_Store(attic_way_members, query, rman), false, query, rman);
+      attic_way_members, Way_Geometry_Store(attic_way_members, context), false, query, rman);
 
   filter_relations_expensive(
       order_by_id(current_node_members, Order_By_Node_Id()),
@@ -137,7 +137,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
   //Process ways
   if (!into.attic_ways.empty())
-    polygon->collect_ways(into.attic_ways, Way_Geometry_Store(into.attic_ways, query, rman),
+    polygon->collect_ways(into.attic_ways, Way_Geometry_Store(into.attic_ways, context),
 			  true, query, rman);
 
   //Process relations

@@ -217,23 +217,23 @@ Extra_Data::Extra_Data(
     : mode(mode_), action(action_), way_geometry_store(0), attic_way_geometry_store(0),
     relation_geometry_store(0), attic_relation_geometry_store(0), roles(0), users(0)
 {
+  Request_Context context(&stmt, rman);
+
   if (mode & (Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
   {
-    way_geometry_store = new Way_Bbox_Geometry_Store(to_print.ways, stmt, rman, south, north, west, east);
+    way_geometry_store = new Way_Bbox_Geometry_Store(to_print.ways, context, south, north, west, east);
     if (rman.get_desired_timestamp() < NOW)
     {
       attic_way_geometry_store = new Way_Bbox_Geometry_Store(
-          to_print.attic_ways, stmt, rman,
-          south, north, west, east);
+          to_print.attic_ways, context, south, north, west, east);
     }
 
     relation_geometry_store = new Relation_Geometry_Store(
-        to_print.relations, stmt, rman, south, north, west, east);
+        to_print.relations, context, south, north, west, east);
     if (rman.get_desired_timestamp() < NOW)
     {
       attic_relation_geometry_store = new Relation_Geometry_Store(
-          to_print.attic_relations, stmt, rman,
-          south, north, west, east);
+          to_print.attic_relations, context, south, north, west, east);
     }
   }
 

@@ -148,7 +148,7 @@ class Pivot_Constraint : public Query_Constraint
   public:
     Pivot_Constraint(Pivot_Statement& stmt_) : stmt(&stmt_) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return prefer_ranges; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
                           const Ranges< Uint32_Index >& ranges,

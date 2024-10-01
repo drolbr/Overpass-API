@@ -345,7 +345,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
 
   if (lat != 100.0)
   {
-    Tilewise_Area_Iterator tai(current_candidates, attic_candidates, *this, rman);
+    Tilewise_Area_Iterator tai(current_candidates, attic_candidates, context);
     uint32 idx = ::ll_upper_(lat, lon);
     tai.set_limits(ilat(idx, 0u), ilat(idx, 0u));
     while (!tai.is_end() && tai.get_idx().val() < idx)
@@ -355,7 +355,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   }
   else if (input_set)
   {
-    Tilewise_Area_Iterator tai(current_candidates, attic_candidates, *this, rman);
+    Tilewise_Area_Iterator tai(current_candidates, attic_candidates, context);
     uint32 minlat = 0x7fff0000u;
     uint32 maxlat = 0u;
     for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = input_set->nodes.begin();

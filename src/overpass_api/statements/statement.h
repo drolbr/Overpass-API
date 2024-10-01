@@ -26,27 +26,19 @@
 #include "../core/datatypes.h"
 #include "../core/parsed_query.h"
 #include "../core/settings.h"
+#include "../data/constraints.h"
 #include "../data/timeless.h"
 #include "../dispatch/resource_manager.h"
 #include "../frontend/tokenizer_utils.h"
 #include "../osm-backend/area_updater.h"
 
 
-typedef enum { ids_required, ids_useful, prefer_ranges } Query_Filter_Strategy;
-
-typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } Answer_State;
-
-
-template< typename Id >
-struct Id_Constraint
-{
-  Id_Constraint() : invert(true) {}
-  bool empty() const { return !invert && ids.empty(); }
-  void restrict_to(const std::vector< Id >& ids);
-
-  std::vector< Id > ids;
-  bool invert;
-};
+const int QUERY_NODE = 1;
+const int QUERY_WAY = 2;
+const int QUERY_CLOSED_WAY = 4;
+const int QUERY_RELATION = 8;
+const int QUERY_DERIVED = 16;
+const int QUERY_AREA = 32;
 
 
 class Query_Constraint
@@ -122,6 +114,7 @@ class Query_Constraint
 
     virtual ~Query_Constraint() {}
 };
+
 
 /**
  * The base class for all statements

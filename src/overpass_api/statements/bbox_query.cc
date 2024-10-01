@@ -35,7 +35,7 @@
 class Bbox_Constraint : public Query_Constraint
 {
   public:
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman);
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override;
 
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_),
         filter_(Bbox_Double(bbox->get_south(), bbox->get_west(), bbox->get_north(), bbox->get_east())) {}
@@ -86,7 +86,8 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 
 void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
-  filter_.filter(query, rman, into);
+  Request_Context context(&query, rman);
+  filter_.filter(context, into);
 }
 
 //-----------------------------------------------------------------------------

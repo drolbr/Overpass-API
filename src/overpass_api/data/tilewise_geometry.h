@@ -406,9 +406,9 @@ public:
   Tilewise_Area_Iterator(
       std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways_,
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways_,
-      const Statement& stmt, Resource_Manager& rman)
+      Request_Context& context)
   : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
-    cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman),
+    cur_geom_store(*ways, context), attic_geom_store(*attic_ways, context),
     complete_idx(0u), minlat(0u), maxlat(0x7fff0000)
   {
     refill();
@@ -535,9 +535,9 @@ public:
   Tilewise_Const_Area_Iterator(
       const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways_,
       const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways_,
-      const Statement& stmt, Resource_Manager& rman)
+      Request_Context& context)
   : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
-    cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman),
+    cur_geom_store(*ways, context), attic_geom_store(*attic_ways, context),
     complete_idx(0u)
   {
     refill();
@@ -1088,9 +1088,9 @@ public:
   Tilewise_Way_Iterator(
       const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways_,
       const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways_,
-      const Statement& stmt, Resource_Manager& rman)
+      Request_Context& context)
     : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
-    cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman),
+    cur_geom_store(*ways, context), attic_geom_store(*attic_ways, context),
     complete_idx(0u)
   {
     refill();

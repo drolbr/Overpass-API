@@ -21,7 +21,6 @@
 
 #include "../../expat/escape_json.h"
 #include "../../expat/escape_xml.h"
-#include "query.h"
 #include "statement.h"
 
 #include <map>

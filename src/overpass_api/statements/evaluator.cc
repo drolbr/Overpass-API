@@ -130,6 +130,7 @@ void Requested_Context::bind(const std::string& set_name)
 
 void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stmt, Resource_Manager& rman)
 {
+  Request_Context context(&stmt, rman);
   Transaction& transaction = *rman.get_transaction();
   base = &set;
 
@@ -176,13 +177,13 @@ void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stm
   {
     use_geometry = true;
 
-    way_geometry_store = new Way_Geometry_Store(set.ways, stmt, rman);
+    way_geometry_store = new Way_Geometry_Store(set.ways, context);
     if (!set.attic_ways.empty())
-      attic_way_geometry_store = new Way_Geometry_Store(set.attic_ways, stmt, rman);
+      attic_way_geometry_store = new Way_Geometry_Store(set.attic_ways, context);
 
-    relation_geometry_store = new Relation_Geometry_Store(set.relations, stmt, rman);
+    relation_geometry_store = new Relation_Geometry_Store(set.relations, context);
     if (!set.attic_relations.empty())
-      attic_relation_geometry_store = new Relation_Geometry_Store(set.attic_relations, stmt, rman);
+      attic_relation_geometry_store = new Relation_Geometry_Store(set.attic_relations, context);
   }
 
   if (usage & Set_Usage::META)

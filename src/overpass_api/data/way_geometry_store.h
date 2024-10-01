@@ -20,9 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__DATA__WAY_GEOMETRY_STORE_H
 
 #include "../core/datatypes.h"
-#include "../statements/statement.h"
-// #include "abstract_processing.h"
-// #include "filenames.h"
+#include "request_context.h"
 
 #include <map>
 #include <vector>
@@ -31,10 +29,10 @@
 class Way_Geometry_Store
 {
 public:
-  Way_Geometry_Store(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                     const Statement& query, Resource_Manager& rman);
-  Way_Geometry_Store(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
-                     const Statement& query, Resource_Manager& rman);
+  Way_Geometry_Store(
+      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways, Request_Context& context);
+  Way_Geometry_Store(
+      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, Request_Context& context);
 
   // return the empty std::vector if the way is not found
   std::vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
@@ -47,12 +45,12 @@ private:
 class Way_Bbox_Geometry_Store : public Way_Geometry_Store
 {
 public:
-  Way_Bbox_Geometry_Store(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                     const Statement& query, Resource_Manager& rman,
-                     double south_, double north_, double west_, double east_);
-  Way_Bbox_Geometry_Store(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
-                     const Statement& query, Resource_Manager& rman,
-                     double south_, double north_, double west_, double east_);
+  Way_Bbox_Geometry_Store(
+      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways, Request_Context& context,
+      double south_, double north_, double west_, double east_);
+  Way_Bbox_Geometry_Store(
+      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, Request_Context& context,
+      double south_, double north_, double west_, double east_);
 
   // return the empty std::vector if the way is not found
   std::vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;

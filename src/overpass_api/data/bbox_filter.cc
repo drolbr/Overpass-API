@@ -198,15 +198,14 @@ void filter_relations_expensive(const Bbox_Filter& filter,
 }
 
 
-void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& into) const
+void Bbox_Filter::filter(Request_Context& context, Set& into) const
 {
   if (!bbox.valid())
     return;
 
   //Process ways
-  filter_ways_expensive(*this, Way_Geometry_Store(into.ways, query, rman), into.ways);
+  filter_ways_expensive(*this, Way_Geometry_Store(into.ways, context), into.ways);
 
-  Request_Context context(&query, rman);
   {
     //Process relations
 
@@ -223,13 +222,13 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
         = order_by_id(way_members_.get_current(), Order_By_Way_Id());
 
     filter_relations_expensive(*this, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_.get_current(), query, rman), into.relations);
+        Way_Geometry_Store(way_members_.get_current(), context), into.relations);
   }
 
-  if (rman.get_desired_timestamp() != NOW)
+  if (context.get_desired_timestamp() != NOW)
   {
     //Process attic ways
-    filter_ways_expensive(*this, Way_Geometry_Store(into.attic_ways, query, rman), into.attic_ways);
+    filter_ways_expensive(*this, Way_Geometry_Store(into.attic_ways, context), into.attic_ways);
 
     //Process attic relations
 
@@ -246,7 +245,7 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
         = order_attic_by_id(way_members_, Order_By_Way_Id());
 
     filter_relations_expensive(*this, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_, query, rman), into.attic_relations);
+        Way_Geometry_Store(way_members_, context), into.attic_relations);
   }
 
   //TODO: filter areas

@@ -937,6 +937,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 
   set_progress(1);
   rman.health_check(*this);
+  Request_Context context(this, rman);
 
   Query_Filter_Strategy check_keys_late = ids_required;
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin(); it != constraints.end(); ++it)
@@ -956,7 +957,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       progress_1< Node_Skeleton, Node::Id_Type, Uint32_Index >(
           keys, key_values, key_regexes, regkey_regexes, key_nvalues, key_nregexes, regkey_nregexes,
-          node_ids, range_vec_32, timestamp, check_keys_late, rman, *this);
+          node_ids, range_vec_32, timestamp, check_keys_late, context);
       if (node_ids.empty())
         node_answer_state = data_collected;
       collect_nodes(node_ids, node_answer_state, into, rman);
@@ -965,7 +966,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       progress_1< Way_Skeleton, Way::Id_Type, Uint31_Index >(
 	  keys, key_values, key_regexes, regkey_regexes, key_nvalues, key_nregexes, regkey_nregexes,
-          way_ids, way_range_vec_31, timestamp, check_keys_late, rman, *this);
+          way_ids, way_range_vec_31, timestamp, check_keys_late, context);
       if (way_ids.empty())
         way_answer_state = data_collected;
       collect_elems(QUERY_WAY, way_ids, way_answer_state, into, rman);
@@ -976,7 +977,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       progress_1< Relation_Skeleton, Relation::Id_Type, Uint31_Index >(
 	  keys, key_values, key_regexes, regkey_regexes, key_nvalues, key_nregexes, regkey_nregexes,
-          relation_ids, relation_range_vec_31, timestamp, check_keys_late, rman, *this);
+          relation_ids, relation_range_vec_31, timestamp, check_keys_late, context);
       if (relation_ids.empty())
         relation_answer_state = data_collected;
       collect_elems(QUERY_RELATION, relation_ids, relation_answer_state, into, rman);
@@ -992,7 +993,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         progress_1(
           keys, key_values, key_regexes, regkey_regexes, key_nvalues, key_nregexes, regkey_nregexes,
-          area_ids, check_keys_late, rman, *this);
+          area_ids, check_keys_late, context);
         if (area_ids.empty())
           area_answer_state = data_collected;
         collect_elems(QUERY_AREA, area_ids, area_answer_state, into, rman);
@@ -1144,7 +1145,6 @@ void Query_Statement::execute(Resource_Manager& rman)
 
     set_progress(4);
     rman.health_check(*this);
-    Request_Context context(this, rman);
 
     if (type & QUERY_NODE)
     {

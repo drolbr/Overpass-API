@@ -23,10 +23,10 @@
 
 
 template< typename Object >
-Ranges< Uint32_Index > small_way_nd_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     typename std::map< Uint31_Index, std::vector< Object > >::const_iterator ways_begin,
-     typename std::map< Uint31_Index, std::vector< Object > >::const_iterator ways_end)
+Ranges< Uint32_Index > small_way_nd_indices(
+    Request_Context& context,
+    typename std::map< Uint31_Index, std::vector< Object > >::const_iterator ways_begin,
+    typename std::map< Uint31_Index, std::vector< Object > >::const_iterator ways_end)
 {
   std::vector< uint32 > parents;
 
@@ -39,8 +39,7 @@ Ranges< Uint32_Index > small_way_nd_indices
   sort(parents.begin(), parents.end());
   parents.erase(unique(parents.begin(), parents.end()), parents.end());
 
-  if (stmt)
-    rman.health_check(*stmt);
+  context.get_health_guard().check();
 
   return calc_node_children_ranges(parents);
 }
@@ -71,22 +70,21 @@ std::vector< Node::Id_Type > small_way_nd_ids(const std::map< Uint31_Index, std:
 }
 
 
-std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members
-    (const Statement* stmt, Resource_Manager& rman,
-     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
+std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members(
+    Request_Context& context,
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
 {
-  Request_Context context(stmt, rman);
   return collect_items_range< Uint32_Index, Node_Skeleton >(context,
-      small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end()),
+      small_way_nd_indices< Way_Skeleton >(context, ways.begin(), ways.end()),
       Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways))).get_current();
 }
 
 
-Way_Geometry_Store::Way_Geometry_Store
-    (const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways, const Statement& query, Resource_Manager& rman)
+Way_Geometry_Store::Way_Geometry_Store(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways, Request_Context& context)
 {
   // Retrieve all nodes referred by the ways.
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > way_members_ = small_way_members(&query, rman, ways);
+  std::map< Uint32_Index, std::vector< Node_Skeleton > > way_members_ = small_way_members(context, ways);
 
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = way_members_.begin();
@@ -100,17 +98,15 @@ Way_Geometry_Store::Way_Geometry_Store
 }
 
 
-Way_Geometry_Store::Way_Geometry_Store
-    (const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
-     const Statement& query, Resource_Manager& rman)
+Way_Geometry_Store::Way_Geometry_Store(
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, Request_Context& context)
 {
   // Retrieve all nodes referred by the ways.
-  Request_Context context(&query, rman);
   auto timeless = collect_items_range< Uint32_Index, Node_Skeleton >(context,
-      small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
+      small_way_nd_indices< Attic< Way_Skeleton > >(context, ways.begin(), ways.end()),
       Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)));
 
-  keep_matching_skeletons(nodes, timeless.get_current(), timeless.get_attic(), rman.get_desired_timestamp());
+  keep_matching_skeletons(nodes, timeless.get_current(), timeless.get_attic(), context.get_desired_timestamp());
 }
 
 
@@ -125,9 +121,9 @@ std::vector< Quad_Coord > Way_Geometry_Store::get_geometry(const Way_Skeleton& w
 
 Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-    const Statement& query, Resource_Manager& rman,
+    Request_Context& context,
     double south_, double north_, double west_, double east_)
-  : Way_Geometry_Store(ways, query, rman),
+  : Way_Geometry_Store(ways, context),
     bbox_d(south_, west_, north_, east_),
     south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {}
@@ -135,9 +131,9 @@ Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
 
 Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
-    const Statement& query, Resource_Manager& rman,
+    Request_Context& context,
     double south_, double north_, double west_, double east_)
-  : Way_Geometry_Store(ways, query, rman),
+  : Way_Geometry_Store(ways, context),
     bbox_d(south_, west_, north_, east_),
     south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {}

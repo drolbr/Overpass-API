@@ -19,19 +19,22 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__USER_BASED_FILTERING_H
 #define DE__OSM3S___OVERPASS_API__DATA__USER_BASED_FILTERING_H
 
+
+#include "request_context.h"
+
 #include <set>
 #include <vector>
 
 
 template< typename Index, typename Object >
 std::vector< typename Object::Id_Type > touched_ids_by_users(
-    Resource_Manager& rman, const Ranges< Index >& ranges, const std::set< Uint32_Index >& user_ids)
+    Request_Context& context, const Ranges< Index >& ranges, const std::set< Uint32_Index >& user_ids)
 {
   std::vector< typename Object::Id_Type > result;
 
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > cur_meta_db(
-      rman.get_transaction()->data_index(current_meta_file_properties< Object >()));
+      context.data_index(current_meta_file_properties< Object >()));
     for (auto it = cur_meta_db.range_begin(ranges); !(it == cur_meta_db.range_end()); ++it)
     {
       if (user_ids.find(it.object().user_id) != user_ids.end()
@@ -41,7 +44,7 @@ std::vector< typename Object::Id_Type > touched_ids_by_users(
   }
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_meta_db(
-      rman.get_transaction()->data_index(attic_meta_file_properties< Object >()));
+      context.data_index(attic_meta_file_properties< Object >()));
     for (auto it = attic_meta_db.range_begin(ranges); !(it == attic_meta_db.range_end()); ++it)
     {
       if (user_ids.find(it.object().user_id) != user_ids.end()
@@ -78,13 +81,13 @@ struct Touch_State
 
 template< typename Index, typename Object >
 std::vector< Touch_State< typename Object::Id_Type > > detect_impacted_versions(
-    Resource_Manager& rman, const Ranges< Index >& ranges, const std::set< Uint32_Index >& user_ids)
+    Request_Context& context, const Ranges< Index >& ranges, const std::set< Uint32_Index >& user_ids)
 {
   std::vector< Touch_State< typename Object::Id_Type > > found;
 
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_meta_db(
-      rman.get_transaction()->data_index(attic_meta_file_properties< Object >()));
+      context.data_index(attic_meta_file_properties< Object >()));
     for (auto it = attic_meta_db.range_begin(ranges); !(it == attic_meta_db.range_end()); ++it)
     {
       if (user_ids.find(it.object().user_id) != user_ids.end())
@@ -124,7 +127,7 @@ std::vector< Touch_State< typename Object::Id_Type > > detect_impacted_versions(
   decltype(found) extra_now;
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > cur_meta_db(
-      rman.get_transaction()->data_index(current_meta_file_properties< Object >()));
+      context.data_index(current_meta_file_properties< Object >()));
     for (auto it = cur_meta_db.range_begin(ranges); !(it == cur_meta_db.range_end()); ++it)
     {
       auto found_it = std::lower_bound(

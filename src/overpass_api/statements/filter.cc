@@ -27,7 +27,7 @@
 class Filter_Constraint : public Query_Constraint
 {
   public:
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return ids_required; }
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return ids_required; }
 
     Filter_Constraint(Filter_Statement& stmt_) : stmt(&stmt_) {}
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges) { return false; }

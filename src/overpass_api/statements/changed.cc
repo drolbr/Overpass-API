@@ -188,7 +188,7 @@ class Changed_Constraint : public Query_Constraint
   public:
     Changed_Constraint(Changed_Statement& stmt_) : stmt(&stmt_) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return prefer_ranges; }
 
     bool get_node_ids
         (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids);
