@@ -16,8 +16,10 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../data/idx_from_id.h"
+#include "../data/collect_items.h"
 #include "../statements/evaluator.h"
+#include "abstract_processing.h"
+#include "idx_from_id.h"
 #include "set_comparison.h"
 
 #include <algorithm>

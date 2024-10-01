@@ -16,11 +16,14 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../core/type_meta.h"
 #include "abstract_processing.h"
+#include "collect_items.h"
 #include "collect_members.h"
 #include "utils.h"
 
 #include <cstdint>
+#include <vector>
 
 //-----------------------------------------------------------------------------
 
@@ -1095,3 +1098,193 @@ void add_nw_member_objects(Request_Context& context, const Set& input_set, Set& 
     rel_nodes.swap(into.nodes, into.attic_nodes);
   }
 }
+
+//-----------------------------------------------------------------------------
+
+template< typename Index, typename Id_Type >
+void eval_timespan_from_meta(
+    std::map< Index, std::map< Id_Type, std::pair< uint64_t, uint64_t > > >& timestamp_by_id_by_idx,
+    File_Blocks_Index_Base* file_index, const std::vector< Index >& idx_set, uint64_t timestamp)
+{
+  Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >,
+          typename std::vector< Index >::const_iterator >
+      attic_meta_db(file_index);
+
+  for (auto it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+      !(it == attic_meta_db.discrete_end()); ++it)
+  {
+    auto tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
+    if (tit != timestamp_by_id_by_idx[it.index()].end())
+    {
+      if (timestamp < it.object().timestamp)
+        tit->second.second = std::min(tit->second.second, it.object().timestamp);
+      else
+        tit->second.first = std::max(tit->second.first, it.object().timestamp);
+    }
+  }
+}
+
+
+template< typename Index, typename Skeleton >
+void validate_against_undelete(
+    std::map< Index, std::vector< Skeleton > >& current,
+    std::map< Index, std::vector< Attic< Skeleton > > >& attic,
+    const std::vector< Index >& idx_set, Request_Context& context, uint64 timestamp)
+{
+  auto cit = current.begin();
+  auto ait = attic.begin();
+  
+  Block_Backend< Index, Attic< typename Skeleton::Id_Type >, typename std::vector< Index >::const_iterator >
+      undeleted_db(context.data_index(attic_undeleted_file_properties< Skeleton >()));
+  for (auto it = undeleted_db.discrete_begin(idx_set.begin(), idx_set.end());
+      !(it == undeleted_db.discrete_end()); ++it)
+  {
+    if (it.object().timestamp <= timestamp)
+      continue;
+
+    while (cit != current.end() && cit->first < it.index())
+      ++cit;
+    if (cit != current.end() && cit->first == it.index())
+    {
+      for (auto it2 = cit->second.begin(); it2 != cit->second.end(); )
+      {
+        if (it2->id == it.object())
+        {
+          *it2 = cit->second.back();
+          cit->second.pop_back();
+        }
+        else
+          ++it2;
+      }
+    }
+
+    while (ait != attic.end() && ait->first < it.index())
+      ++ait;
+    if (ait != attic.end() && ait->first == it.index())
+    {
+      for (typename std::vector< Attic< Skeleton > >::iterator it2 = ait->second.begin();
+            it2 != ait->second.end(); )
+      {
+        if (it2->id == it.object() && it.object().timestamp < it2->timestamp)
+        {
+          *it2 = ait->second.back();
+          ait->second.pop_back();
+        }
+        else
+          ++it2;
+      }
+    }
+  }
+}
+
+
+template< typename Index, typename Skeleton >
+void validate_against_meta(
+    std::map< Index, std::vector< Skeleton > >& current,
+    std::map< Index, std::vector< Attic< Skeleton > > >& attic,
+    const std::vector< Index >& idx_set, Request_Context& context, uint64 timestamp)
+{
+  // Confirm elements that are backed by meta data
+  // Update element's expiration timestamp if a meta exists that is older than the current
+  // expiration date and younger than timestamp
+  std::map< Index, std::map< typename Skeleton::Id_Type, std::pair< uint64_t, uint64_t > > >
+      timestamp_by_id_by_idx;
+  for (const auto& i : current)
+  {
+    auto& entry = timestamp_by_id_by_idx[i.first];
+    for (const auto& j : i.second)
+      entry[j.id] = std::make_pair(0, NOW);
+  }
+  for (const auto& i : attic)
+  {
+    auto& entry = timestamp_by_id_by_idx[i.first];
+    for (const auto& j : i.second)
+      entry[j.id] = std::make_pair(0, j.timestamp);
+  }
+  
+  eval_timespan_from_meta< Index, typename Skeleton::Id_Type >(
+      timestamp_by_id_by_idx, context.data_index(attic_meta_file_properties< Skeleton >()),
+      idx_set, timestamp);
+  eval_timespan_from_meta< Index, typename Skeleton::Id_Type >(
+      timestamp_by_id_by_idx, context.data_index(current_meta_file_properties< Skeleton >()),
+      idx_set, timestamp);
+
+  // Filter current: only keep elements that have already existed at timestamp
+  for (auto& i : current)
+  {
+    std::vector< Skeleton > result;
+    auto& entry = timestamp_by_id_by_idx[i.first];
+
+    for (const auto& j : i.second)
+    {
+      if (entry[j.id].first > 0)
+      {
+        if (entry[j.id].second == NOW)
+          result.push_back(j);
+        else
+          attic[i.first].push_back(Attic< Skeleton >(j, entry[j.id].second));
+      }
+    }
+
+    result.swap(i.second);
+  }
+
+  // Filter attic: only keep elements that have already existed at timestamp
+  for (auto& i : attic)
+  {
+    std::vector< Attic< Skeleton > > result;
+    auto& entry = timestamp_by_id_by_idx[i.first];
+
+    for (const auto& j : i.second)
+    {
+      if (entry[j.id].first > 0)
+      {
+        result.push_back(j);
+        result.back().timestamp = entry[j.id].second;
+      }
+    }
+
+    result.swap(i.second);
+  }
+}
+
+
+template< typename Index, typename Skeleton >
+void filter_attic_elements
+    (Request_Context& context, uint64 timestamp,
+     std::map< Index, std::vector< Skeleton > >& current,
+     std::map< Index, std::vector< Attic< Skeleton > > >& attic)
+{
+  if (timestamp != NOW)
+  {
+    std::vector< Index > idx_set;
+    for (const auto& i : current)
+      idx_set.push_back(i.first);
+    for (const auto& i : attic)
+      idx_set.push_back(i.first);
+    std::sort(idx_set.begin(), idx_set.end());
+    idx_set.erase(std::unique(idx_set.begin(), idx_set.end()), idx_set.end());
+
+    if (!idx_set.empty())
+    {
+      validate_against_undelete(current, attic, idx_set, context, timestamp);
+      validate_against_meta(current, attic, idx_set, context, timestamp);
+    }
+  }
+}
+
+
+template void filter_attic_elements(
+    Request_Context& context, uint64 timestamp,
+    std::map< Uint32_Index, std::vector< Node_Skeleton > >& current,
+    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic);
+
+template void filter_attic_elements(
+    Request_Context& context, uint64 timestamp,
+    std::map< Uint31_Index, std::vector< Way_Skeleton > >& current,
+    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic);
+
+template void filter_attic_elements(
+    Request_Context& context, uint64 timestamp,
+    std::map< Uint31_Index, std::vector< Relation_Skeleton > >& current,
+    std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic);

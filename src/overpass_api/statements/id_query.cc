@@ -20,6 +20,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
+#include "../data/collect_items.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
 #include "../data/idx_from_id.h"

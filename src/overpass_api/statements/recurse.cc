@@ -27,6 +27,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
+#include "../data/collect_items.h"
 #include "../data/collect_members.h"
 #include "../data/utils.h"
 #include "recurse.h"

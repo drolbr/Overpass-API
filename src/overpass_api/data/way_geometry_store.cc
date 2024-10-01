@@ -16,6 +16,8 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../data/abstract_processing.h"
+#include "../data/collect_items.h"
 #include "../data/collect_members.h"
 #include "../data/way_geometry_store.h"
 

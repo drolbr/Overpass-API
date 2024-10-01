@@ -26,6 +26,7 @@
 #include <cstring>
 #include <limits>
 #include <string>
+#include <vector>
 
 
 struct User_Data

@@ -21,6 +21,7 @@
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
+#include "../data/elements_from_db.h"
 #include "../data/filenames.h"
 #include "../data/filter_by_tags.h"
 #include "../data/filter_ids_by_tags.h"

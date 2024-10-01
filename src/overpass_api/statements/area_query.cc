@@ -29,7 +29,9 @@
 
 #include "../../template_db/block_backend.h"
 #include "../core/index_computations.h"
+#include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
+#include "../data/elements_from_db.h"
 #include "../data/tilewise_geometry.h"
 #include "area_query.h"
 #include "coord_query.h"

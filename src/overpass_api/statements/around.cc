@@ -20,6 +20,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/collect_members.h"
+#include "../data/elements_from_db.h"
 #include "around.h"
 #include "recurse.h"
 

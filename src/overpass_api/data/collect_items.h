@@ -19,7 +19,8 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
 #define DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
 
-#include "abstract_processing.h"
+
+#include "../../template_db/block_backend.h"
 #include "filenames.h"
 #include "request_context.h"
 #include "timeless.h"

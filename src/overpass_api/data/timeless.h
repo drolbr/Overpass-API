@@ -19,6 +19,8 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__TIMELESS_H
 #define DE__OSM3S___OVERPASS_API__DATA__TIMELESS_H
 
+
+#include "../core/settings.h"
 #include "utils.h"
 
 

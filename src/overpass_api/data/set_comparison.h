@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__DATA__SET_COMPARISON_H
 
 
+#include "../dispatch/resource_manager.h"
 #include "../frontend/output_handler.h"
 #include "collect_members.h"
 #include "diff_set.h"

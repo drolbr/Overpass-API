@@ -238,7 +238,9 @@ nobase_dist_HEADERS = \
   overpass_api/data/bbox_filter.h\
   overpass_api/data/collect_items.h\
   overpass_api/data/collect_members.h\
+  overpass_api/data/constraints.h\
   overpass_api/data/diff_set.h\
+  overpass_api/data/elements_from_db.h\
   overpass_api/data/flat_meta_collector.h\
   overpass_api/data/filenames.h\
   overpass_api/data/filter_by_tags.h\

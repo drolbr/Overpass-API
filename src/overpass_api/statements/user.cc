@@ -21,6 +21,7 @@
 #include "../core/settings.h"
 #include "../data/bbox_filter.h"
 #include "../data/collect_members.h"
+#include "../data/elements_from_db.h"
 #include "../data/meta_collector.h"
 #include "../data/user_based_filtering.h"
 #include "user.h"
