@@ -27,6 +27,99 @@
 
 //-----------------------------------------------------------------------------
 
+
+template< typename Ref_Type, typename Relation_Skeleton >
+void filter_for_member_ids(const std::vector< Relation_Skeleton >& relations,
+                           std::vector< Ref_Type >& ids, uint32 type)
+{
+  for (typename std::vector< Relation_Skeleton >::const_iterator it2(relations.begin());
+      it2 != relations.end(); ++it2)
+  {
+    for (std::vector< Relation_Entry >::const_iterator it3(it2->members.begin());
+        it3 != it2->members.end(); ++it3)
+    {
+      if (it3->type == type)
+        ids.push_back(Ref_Type(it3->ref.val()));
+    }
+  }
+}
+
+
+template< typename Ref_Type, typename Relation_Skeleton >
+void filter_for_member_ids(const std::vector< Relation_Skeleton >& relations,
+                           std::vector< Ref_Type >& ids, uint32 type, uint32 role_id)
+{
+  for (typename std::vector< Relation_Skeleton >::const_iterator it2(relations.begin());
+      it2 != relations.end(); ++it2)
+  {
+    for (std::vector< Relation_Entry >::const_iterator it3(it2->members.begin());
+        it3 != it2->members.end(); ++it3)
+    {
+      if (it3->type == type && it3->role == role_id)
+        ids.push_back(Ref_Type(it3->ref.val()));
+    }
+  }
+}
+
+
+std::vector< Node::Id_Type > relation_node_member_ids
+    (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
+     const uint32* role_id)
+{
+  std::vector< Node::Id_Type > ids;
+  if (role_id)
+  {
+    for (auto it = rels.begin(); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::NODE, *role_id);
+    for (auto it = attic_rels.begin(); it != attic_rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::NODE, *role_id);
+  }
+  else
+  {
+    for (auto it = rels.begin(); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::NODE);
+    for (auto it = attic_rels.begin(); it != attic_rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::NODE);
+  }
+
+  std::sort(ids.begin(), ids.end());
+  ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+
+  return ids;
+}
+
+
+std::vector< Way::Id_Type > relation_way_member_ids
+    (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
+     const uint32* role_id)
+{
+  std::vector< Way::Id_Type > ids;
+  if (role_id)
+  {
+    for (auto it = rels.begin(); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::WAY, *role_id);
+    for (auto it = attic_rels.begin(); it != attic_rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::WAY, *role_id);
+  }
+  else
+  {
+    for (auto it = rels.begin(); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::WAY);
+    for (auto it = attic_rels.begin(); it != attic_rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::WAY);
+  }
+
+  std::sort(ids.begin(), ids.end());
+  ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+
+  return ids;
+}
+
+
+//-----------------------------------------------------------------------------
+
 template< typename Container >
 void way_nd_ids_pos(
     const Container& ways, const std::vector< int >& pos, std::vector< Node::Id_Type >& ids)
@@ -694,24 +787,6 @@ Timeless< Uint32_Index, Node_Skeleton > relation_node_members
 }
 
 
-std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_members
-    (Request_Context& context,
-     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const Ranges< Uint32_Index >& node_ranges)
-{
-  std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(relations, {});
-  context.get_health_guard().check();
-
-  // Retrieve all nodes referred by the ways.
-  auto timeless = collect_items_range< Uint32_Index, Node_Skeleton >(
-      context, node_ranges, Id_Predicate< Node_Skeleton >(intersect_ids));
-
-  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > result;
-  keep_matching_skeletons(result, timeless.get_current(), timeless.get_attic(), context.get_desired_timestamp());
-  return result;
-}
-
-
 Timeless< Uint32_Index, Node_Skeleton > way_members(
     Request_Context& context,
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
@@ -941,60 +1016,6 @@ void filter_ways_by_ranges(std::map< Uint31_Index, std::vector< Attic< Way_Skele
                            const Ranges< Uint31_Index >& ranges)
 {
   filter_ways_by_ranges_generic(ways, ranges);
-}
-
-
-void keep_matching_skeletons
-    (std::vector< Node >& result,
-     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& current,
-     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic,
-     uint64 timestamp)
-{
-  std::map< Node_Skeleton::Id_Type, uint64 > timestamp_by_id;
-
-  result.clear();
-
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = current.begin();
-       it != current.end(); ++it)
-  {
-    for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      timestamp_by_id[it2->id] = NOW;
-  }
-
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = attic.begin();
-       it != attic.end(); ++it)
-  {
-    for (std::vector< Attic<Node_Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-    {
-      uint64& stored_timestamp = timestamp_by_id[it2->id];
-      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
-        stored_timestamp = it2->timestamp;
-    }
-  }
-
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = current.begin();
-       it != current.end(); ++it)
-  {
-    for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      if (timestamp_by_id[it2->id] == NOW)
-        result.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
-    }
-  }
-
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = attic.begin();
-       it != attic.end(); ++it)
-  {
-    for (std::vector< Attic<Node_Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-    {
-      if (timestamp_by_id[it2->id] == it2->timestamp)
-        result.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
-    }
-  }
-
-  std::sort(result.begin(), result.end(), Node_Comparator_By_Id());
 }
 
 

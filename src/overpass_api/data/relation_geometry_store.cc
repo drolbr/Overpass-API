@@ -117,14 +117,12 @@ Relation_Geometry_Store::Relation_Geometry_Store(
 
   way_geometry_store = new Way_Geometry_Store(ways_by_idx, context);
 
-  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::iterator it = ways_by_idx.begin();
-      it != ways_by_idx.end(); ++it)
+  for (auto it = ways_by_idx.begin(); it != ways_by_idx.end(); ++it)
   {
-    for (std::vector< Attic< Way_Skeleton > >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
+    for (auto iit = it->second.begin(); iit != it->second.end(); ++iit)
       ways.push_back(*iit);
   }
-  sort(ways.begin(), ways.end());
+  std::sort(ways.begin(), ways.end());
 }
 
 

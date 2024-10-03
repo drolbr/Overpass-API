@@ -100,6 +100,60 @@ Way_Geometry_Store::Way_Geometry_Store(
 }
 
 
+void keep_matching_skeletons
+    (std::vector< Node >& result,
+     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& current,
+     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic,
+     uint64 timestamp)
+{
+  std::map< Node_Skeleton::Id_Type, uint64 > timestamp_by_id;
+
+  result.clear();
+
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = current.begin();
+       it != current.end(); ++it)
+  {
+    for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      timestamp_by_id[it2->id] = NOW;
+  }
+
+  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = attic.begin();
+       it != attic.end(); ++it)
+  {
+    for (std::vector< Attic<Node_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      uint64& stored_timestamp = timestamp_by_id[it2->id];
+      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
+        stored_timestamp = it2->timestamp;
+    }
+  }
+
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = current.begin();
+       it != current.end(); ++it)
+  {
+    for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == NOW)
+        result.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
+    }
+  }
+
+  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = attic.begin();
+       it != attic.end(); ++it)
+  {
+    for (std::vector< Attic<Node_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == it2->timestamp)
+        result.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
+    }
+  }
+
+  std::sort(result.begin(), result.end(), Node_Comparator_By_Id());
+}
+
+
 Way_Geometry_Store::Way_Geometry_Store(
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, Request_Context& context)
 {

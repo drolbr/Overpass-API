@@ -323,50 +323,47 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
   around->calc_lat_lons(input ? *input : Set(), *around, rman);
 
   filter_nodes_expensive(*around, into.nodes);
-  filter_ways_expensive(*around, Way_Geometry_Store(into.ways, context), into.ways);
-
-  {
-    //Process relations
-
-    // Retrieve all node and way members referred by the relations.
-    Ranges< Uint32_Index > node_ranges;
-    get_ranges(rman, node_ranges);
-
-    Timeless< Uint32_Index, Node_Skeleton > node_members
-        = relation_node_members(context, into.relations, {}, node_ranges, {}, true);
-    std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
-        = order_by_id(node_members.get_current(), Order_By_Node_Id());
-
-    // Retrieve all ways referred by the relations.
-    Ranges< Uint31_Index > way_ranges;
-    get_ranges(rman, way_ranges);
-
-    Timeless< Uint31_Index, Way_Skeleton > way_members_
-        = relation_way_members(context, into.relations, {}, way_ranges, {}, true);
-    std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
-        = order_by_id(way_members_.get_current(), Order_By_Way_Id());
-
-    // Retrieve all nodes referred by the ways.
-    filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_.get_current(), context), into.relations);
-  }
-
   if (!into.attic_nodes.empty())
     filter_nodes_expensive(*around, into.attic_nodes);
 
+  filter_ways_expensive(*around, Way_Geometry_Store(into.ways, context), into.ways);
   if (!into.attic_ways.empty())
     filter_ways_expensive(*around, Way_Geometry_Store(into.attic_ways, context), into.attic_ways);
+
+  //Process relations
+
+  // Retrieve all node and way members referred by the relations.
+  Ranges< Uint32_Index > node_ranges;
+  get_ranges(rman, node_ranges);
+
+  Timeless< Uint32_Index, Node_Skeleton > node_members
+      = relation_node_members(context, into.relations, into.attic_relations, node_ranges, {}, true);
+  std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+      = order_by_id(node_members, Order_By_Node_Id());
+
+  // Retrieve all ways referred by the relations.
+  Ranges< Uint31_Index > way_ranges;
+  get_ranges(rman, way_ranges);
+
+  Timeless< Uint31_Index, Way_Skeleton > way_members
+      = relation_way_members(context, into.relations, into.attic_relations, way_ranges, {}, true);
+  std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
+      = order_by_id(way_members.get_current(), Order_By_Way_Id());
+
+  // Retrieve all nodes referred by the ways.
+  filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
+      Way_Geometry_Store(way_members.get_current(), context), into.relations);
 
   if (!into.attic_relations.empty())
   {
     //Process relations
-    Ranges< Uint32_Index > node_ranges;
-    get_ranges(rman, node_ranges);
-
-    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(context, into.attic_relations, node_ranges);
-    std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
-        = order_attic_by_id(node_members, Order_By_Node_Id());
+//     Ranges< Uint32_Index > node_ranges;
+//     get_ranges(rman, node_ranges);
+// 
+//     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
+//         = relation_node_members(context, into.attic_relations, node_ranges);
+//     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+//         = order_attic_by_id(node_members, Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     Ranges< Uint31_Index > way_ranges;
@@ -845,10 +842,18 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
 
   add_nodes(input.nodes);
   add_ways(input.ways, Way_Geometry_Store(input.ways, context));
+  if (rman.get_desired_timestamp() != NOW)
+  {
+    add_nodes(input.attic_nodes);
+    add_ways(input.attic_ways, Way_Geometry_Store(input.attic_ways, context));
+  }
 
   // Retrieve all node and way members referred by the relations.
-  add_nodes(relation_node_members(context, input.relations, {}, Ranges< Uint32_Index >::global(), {}, true)
-    .get_current());
+  auto member_nodes = relation_node_members(
+      context, input.relations, input.attic_relations, Ranges< Uint32_Index >::global(), {}, true);
+  add_nodes(member_nodes.get_current());
+  if (rman.get_desired_timestamp() != NOW)
+    add_nodes(member_nodes.get_attic());
 
   // Retrieve all ways referred by the relations.
   Timeless< Uint31_Index, Way_Skeleton > way_members
@@ -857,13 +862,6 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
 
   if (rman.get_desired_timestamp() != NOW)
   {
-    add_nodes(input.attic_nodes);
-    add_ways(input.attic_ways, Way_Geometry_Store(input.attic_ways, context));
-
-    // Retrieve all node and way members referred by the relations.
-    add_nodes(relation_node_members(
-        context, input.attic_relations, relation_node_member_indices({}, input.attic_relations)));
-
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members
         = relation_way_members(context, input.attic_relations, Ranges< Uint31_Index >::global());
