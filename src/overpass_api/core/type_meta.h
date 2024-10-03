@@ -216,32 +216,26 @@ public:
     return Nibble_Varint_Reader((const uint8_t*)data, 8).read_flex< uint64_t >(SIZE_RULES);
   }
 
-/*  void to_data(void* data) const
+  void to_data(void* data) const
   {
     prepare_write();
 
-    Nibble_Varint_Writer dest(data, 8);
-    dest.write_flex< uint64_t >(BASE_TIMESTAMP_RULES, base_timestamp);
-    dest.write_flex< ? >(CHANGESET_ID_RULES, changeset);
-    dest.write_flex< ? >(USER_ID_RULES, user_id);
+    Nibble_Varint_Writer dest((uint8_t*)data);
+    dest.write_flex(SIZE_RULES, Nibble_Varint_Writer::brutto_size_in_bytes(cached_size));
+    dest.write_flex(BASE_TIMESTAMP_RULES, cached_base_timestamp);
+    dest.write_flex(CHANGESET_ID_RULES, changeset);
     dest.write_fixed(4, is_redacted);
+    dest.write_flex(USER_ID_RULES, user_id);
     
-    auto it = refs.begin();
-    if (it != refs.end())
+    uint64_t last_ref = 0;
+    for (const auto& i : refs)
     {
-      dest.write_flex(OBJ_ID_RULES, it->ref);
-      dest.write_flex(VERSION_RULES, it->version);
-      dest.write_flex(DELTA_TIMESTAMP_RULES - cached_base_timestamp + 1);
-      ++it;
-    }
-    while (it != refs.end())
-    {
-      dest.write_flex(OBJ_ID_RULES, it->ref);
-      dest.write_flex(VERSION_RULES, it->version);
-      dest.write_flex(DELTA_TIMESTAMP_RULES - cached_base_timestamp + 1);
-      ++it;
-    }
-  }*/
+      dest.write_flex(VERSION_RULES, i.version);
+      dest.write_flex(OBJ_ID_RULES, i.ref - last_ref);
+      dest.write_flex(DELTA_TIMESTAMP_RULES, i.timestamp - cached_base_timestamp + 1);
+      last_ref = i.ref;
+    }    
+  }
 
   bool operator<(const Meta_Per_Changeset_Skeleton& a) const
   {
@@ -262,7 +256,7 @@ private:
   uint64_t user_id;
   mutable std::vector< Entry > refs;
   
-  static constexpr uint32_t SIZE_RULES = 0x30100c08;
+  static constexpr uint32_t SIZE_RULES = 0x18100c08;
   static constexpr uint32_t BASE_TIMESTAMP_RULES = 0x302c2824;
   static constexpr uint32_t CHANGESET_ID_RULES = 0x2824201c;
   static constexpr uint32_t USER_ID_RULES = 0x24201c14;
@@ -298,12 +292,9 @@ private:
           + Nibble_Varint_Writer::size_in_bits(VERSION_RULES, i.version)
           + Nibble_Varint_Writer::size_in_bits(DELTA_TIMESTAMP_RULES, i.timestamp - cached_base_timestamp + 1);
       last_ref = i.ref;
-    }
-/*
-    uint_fast32_t size_length = Nibble_Varint_Writer::size_in_bits(SIZE_RULES, payload_size);
-    uint_fast32_t gross_size_length = Nibble_Varint_Writer::size_in_bits(SIZE_RULES, payload_size + size_length);
-    cached_size = payload_size + gross_size_length;
-*/
+    }    
+    cached_size = payload_size + Nibble_Varint_Writer::size_of_size_in_bytes(SIZE_RULES, payload_size);
+
     raw_mode = true;
   }
 };

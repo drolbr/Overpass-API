@@ -218,6 +218,25 @@ struct Nibble_Varint_Writer
     
     return 68;
   }
+  
+  static uint64_t brutto_size_in_bytes(uint64_t brutto_size_in_bits)
+  {
+    return (brutto_size_in_bits + 7)/8;
+  }
+
+  static uint64_t size_of_size_in_bytes(const uint32_t LIMITS, uint64_t netto_size_in_bits)
+  {    
+    if ((netto_size_in_bits + (LIMITS & 0xff) + 7)/8 <= (uint64_t)~(-1ull<<((LIMITS & 0xff) - 1)))
+      return (LIMITS & 0xff);
+    else if ((netto_size_in_bits + ((LIMITS>>8) & 0xff) + 7)/8 <= (uint64_t)~(-1ull<<(((LIMITS>>8) & 0xff) - 2)))
+      return ((LIMITS>>8) & 0xff);
+    else if ((netto_size_in_bits + ((LIMITS>>16) & 0xff) + 7)/8 <= (uint64_t)~(-1ull<<(((LIMITS>>16) & 0xff) - 3)))
+      return ((LIMITS>>16) & 0xff);
+    else if ((netto_size_in_bits + ((LIMITS>>24) & 0xff) + 7)/8 <= (uint64_t)~(-1ull<<(((LIMITS>>24) & 0xff) - 4)))
+      return ((LIMITS>>24) & 0xff);
+    
+    return 68;
+  }
 
   void write_flex(const uint32_t LIMITS, uint64_t value)
   {
@@ -285,6 +304,12 @@ struct Nibble_Varint_Writer
     }
     else
       bitpos = 8 + num_bits - valpos;
+  }
+  
+  void pad_to_byte()
+  {
+    if (bitpos > 0)
+      *ptr = (*ptr | (-1ull<<bitpos));
   }
 
 private:
