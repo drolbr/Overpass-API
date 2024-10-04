@@ -27,7 +27,7 @@ int main(int argc, char* args[])
   {
     std::cout<<"Empty reader:\n";
 
-    Nibble_Varint_Reader reader(0, 0);
+    Nibble_Varint_Reader reader(nullptr, 0);
     show_good(reader);
     std::cout<<'\n';
   }

@@ -172,48 +172,24 @@ public:
   Meta_Per_Changeset_Skeleton(uint64_t changeset_, bool is_redacted_, uint64_t user_id_)
       : changeset(changeset_), is_redacted(is_redacted_), user_id(user_id_) {}
 
-/*  Meta_Per_Changeset_Skeleton(void* data)
+  Meta_Per_Changeset_Skeleton(void* data)
   {
-    Nibble_Varint_Reader src(data, 8);
-    src.resize(src.read_flex< uint32_t >(SIZE_RULES));
+    Nibble_Varint_Reader src(SIZE_RULES, (uint8_t*)data);
     uint64_t base_timestamp = src.read_flex< uint64_t >(BASE_TIMESTAMP_RULES);
-    Id_Type changeset = src.read_flex< ? >(CHANGESET_ID_RULES);
-    Id_Type user_id = src.read_flex< ? >(USER_ID_RULES);
-    uint8_t flags = src.read_fixed(4);
+    changeset = src.read_flex< uint64_t >(CHANGESET_ID_RULES);
+    uint8_t flags = src.read_fixed< uint64_t >(4);
+    user_id = src.read_flex< uint64_t >(USER_ID_RULES);
     is_redacted = (flags & 0x01);
   
-    if (src.has_data())
-      refs.push_back({
-        src.read_flex< uint64_t >(OBJ_ID_RULES),
-        src.read_flex< uint64_t >(VERSION_RULES),
-        src.read_flex< uint64_t >(DELTA_TIMESTAMP_RULES) + base_timestamp - 1 });
-    while (src.has_data())
-      refs.push_back({
-        src.read_flex< uint64_t >(OBJ_ID_RULES) + refs.back().ref,
-        src.read_flex< uint64_t >(VERSION_RULES),
-        src.read_flex< uint64_t >(DELTA_TIMESTAMP_RULES) + base_timestamp - 1 });
-  }*/
-
-  const std::vector< Entry >& get_refs() const { return refs; }
-  const uint64_t get_changeset() const { return changeset; }
-  const bool get_is_redacted() const { return is_redacted; }
-  const uint64_t get_user_id() const { return user_id; }
-  
-  void add_ref(const Entry& entry)
-  {
-    raw_mode = false;
-    refs.push_back(entry);
-  }
-
-  uint32_t size_of() const
-  {
-    prepare_write();
-    return cached_size;
-  }
-
-  static uint32_t size_of(void* data)
-  {
-    return Nibble_Varint_Reader((const uint8_t*)data, 8).read_flex< uint64_t >(SIZE_RULES);
+    uint64_t last_ref = 0;
+    while (src.good_flex())
+    {
+      uint64_t version = src.read_flex< uint64_t >(VERSION_RULES);
+      uint64_t ref = src.read_flex< uint64_t >(OBJ_DELTA_RULES) + last_ref;
+      uint64_t timestamp = src.read_flex< uint64_t >(DELTA_TIMESTAMP_RULES) + base_timestamp - 1;
+      refs.push_back({ ref, version, timestamp });
+      last_ref = ref;
+    }
   }
 
   void to_data(void* data) const
@@ -231,10 +207,34 @@ public:
     for (const auto& i : refs)
     {
       dest.write_flex(VERSION_RULES, i.version);
-      dest.write_flex(OBJ_ID_RULES, i.ref - last_ref);
+      dest.write_flex(OBJ_DELTA_RULES, i.ref - last_ref);
       dest.write_flex(DELTA_TIMESTAMP_RULES, i.timestamp - cached_base_timestamp + 1);
       last_ref = i.ref;
-    }    
+    }
+    
+    dest.pad_to_byte();
+  }
+
+  const std::vector< Entry >& get_refs() const { return refs; }
+  const uint64_t get_changeset() const { return changeset; }
+  const bool get_is_redacted() const { return is_redacted; }
+  const uint64_t get_user_id() const { return user_id; }
+  
+  void add_ref(const Entry& entry)
+  {
+    raw_mode = false;
+    refs.push_back(entry);
+  }
+
+  uint32_t size_of() const
+  {
+    prepare_write();
+    return Nibble_Varint_Writer::brutto_size_in_bytes(cached_size);
+  }
+
+  static uint32_t size_of(void* data)
+  {
+    return Nibble_Varint_Reader((const uint8_t*)data, 8).read_flex< uint64_t >(SIZE_RULES);
   }
 
   bool operator<(const Meta_Per_Changeset_Skeleton& a) const
@@ -260,7 +260,7 @@ private:
   static constexpr uint32_t BASE_TIMESTAMP_RULES = 0x302c2824;
   static constexpr uint32_t CHANGESET_ID_RULES = 0x2824201c;
   static constexpr uint32_t USER_ID_RULES = 0x24201c14;
-  static constexpr uint32_t OBJ_ID_RULES = 0x2c282420;
+  static constexpr uint32_t OBJ_DELTA_RULES = 0x2c280c04;
   static constexpr uint32_t VERSION_RULES = 0x18100804;
   static constexpr uint32_t DELTA_TIMESTAMP_RULES = 0x18100804;
 
@@ -275,7 +275,7 @@ private:
       
     std::sort(refs.begin(), refs.end());
   
-    cached_base_timestamp = std::numeric_limits< uint32_t >::max();
+    cached_base_timestamp = std::numeric_limits< uint64_t >::max();
     for (const auto& i : refs)
       cached_base_timestamp = std::min(cached_base_timestamp, i.timestamp);
     
@@ -288,7 +288,7 @@ private:
     for (const auto& i : refs)
     {
       payload_size +=
-          Nibble_Varint_Writer::size_in_bits(OBJ_ID_RULES, i.ref - last_ref)
+          Nibble_Varint_Writer::size_in_bits(OBJ_DELTA_RULES, i.ref - last_ref)
           + Nibble_Varint_Writer::size_in_bits(VERSION_RULES, i.version)
           + Nibble_Varint_Writer::size_in_bits(DELTA_TIMESTAMP_RULES, i.timestamp - cached_base_timestamp + 1);
       last_ref = i.ref;

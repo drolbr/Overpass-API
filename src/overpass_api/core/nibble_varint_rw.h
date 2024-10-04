@@ -16,6 +16,15 @@ struct Nibble_Varint_Reader
       bitpos = 8;
   }
 
+  Nibble_Varint_Reader(const uint32_t LIMITS, const uint8_t* data)
+      : ptr(data), end(0), cur(0), bitpos(0)
+  {
+    cur = *ptr++;
+    
+    uint64_t size = read_flex< uint64_t >(LIMITS);
+    end = data + size;
+  }
+
   template< typename Int64 >
   Int64 read_flex(const uint32_t LIMITS)
   {
@@ -107,6 +116,16 @@ struct Nibble_Varint_Reader
     }
     else
       bitpos = 64;
+  }
+
+  Nibble_Varint_Reader(const uint32_t LIMITS, const uint8_t* data)
+      : ptr((const uint64_t*)((uintptr_t)data & ~0x7ll)), end(0), cur(0), bitpos(0)
+  {
+    bitpos = ((uintptr_t)data - (uintptr_t)ptr)*8;
+    cur = *ptr++;
+    
+    uint64_t size = read_flex< uint64_t >(LIMITS);
+    end = data + size;
   }
 
   template< typename Int64 >
