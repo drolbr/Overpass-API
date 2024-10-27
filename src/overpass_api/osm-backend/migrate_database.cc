@@ -18,6 +18,7 @@
 
 #include "../../template_db/dispatcher_client.h"
 #include "../core/settings.h"
+#include "../core/type_meta.h"
 #include "../frontend/output.h"
 #include "map_file_replicator.h"
 #include "tags_global_writer.h"
@@ -95,6 +96,14 @@ void check_all_files(File_Format_Version_Checker& ver_checker, Transaction&& tra
   ver_checker.check_bin_up_to_date(transaction, 7562, *attic_settings().NODE_CHANGELOG);
   ver_checker.check_bin_up_to_date(transaction, 7562, *attic_settings().WAY_CHANGELOG);
   ver_checker.check_bin_up_to_date(transaction, 7562, *attic_settings().RELATION_CHANGELOG);
+  
+  ver_checker.check_bin_up_to_date(transaction, 7601, *meta_settings().NODES_META);
+  ver_checker.check_bin_up_to_date(transaction, 7601, *meta_settings().WAYS_META);
+  ver_checker.check_bin_up_to_date(transaction, 7601, *meta_settings().RELATIONS_META);
+  
+  ver_checker.check_bin_up_to_date(transaction, 7601, *attic_settings().NODES_META);
+  ver_checker.check_bin_up_to_date(transaction, 7601, *attic_settings().WAYS_META);
+  ver_checker.check_bin_up_to_date(transaction, 7601, *attic_settings().RELATIONS_META);
 }
 
 
@@ -136,6 +145,73 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
 }
 
 
+#include <iostream>
+template< typename Index, typename Skeleton >
+void migrate_current_meta(Osm_Backend_Callback* callback, Transaction& transaction)
+{
+  callback->migration_started(current_meta_file_properties< Skeleton >()->get_file_name_trunk());
+
+  Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
+      from_db(transaction.data_index(current_meta_file_properties< Skeleton >()));
+
+  Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
+  Block_Backend< Index, Meta_Per_Changeset_Skeleton >
+      into_db(into_transaction.data_index(current_meta_file_properties< Skeleton >()));
+
+  auto it = from_db.flat_begin();
+  uint64_t obj_cnt = 0;
+  std::map< uint64_t, Meta_Per_Changeset_Skeleton > changesets_by_id;
+  if (!(it == from_db.flat_end()))
+  {
+    Index last_idx = it.index();
+    for (; !(it == from_db.flat_end()); ++it)
+    {
+      if (!(it.index() == last_idx))
+      {
+        uint64_t total_size = 0;
+        for (const auto& j : changesets_by_id)
+          total_size += j.second.size_of();
+        std::cout<<"Idx "<<std::hex<<last_idx.val()<<": "<<std::dec
+          <<obj_cnt<<" objs, "<<changesets_by_id.size()<<" chgsts, "<<total_size<<" bytes.\n";
+        
+        last_idx = it.index();
+        obj_cnt = 0;
+        changesets_by_id.clear();
+      }
+      
+      ++obj_cnt;
+      auto cit = changesets_by_id.insert({
+          it.object().changeset,
+          Meta_Per_Changeset_Skeleton(it.object().changeset, false, it.object().user_id) }).first;
+      cit->second.add_ref({ it.object().ref.val(), it.object().version, it.object().timestamp });
+    }
+
+    std::cout<<"Idx "<<std::hex<<last_idx.val()<<": "<<std::dec
+      <<obj_cnt<<" objs, "<<changesets_by_id.size()<<" chgsts.\n";
+  }
+
+  callback->migration_completed();
+}
+
+
+template< typename Index, typename Skeleton >
+void migrate_attic_meta(Osm_Backend_Callback* callback, Transaction& transaction)
+{
+  callback->migration_started(attic_meta_file_properties< Skeleton >()->get_file_name_trunk());
+
+  Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
+      from_db(transaction.data_index(current_meta_file_properties< Skeleton >()));
+
+  Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
+  Block_Backend< Index, Meta_Per_Changeset_Skeleton >
+      into_db(into_transaction.data_index(attic_meta_file_properties< Skeleton >()));
+
+  //...
+
+  callback->migration_completed();
+}
+
+
 void migrate_listed_files(
     File_Format_Version_Checker& ver_checker, Transaction&& transaction, Osm_Backend_Callback* callback,
     uint64_t flush_limit)
@@ -154,6 +230,18 @@ void migrate_listed_files(
       migrate_attic_global_tags< Way_Skeleton >(callback, transaction);
     else if (i == attic_settings().RELATION_TAGS_GLOBAL)
       migrate_attic_global_tags< Relation_Skeleton >(callback, transaction);
+    else if (i == meta_settings().NODES_META)
+      migrate_current_meta< Uint32_Index, Node_Skeleton >(callback, transaction);
+    else if (i == meta_settings().WAYS_META)
+      migrate_current_meta< Uint31_Index, Way_Skeleton >(callback, transaction);
+    else if (i == meta_settings().RELATIONS_META)
+      migrate_current_meta< Uint31_Index, Relation_Skeleton >(callback, transaction);
+    else if (i == attic_settings().NODES_META)
+      migrate_current_meta< Uint32_Index, Node_Skeleton >(callback, transaction);
+    else if (i == attic_settings().WAYS_META)
+      migrate_current_meta< Uint31_Index, Way_Skeleton >(callback, transaction);
+    else if (i == attic_settings().RELATIONS_META)
+      migrate_current_meta< Uint31_Index, Relation_Skeleton >(callback, transaction);
     else if (i == attic_settings().NODE_CHANGELOG)
       migrate_changelog< Node_Skeleton >(callback, transaction);
     else if (i == attic_settings().WAY_CHANGELOG)
@@ -236,7 +324,7 @@ int main(int argc, char* argv[])
   Database_Meta_State meta;
   bool abort = false;
   bool migrate = false;
-  uint64_t flush_limit = 16*1024*1024*1024;
+  uint64_t flush_limit = 16ull*1024*1024*1024;
 
   int argpos(1);
   while (argpos < argc)

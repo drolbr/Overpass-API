@@ -169,6 +169,8 @@ public:
     { return ref < rhs.ref; }
   };
   
+  typedef uint64_t Id_Type;
+  
   Meta_Per_Changeset_Skeleton(uint64_t changeset_, bool is_redacted_, uint64_t user_id_)
       : changeset(changeset_), is_redacted(is_redacted_), user_id(user_id_) {}
 
