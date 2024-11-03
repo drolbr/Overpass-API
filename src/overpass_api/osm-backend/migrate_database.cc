@@ -145,19 +145,11 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
 }
 
 
-#include <iostream>
-template< typename Index, typename Skeleton >
-void migrate_current_meta(Osm_Backend_Callback* callback, Transaction& transaction)
+template< typename Index, typename From_Db >
+void migrate_meta(
+    From_Db& from_db, Block_Backend< Index, Meta_Per_Changeset_Skeleton >& into_db,
+    Osm_Backend_Callback* callback)
 {
-  callback->migration_started(current_meta_file_properties< Skeleton >()->get_file_name_trunk());
-
-  Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
-      from_db(transaction.data_index(current_meta_file_properties< Skeleton >()));
-
-  Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
-  Block_Backend< Index, Meta_Per_Changeset_Skeleton >
-      into_db(into_transaction.data_index(current_meta_file_properties< Skeleton >()));
-
   std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > db_to_insert;
 
   auto it = from_db.flat_begin();
@@ -200,6 +192,23 @@ void migrate_current_meta(Osm_Backend_Callback* callback, Transaction& transacti
 
     into_db.update({}, db_to_insert);
   }
+}
+
+
+template< typename Index, typename Skeleton >
+void migrate_current_meta(Osm_Backend_Callback* callback, Transaction& transaction)
+{
+  callback->migration_started(current_meta_file_properties< Skeleton >()->get_file_name_trunk());
+
+  Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
+      from_db(transaction.data_index(current_meta_file_properties< Skeleton >()));
+
+  Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
+  Block_Backend< Index, Meta_Per_Changeset_Skeleton >
+      into_db(into_transaction.data_index(current_meta_file_properties< Skeleton >()));
+
+  migrate_meta< Index, Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > >(
+      from_db, into_db, callback);
 
   callback->migration_completed();
 }
@@ -217,7 +226,8 @@ void migrate_attic_meta(Osm_Backend_Callback* callback, Transaction& transaction
   Block_Backend< Index, Meta_Per_Changeset_Skeleton >
       into_db(into_transaction.data_index(attic_meta_file_properties< Skeleton >()));
 
-  //...
+  migrate_meta< Index, Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > >(
+      from_db, into_db, callback);
 
   callback->migration_completed();
 }
