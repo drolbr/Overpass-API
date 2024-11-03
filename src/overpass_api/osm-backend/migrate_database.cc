@@ -175,6 +175,9 @@ void migrate_current_meta(Osm_Backend_Callback* callback, Transaction& transacti
         for (const auto& j : changesets_by_id)
           into.push_back(j.second);
 
+        changesets_by_id.clear();
+        last_idx = it.index();
+
         if (obj_cnt >= 64*1024*1024)
         {
           callback->migration_flush();
