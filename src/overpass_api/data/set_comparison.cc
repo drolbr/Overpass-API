@@ -265,9 +265,11 @@ void Set_Comparison::tags_quadtile_attic
 {
   Tag_Store< Index, Object > tag_store(*rman.get_transaction());
   tag_store.prefetch_all(items);
-  // formulate meta query if meta data shall be printed
-  Attic_Meta_Collector< Index, Object > meta_printer(
-      items, *rman.get_transaction(), extra_data.mode & Output_Mode::META);
+  
+  std::unique_ptr< Attic_Meta_Collector< Index, Object > > meta_printer(
+      extra_data.mode & Output_Mode::META
+      ? new Attic_Meta_Collector< Index, Object >(items, *rman.get_transaction())
+      : nullptr);
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -275,8 +277,10 @@ void Set_Comparison::tags_quadtile_attic
   {
     for (typename std::vector< Attic< Object > >::const_iterator it2(item_it->second.begin());
         it2 != item_it->second.end(); ++it2)
-      print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-                 meta_printer.get(item_it->first, it2->id, it2->timestamp), extra_data.users);
+      print_item(
+          extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
+          meta_printer ? meta_printer->get(item_it->first, it2->id, it2->timestamp) : nullptr,
+          extra_data.users);
     ++item_it;
   }
 }
@@ -318,9 +322,11 @@ void Set_Comparison::tags_quadtile_attic
 {
   Tag_Store< Index, Object > tag_store(*rman.get_transaction());
   tag_store.prefetch_all(items);
-  // formulate meta query if meta data shall be printed
-  Attic_Meta_Collector< Index, Object > meta_printer(
-      items, *rman.get_transaction(), extra_data.mode & Output_Mode::META);
+  
+  std::unique_ptr< Attic_Meta_Collector< Index, Object > > meta_printer(
+      extra_data.mode & Output_Mode::META
+      ? new Attic_Meta_Collector< Index, Object >(items, *rman.get_transaction())
+      : nullptr);
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -330,8 +336,10 @@ void Set_Comparison::tags_quadtile_attic
         it2 != item_it->second.end(); ++it2)
     {
       if (std::binary_search(id_list.begin(), id_list.end(), it2->id))
-        print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-                 meta_printer.get(item_it->first, it2->id, it2->timestamp), extra_data.users);
+        print_item(
+            extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
+            meta_printer ? meta_printer->get(item_it->first, it2->id, it2->timestamp) : nullptr,
+            extra_data.users);
     }
     ++item_it;
   }

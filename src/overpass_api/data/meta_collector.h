@@ -78,8 +78,7 @@ template< typename Index, typename Object >
 struct Attic_Meta_Collector
 {
 public:
-  Attic_Meta_Collector(const std::map< Index, std::vector< Attic< Object > > >& items,
-                       Transaction& transaction, bool turn_on);
+  Attic_Meta_Collector(const std::map< Index, std::vector< Attic< Object > > >& items, Transaction& transaction);
 
   const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* get
       (const Index& index, typename Object::Id_Type ref, uint64 timestamp = NOW);
@@ -264,9 +263,9 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
 
 template< typename Index, typename Object >
 Attic_Meta_Collector< Index, Object >::Attic_Meta_Collector(
-    const std::map< Index, std::vector< Attic< Object > > >& items, Transaction& transaction, bool turn_on)
-    : current(items, transaction, turn_on ? current_meta_file_properties< Object >() : 0),
-    attic(items, transaction, turn_on ? attic_meta_file_properties< Object >() : 0)
+    const std::map< Index, std::vector< Attic< Object > > >& items, Transaction& transaction)
+    : current(items, transaction, current_meta_file_properties< Object >()),
+    attic(items, transaction, attic_meta_file_properties< Object >())
 {}
 
 

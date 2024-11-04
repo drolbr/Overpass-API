@@ -393,8 +393,11 @@ void tags_quadtile_attic_
 {
   Tag_Store< Index, Object > tag_store(transaction);
   tag_store.prefetch_all(items);
-
-  Attic_Meta_Collector< Index, Object > meta_printer(items, transaction, extra_data.mode & Output_Mode::META);
+  
+  std::unique_ptr< Attic_Meta_Collector< Index, Object > > meta_printer(
+      extra_data.mode & Output_Mode::META
+      ? new Attic_Meta_Collector< Index, Object >(items, *rman.get_transaction())
+      : nullptr);
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -405,8 +408,9 @@ void tags_quadtile_attic_
     {
       if (++element_count > limit)
         return;
-      print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-                 meta_printer.get(item_it->first, it2->id, it2->timestamp));
+      print_item(
+          extra_data, output, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
+          meta_printer ? meta_printer->get(item_it->first, it2->id, it2->timestamp) : nullptr);
     }
     ++item_it;
   }
@@ -685,9 +689,12 @@ void tags_by_id_attic
 		     only_current_meta_printer);
     only_current_meta_printer.reset();
 
-    Attic_Meta_Collector< Index, Object > meta_printer(attic_items, transaction, extra_data.mode & Output_Mode::META);
     std::set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_metadata;
-    collect_metadata(attic_metadata, attic_items, lower_id_bound, upper_id_bound, meta_printer);
+    if (extra_data.mode & Output_Mode::META)
+    {
+      Attic_Meta_Collector< Index, Object > meta_printer(attic_items, transaction);
+      collect_metadata(attic_metadata, attic_items, lower_id_bound, upper_id_bound, meta_printer);
+    }
 
     // print the result
     for (typename Object::Id_Type i(id_pos);
