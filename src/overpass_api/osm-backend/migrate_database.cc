@@ -220,7 +220,7 @@ void migrate_attic_meta(Osm_Backend_Callback* callback, Transaction& transaction
   callback->migration_started(attic_meta_file_properties< Skeleton >()->get_file_name_trunk());
 
   Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
-      from_db(transaction.data_index(current_meta_file_properties< Skeleton >()));
+      from_db(transaction.data_index(attic_meta_file_properties< Skeleton >()));
 
   Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
   Block_Backend< Index, Meta_Per_Changeset_Skeleton >
