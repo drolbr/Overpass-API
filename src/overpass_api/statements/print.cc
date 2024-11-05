@@ -623,11 +623,7 @@ void tags_by_id
 
     std::set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > metadata;
     if (meta_printer)
-    {
-      // collect metadata if required
       collect_metadata(metadata, items, lower_id_bound, upper_id_bound, *meta_printer);
-      meta_printer->reset();
-    }
 
     // print the result
     for (typename Object::Id_Type i(id_pos);
@@ -687,7 +683,6 @@ void tags_by_id_attic
     std::set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > only_current_metadata;
     collect_metadata(only_current_metadata, current_items, lower_id_bound, upper_id_bound,
 		     only_current_meta_printer);
-    only_current_meta_printer.reset();
 
     std::set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_metadata;
     if (extra_data.mode & Output_Mode::META)
