@@ -174,11 +174,9 @@ void Meta_Collector< Index, Id_Type >::reset()
   range_it = 0;
   delete current_index;
   current_index = 0;
-  current_objects.clear();
 
   if (used_ranges.empty())
-    db_it = new typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::set< Index >::const_iterator >
-        ::Discrete_Iterator(meta_db->discrete_begin(used_indices.begin(), used_indices.end()));
+    db_it = new auto(meta_db->discrete_begin(used_indices.begin(), used_indices.end()));
   else
     range_it = new auto(meta_db->range_begin(used_ranges));
 }
@@ -187,12 +185,16 @@ void Meta_Collector< Index, Id_Type >::reset()
 template< typename Index, typename Id_Type >
 void Meta_Collector< Index, Id_Type >::update_current_objects(const Index& index)
 {
-  current_objects.clear();
   if (!current_index)
     current_index = new Index(index);
-  else
+  else if (*current_index < index) 
     *current_index = index;
+  else if (*current_index == index)
+    return;
+  else
+    reset();
 
+  current_objects.clear();
   if (db_it)
   {
     while (!(*db_it == meta_db->discrete_end()) && (db_it->index() < index))
@@ -202,7 +204,6 @@ void Meta_Collector< Index, Id_Type >::update_current_objects(const Index& index
       current_objects.push_back(db_it->object());
       ++(*db_it);
     }
-    std::sort(current_objects.begin(), current_objects.end());
   }
   else if (range_it)
   {
@@ -213,8 +214,8 @@ void Meta_Collector< Index, Id_Type >::update_current_objects(const Index& index
       current_objects.push_back(range_it->object());
       ++(*range_it);
     }
-    std::sort(current_objects.begin(), current_objects.end());
   }
+  std::sort(current_objects.begin(), current_objects.end());
 }
 
 
@@ -224,11 +225,7 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
 {
   if (!meta_db)
     return 0;
-
-  if (current_index && index < *current_index)
-    reset();
-  if (!current_index || *current_index < index)
-    update_current_objects(index);
+  update_current_objects(index);
 
   auto it = std::lower_bound(
       current_objects.begin(), current_objects.end(), OSM_Element_Metadata_Skeleton< Id_Type >(ref));
@@ -245,11 +242,7 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
 {
   if (!meta_db)
     return 0;
-
-  if (current_index && index < *current_index)
-    reset();
-  if (!current_index || *current_index < index)
-    update_current_objects(index);
+  update_current_objects(index);
 
   auto it = std::lower_bound(
       current_objects.begin(), current_objects.end(), OSM_Element_Metadata_Skeleton< Id_Type >(ref, timestamp));
