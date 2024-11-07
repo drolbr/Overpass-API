@@ -189,7 +189,7 @@ void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stm
   if (usage & Set_Usage::META)
   {
     meta_collector_nodes = new Meta_Collector< Node::Index, Node_Skeleton::Id_Type >(
-        set.nodes, transaction, current_meta_file_properties< Node_Skeleton >());
+        set.nodes, transaction, *current_meta_file_properties< Node_Skeleton >());
 
     if (!set.attic_nodes.empty())
     {
@@ -198,7 +198,7 @@ void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stm
     }
 
     meta_collector_ways = new Meta_Collector< Way::Index, Way_Skeleton::Id_Type >(
-        set.ways, transaction, current_meta_file_properties< Way_Skeleton >());
+        set.ways, transaction, *current_meta_file_properties< Way_Skeleton >());
 
     if (!set.attic_ways.empty())
     {
@@ -207,7 +207,7 @@ void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stm
     }
 
     meta_collector_relations = new Meta_Collector< Relation::Index, Relation_Skeleton::Id_Type >(
-        set.relations, transaction, current_meta_file_properties< Relation_Skeleton >());
+        set.relations, transaction, *current_meta_file_properties< Relation_Skeleton >());
 
     if (!set.attic_relations.empty())
     {

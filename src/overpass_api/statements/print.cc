@@ -364,8 +364,11 @@ void tags_quadtile_
   tag_store.prefetch_all(items);
 
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+  std::unique_ptr< Meta_Collector< Index, typename Object::Id_Type > > meta_printer(
+      extra_data.mode & Output_Mode::META
+      ? new Meta_Collector< Index, typename Object::Id_Type >(
+          items, transaction, *current_meta_file_properties< Object >())
+      : nullptr);
 
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
@@ -378,7 +381,7 @@ void tags_quadtile_
       if (++element_count > limit)
         return;
       print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-          meta_printer.get(item_it->first, it2->id));
+          meta_printer ? meta_printer->get(item_it->first, it2->id) : nullptr);
     }
     ++item_it;
   }
@@ -534,11 +537,9 @@ void collect_metadata(std::set< OSM_Element_Metadata_Skeleton< typename Object::
 		      typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound,
 		      Meta_Collector< Index, typename Object::Id_Type >& meta_printer)
 {
-  for (typename std::map< Index, std::vector< Object > >::const_iterator
-      it(items.begin()); it != items.end(); ++it)
+  for (auto it = items.begin(); it != items.end(); ++it)
   {
-    for (typename std::vector< Object >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (!(it2->id < lower_id_bound) && (it2->id < upper_id_bound))
       {
@@ -558,11 +559,9 @@ void collect_metadata(std::set< OSM_Element_Metadata_Skeleton< typename Object::
                       typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound,
                       Attic_Meta_Collector< Index, Object >& meta_printer)
 {
-  for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
-      it(items.begin()); it != items.end(); ++it)
+  for (auto it = items.begin(); it != items.end(); ++it)
   {
-    for (typename std::vector< Attic< Object > >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (!(it2->id < lower_id_bound) && (it2->id < upper_id_bound))
       {
@@ -656,11 +655,6 @@ void tags_by_id_attic
   Tag_Store< Index, Object > current_tag_store(transaction);
   Tag_Store< Index, Object > attic_tag_store(transaction);
 
-  // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
-      (current_items, transaction,
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
-
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
     // Disable health_check: This ensures that a result will be always printed completely
@@ -681,8 +675,13 @@ void tags_by_id_attic
 
     // collect metadata if required
     std::set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > only_current_metadata;
-    collect_metadata(only_current_metadata, current_items, lower_id_bound, upper_id_bound,
-		     only_current_meta_printer);
+    if (extra_data.mode & Output_Mode::META)
+    {
+      Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer(
+          current_items, transaction, *current_meta_file_properties< Object >());
+      collect_metadata(
+          only_current_metadata, current_items, lower_id_bound, upper_id_bound, only_current_meta_printer);
+    }
 
     std::set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_metadata;
     if (extra_data.mode & Output_Mode::META)
@@ -735,7 +734,7 @@ void tags_by_id
     {
       Tag_Store< Index, Object > tag_store(*rman.get_transaction());
       Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
-          current_meta_file_properties< Object >());
+          *current_meta_file_properties< Object >());
       tags_by_id(extra_data, items, FLUSH_SIZE, output, rman, &meta_printer, tag_store, limit, element_count);
     }
     else

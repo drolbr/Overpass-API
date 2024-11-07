@@ -239,8 +239,11 @@ void Set_Comparison::tags_quadtile
   tag_store.prefetch_all(items);
 
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+  std::unique_ptr< Meta_Collector< Index, typename Object::Id_Type > > meta_printer(
+      extra_data.mode & Output_Mode::META
+      ? new Meta_Collector< Index, typename Object::Id_Type >(
+          items, *rman.get_transaction(), *current_meta_file_properties< Object >())
+      : nullptr);
 
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
@@ -251,7 +254,7 @@ void Set_Comparison::tags_quadtile
         it2 != item_it->second.end(); ++it2)
     {
       print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-          meta_printer.get(item_it->first, it2->id), extra_data.users);
+          meta_printer ? meta_printer->get(item_it->first, it2->id) : nullptr, extra_data.users);
     }
     ++item_it;
   }
@@ -295,8 +298,11 @@ void Set_Comparison::tags_quadtile
   tag_store.prefetch_all(items);
 
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+  std::unique_ptr< Meta_Collector< Index, typename Object::Id_Type > > meta_printer(
+      extra_data.mode & Output_Mode::META
+      ? new Meta_Collector< Index, typename Object::Id_Type >(
+          items, *rman.get_transaction(), *current_meta_file_properties< Object >())
+      : nullptr);
 
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
@@ -308,7 +314,7 @@ void Set_Comparison::tags_quadtile
     {
       if (std::binary_search(id_list.begin(), id_list.end(), it2->id))
         print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-            meta_printer.get(item_it->first, it2->id), extra_data.users);
+            meta_printer ? meta_printer->get(item_it->first, it2->id) : nullptr, extra_data.users);
     }
     ++item_it;
   }

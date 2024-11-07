@@ -60,7 +60,7 @@ class User_Constraint : public Query_Constraint
 template< typename TIndex, typename TObject >
 void user_filter_map
     (std::map< TIndex, std::vector< TObject > >& modify,
-     Resource_Manager& rman, const std::set< Uint32_Index >& user_ids, File_Properties* file_properties)
+     Resource_Manager& rman, const std::set< Uint32_Index >& user_ids, File_Properties& file_properties)
 {
   if (modify.empty())
     return;
@@ -71,12 +71,10 @@ void user_filter_map
   for (auto it = modify.begin(); it != modify.end(); ++it)
   {
     std::vector< TObject > local_into;
-    for (auto iit = it->second.begin();
-        iit != it->second.end(); ++iit)
+    for (auto iit = it->second.begin(); iit != it->second.end(); ++iit)
     {
-      const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
-          = meta_collector.get(it->first, iit->id);
-      if ((meta_skel) && (user_ids.find(meta_skel->user_id) != user_ids.end()))
+      const auto* meta_skel = meta_collector.get(it->first, iit->id);
+      if (meta_skel && (user_ids.find(meta_skel->user_id) != user_ids.end()))
         local_into.push_back(*iit);
     }
     it->second.swap(local_into);
@@ -86,30 +84,23 @@ void user_filter_map
 
 template< typename TIndex, typename TObject >
 void user_filter_map_attic
-    (std::map< TIndex, std::vector< TObject > >& modify,
+    (std::map< TIndex, std::vector< Attic< TObject > > >& modify,
      Resource_Manager& rman, const std::set< Uint32_Index >& user_ids,
-     File_Properties* current_file_properties, File_Properties* attic_file_properties)
+     File_Properties& current_file_properties, File_Properties& attic_file_properties)
 {
   if (modify.empty())
     return;
 
-  Meta_Collector< TIndex, typename TObject::Id_Type > current_meta_collector
-      (modify, *rman.get_transaction(), current_file_properties);
-  Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
-      (modify, *rman.get_transaction(), attic_file_properties);
+  Attic_Meta_Collector< TIndex, TObject > meta_collector(modify, *rman.get_transaction());
 
   for (auto it = modify.begin(); it != modify.end(); ++it)
   {
-    std::vector< TObject > local_into;
-    for (auto iit = it->second.begin();
-        iit != it->second.end(); ++iit)
+    std::vector< Attic< TObject > > local_into;
+    for (auto iit = it->second.begin(); iit != it->second.end(); ++iit)
     {
-      const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
-	  = current_meta_collector.get(it->first, iit->id);
-      if (!meta_skel || !(meta_skel->timestamp < iit->timestamp))
-        meta_skel = attic_meta_collector.get(it->first, iit->id, iit->timestamp);
-      if ((meta_skel) && (user_ids.find(meta_skel->user_id) != user_ids.end()))
-	local_into.push_back(*iit);
+      const auto* meta_skel = meta_collector.get(it->first, iit->id, iit->timestamp);
+      if (meta_skel && (user_ids.find(meta_skel->user_id) != user_ids.end()))
+        local_into.push_back(*iit);
     }
     it->second.swap(local_into);
   }
@@ -186,21 +177,21 @@ void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 
   if (user->get_criterion() == User_Statement::last)
   {
-    user_filter_map(into.nodes, rman, user_ids, meta_settings().NODES_META);
-    user_filter_map(into.ways, rman, user_ids, meta_settings().WAYS_META);
-    user_filter_map(into.relations, rman, user_ids, meta_settings().RELATIONS_META);
+    user_filter_map(into.nodes, rman, user_ids, *meta_settings().NODES_META);
+    user_filter_map(into.ways, rman, user_ids, *meta_settings().WAYS_META);
+    user_filter_map(into.relations, rman, user_ids, *meta_settings().RELATIONS_META);
 
     if (!into.attic_nodes.empty())
       user_filter_map_attic(
-          into.attic_nodes, rman, user_ids, meta_settings().NODES_META, attic_settings().NODES_META);
+          into.attic_nodes, rman, user_ids, *meta_settings().NODES_META, *attic_settings().NODES_META);
 
     if (!into.attic_ways.empty())
       user_filter_map_attic(
-          into.attic_ways, rman, user_ids, meta_settings().WAYS_META, attic_settings().WAYS_META);
+          into.attic_ways, rman, user_ids, *meta_settings().WAYS_META, *attic_settings().WAYS_META);
 
     if (!into.attic_relations.empty())
       user_filter_map_attic(
-          into.attic_relations, rman, user_ids, meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
+          into.attic_relations, rman, user_ids, *meta_settings().RELATIONS_META, *attic_settings().RELATIONS_META);
   }
   else
   {
