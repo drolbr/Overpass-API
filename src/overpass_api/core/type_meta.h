@@ -87,75 +87,6 @@ struct OSM_Element_Metadata
 };
 
 
-template< typename Id_Type_ >
-struct OSM_Element_Metadata_Skeleton
-{
-  typedef Id_Type_ Id_Type;
-
-  Id_Type ref;
-  uint32_t version;
-  uint64_t timestamp;
-  uint32_t changeset;
-  uint32_t user_id;
-
-  OSM_Element_Metadata_Skeleton() : version(0), timestamp(0), changeset(0), user_id(0) {}
-
-  OSM_Element_Metadata_Skeleton(Id_Type ref_)
-    : ref(ref_), version(0), timestamp(0), changeset(0), user_id(0) {}
-
-  OSM_Element_Metadata_Skeleton(Id_Type ref_, const OSM_Element_Metadata& meta)
-    : ref(ref_),
-      version(meta.version), timestamp(meta.timestamp),
-      changeset(meta.changeset), user_id(meta.user_id) {}
-
-  OSM_Element_Metadata_Skeleton(Id_Type ref_, uint64_t timestamp_)
-    : ref(ref_), version(0), timestamp(timestamp_),
-      changeset(0), user_id(0) {}
-
-  OSM_Element_Metadata_Skeleton(void* data)
-    : ref(*(Id_Type*)data)
-  {
-    version = *(uint32_t*)((int8_t*)data + sizeof(Id_Type));
-    timestamp = (*(uint64_t*)((int8_t*)data + sizeof(Id_Type) + 4) & 0xffffffffffull);
-    changeset = *(uint32_t*)((int8_t*)data + sizeof(Id_Type) + 9);
-    user_id = *(uint32_t*)((int8_t*)data + sizeof(Id_Type) + 13);
-  }
-
-  uint32_t size_of() const
-  {
-    return 17 + sizeof(Id_Type);
-  }
-
-  static uint32_t size_of(void* data)
-  {
-    return 17 + sizeof(Id_Type);
-  }
-
-  void to_data(void* data) const
-  {
-    *(Id_Type*)data = ref;
-    *(uint32_t*)((int8_t*)data + sizeof(Id_Type)) = version;
-    *(uint64_t*)((int8_t*)data + sizeof(Id_Type) + 4) = timestamp;
-    *(uint32_t*)((int8_t*)data + sizeof(Id_Type) + 9) = changeset;
-    *(uint32_t*)((int8_t*)data + sizeof(Id_Type) + 13) = user_id;
-  }
-
-  bool operator<(const OSM_Element_Metadata_Skeleton& a) const
-  {
-    if (ref < a.ref)
-      return true;
-    else if (a.ref < ref)
-      return false;
-    return (timestamp < a.timestamp);
-  }
-
-  bool operator==(const OSM_Element_Metadata_Skeleton& a) const
-  {
-    return (ref == a.ref);
-  }
-};
-
-
 class Meta_Per_Changeset_Skeleton
 {
 public:
@@ -298,6 +229,80 @@ private:
     cached_size = payload_size + Nibble_Varint_Writer::size_of_size_in_bytes(SIZE_RULES, payload_size);
 
     raw_mode = true;
+  }
+};
+
+
+template< typename Id_Type_ >
+struct OSM_Element_Metadata_Skeleton
+{
+  typedef Id_Type_ Id_Type;
+
+  Id_Type ref;
+  uint32_t version;
+  uint64_t timestamp;
+  uint32_t changeset;
+  uint32_t user_id;
+
+  OSM_Element_Metadata_Skeleton() : version(0), timestamp(0), changeset(0), user_id(0) {}
+
+  OSM_Element_Metadata_Skeleton(Id_Type ref_)
+    : ref(ref_), version(0), timestamp(0), changeset(0), user_id(0) {}
+
+  OSM_Element_Metadata_Skeleton(Id_Type ref_, const OSM_Element_Metadata& meta)
+    : ref(ref_),
+      version(meta.version), timestamp(meta.timestamp),
+      changeset(meta.changeset), user_id(meta.user_id) {}
+
+  OSM_Element_Metadata_Skeleton(Id_Type ref_, uint64_t timestamp_)
+    : ref(ref_), version(0), timestamp(timestamp_),
+      changeset(0), user_id(0) {}
+      
+  OSM_Element_Metadata_Skeleton(
+      const Meta_Per_Changeset_Skeleton& cset, const Meta_Per_Changeset_Skeleton::Entry& entry)
+    : ref(entry.ref), version(entry.version), timestamp(entry.timestamp),
+      changeset(cset.get_changeset()), user_id(cset.get_user_id()) {}
+
+  OSM_Element_Metadata_Skeleton(void* data)
+    : ref(*(Id_Type*)data)
+  {
+    version = *(uint32_t*)((int8_t*)data + sizeof(Id_Type));
+    timestamp = (*(uint64_t*)((int8_t*)data + sizeof(Id_Type) + 4) & 0xffffffffffull);
+    changeset = *(uint32_t*)((int8_t*)data + sizeof(Id_Type) + 9);
+    user_id = *(uint32_t*)((int8_t*)data + sizeof(Id_Type) + 13);
+  }
+
+  uint32_t size_of() const
+  {
+    return 17 + sizeof(Id_Type);
+  }
+
+  static uint32_t size_of(void* data)
+  {
+    return 17 + sizeof(Id_Type);
+  }
+
+  void to_data(void* data) const
+  {
+    *(Id_Type*)data = ref;
+    *(uint32_t*)((int8_t*)data + sizeof(Id_Type)) = version;
+    *(uint64_t*)((int8_t*)data + sizeof(Id_Type) + 4) = timestamp;
+    *(uint32_t*)((int8_t*)data + sizeof(Id_Type) + 9) = changeset;
+    *(uint32_t*)((int8_t*)data + sizeof(Id_Type) + 13) = user_id;
+  }
+
+  bool operator<(const OSM_Element_Metadata_Skeleton& a) const
+  {
+    if (ref < a.ref)
+      return true;
+    else if (a.ref < ref)
+      return false;
+    return (timestamp < a.timestamp);
+  }
+
+  bool operator==(const OSM_Element_Metadata_Skeleton& a) const
+  {
+    return (ref == a.ref);
   }
 };
 

@@ -40,20 +40,20 @@ public:
   Meta_File_Reader(const std::map< Index, std::vector< Object > >& items,
       Transaction& transaction, const File_Properties& meta_file_prop = 0);
 
-  ~Meta_File_Reader()
-  {
-    delete last_index;
-  }
-
   void read_objects(const Index&, std::vector< OSM_Element_Metadata_Skeleton< Id_Type > >&);
-  const Index* get_last_index() const { return last_index; }
+  const Index* get_last_index() const { return last_index.get(); }
 
 private:
   std::vector< Index > used_indices;
 
-  Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > > meta_db;
-  typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >::Discrete_Iterator db_it;
-  Index* last_index;
+  std::unique_ptr< Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > > > plain_meta_db;
+  std::unique_ptr< typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+      ::Discrete_Iterator > plain_db_it;
+
+  std::unique_ptr< Block_Backend< Index, Meta_Per_Changeset_Skeleton > > cset_meta_db;
+  std::unique_ptr< typename Block_Backend< Index, Meta_Per_Changeset_Skeleton >::Discrete_Iterator > cset_db_it;
+
+  std::unique_ptr< Index > last_index;
 };
 
 
@@ -109,10 +109,21 @@ template< typename Object >
 Meta_File_Reader< Index, Id_Type >::Meta_File_Reader
     (const std::map< Index, std::vector< Object > >& items,
      Transaction& transaction, const File_Properties& meta_file_prop)
-  : used_indices(generate_index_query(items)),
-    meta_db(transaction.data_index(&meta_file_prop)),
-    db_it(meta_db.discrete_begin(used_indices.begin(), used_indices.end())),
-    last_index(0) {}
+  : used_indices(generate_index_query(items))
+{
+  auto meta_idx = transaction.data_index(&meta_file_prop);
+  if (meta_idx->get_file_format_version() <= 7620)
+  {
+    plain_meta_db.reset(
+        new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >(meta_idx));
+    plain_db_it.reset(new auto(plain_meta_db->discrete_begin(used_indices.begin(), used_indices.end())));
+  }
+  else
+  {
+    cset_meta_db.reset(new Block_Backend< Index, Meta_Per_Changeset_Skeleton >(meta_idx));
+    cset_db_it.reset(new auto(cset_meta_db->discrete_begin(used_indices.begin(), used_indices.end())));
+  }
+}
 
 
 template< typename Index, typename Id_Type >
@@ -128,20 +139,40 @@ void Meta_File_Reader< Index, Id_Type >::read_objects(
     const Index& index, std::vector< OSM_Element_Metadata_Skeleton< Id_Type > >& current_objects)
 {
   if (!last_index)
-    last_index = new Index(index);
+    last_index.reset(new Index(index));
   else
   {
     if (!(*last_index < index))
-      db_it = meta_db.discrete_begin(used_indices.begin(), used_indices.end());
+    {
+      if (plain_meta_db)
+        *plain_db_it = plain_meta_db->discrete_begin(used_indices.begin(), used_indices.end());
+      else
+        *cset_db_it = cset_meta_db->discrete_begin(used_indices.begin(), used_indices.end());
+    }
     *last_index = index;
   }
 
-  while (!(db_it == meta_db.discrete_end()) && (db_it.index() < index))
-    ++db_it;
-  while (!(db_it == meta_db.discrete_end()) && (index == db_it.index()))
+  if (plain_db_it)
   {
-    current_objects.push_back(db_it.object());
-    ++db_it;
+    while (!(*plain_db_it == plain_meta_db->discrete_end()) && (plain_db_it->index() < index))
+      ++(*plain_db_it);
+    while (!(*plain_db_it == plain_meta_db->discrete_end()) && (index == plain_db_it->index()))
+    {
+      current_objects.push_back(plain_db_it->object());
+      ++(*plain_db_it);
+    }
+  }
+  else
+  {
+    while (!(*cset_db_it == cset_meta_db->discrete_end()) && (cset_db_it->index() < index))
+      ++(*cset_db_it);
+    while (!(*cset_db_it == cset_meta_db->discrete_end()) && (cset_db_it->index() == index))
+    {
+      const auto& cset = cset_db_it->object();
+      for (auto i : cset.get_refs())
+        current_objects.push_back(OSM_Element_Metadata_Skeleton< Id_Type >(cset, i));
+      ++(*cset_db_it);      
+    }
   }
 }
 

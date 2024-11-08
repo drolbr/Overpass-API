@@ -119,7 +119,7 @@ struct Nibble_Varint_Reader
   }
 
   Nibble_Varint_Reader(const uint32_t LIMITS, const uint8_t* data)
-      : ptr((const uint64_t*)((uintptr_t)data & ~0x7ll)), end(0), cur(0), bitpos(0)
+      : ptr((const uint64_t*)((uintptr_t)data & ~0x7ll)), end(nullptr), cur(0), bitpos(0)
   {
     bitpos = ((uintptr_t)data - (uintptr_t)ptr)*8;
     cur = *ptr++;
@@ -189,7 +189,7 @@ private:
 
     if (64 <= num_bits + bitpos)
     {
-      if ((uintptr_t)ptr + 7 < (uintptr_t)end)
+      if (!end || (uintptr_t)ptr + 7 < (uintptr_t)end)
         cur = *ptr++;
       else if ((uintptr_t)ptr < (uintptr_t)end)
       {

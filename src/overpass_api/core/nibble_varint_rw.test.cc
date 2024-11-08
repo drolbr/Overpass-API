@@ -154,6 +154,48 @@ int main(int argc, char* args[])
   std::cout<<"Size of size 8388580 with limits 0x18100c08: "<<Nibble_Varint_Writer::size_of_size_in_bytes(0x18100c08, 8388580)<<'\n';
   std::cout<<'\n';
   
+  // Test that size autoconfiguration works
+  {
+    std::cout<<"Flex size marker beginning on boundary:\n";
+
+    std::vector< uint8_t > src = { 0x4, 0x54 };
+    Nibble_Varint_Reader reader(0x18100c08, &src[0]);
+
+    while (reader.good_flex())
+      std::cout<<"read_flex(): "<<reader.read_flex< uint64_t >(0x18100c08)<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::cout<<"Flex size marker inside boundary:\n";
+
+    std::vector< uint8_t > src = { 0x55, 0x4, 0x54 };
+    Nibble_Varint_Reader reader(0x18100c08, &src[1]);
+
+    while (reader.good_flex())
+      std::cout<<"read_flex(): "<<reader.read_flex< uint64_t >(0x18100c08)<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::cout<<"Flex size marker ending on boundary:\n";
+
+    std::vector< uint8_t > src = { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x4, 0x54 };
+    Nibble_Varint_Reader reader(0x18100c08, &src[7]);
+
+    while (reader.good_flex())
+      std::cout<<"read_flex(): "<<reader.read_flex< uint64_t >(0x18100c08)<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::cout<<"Flex size marker crossing boundary:\n";
+
+    std::vector< uint8_t > src = { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x9, 0x40, 0x5 };
+    Nibble_Varint_Reader reader(0x18100c08, &src[7]);
+
+    while (reader.good_flex())
+      std::cout<<"read_flex(): "<<reader.read_flex< uint64_t >(0x18100c08)<<'\n';
+    std::cout<<'\n';
+  }
+  
   // Test that an empty writer does not crash
   {
     std::cout<<"Empty writer:\n";
