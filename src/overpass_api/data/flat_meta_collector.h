@@ -52,7 +52,9 @@ struct Flat_Meta_Collector
     std::map< OSM_Element_Metadata_Skeleton< Id_Type >, bool > current_objects;
 };
 
+
 /** Implementation --------------------------------------------------------- */
+
 
 template< class TIndex, class Id_Type >
 Flat_Meta_Collector< TIndex, Id_Type >::Flat_Meta_Collector
@@ -64,6 +66,7 @@ Flat_Meta_Collector< TIndex, Id_Type >::Flat_Meta_Collector
 
   reset();
 }
+
 
 template< class TIndex, class Id_Type >
 void Flat_Meta_Collector< TIndex, Id_Type >::reset()

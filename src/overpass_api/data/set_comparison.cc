@@ -393,45 +393,95 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
 {
   std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > result;
 
-  Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-        typename std::vector< Index >::const_iterator >
-      attic_meta_db(context.data_index(attic_meta_file_properties< Skeleton >()));
-  for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-          typename std::vector< Index >::const_iterator >::Discrete_Iterator
-      it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
-      !(it == attic_meta_db.discrete_end()); ++it)
+  auto attic_idx = context.data_index(attic_meta_file_properties< Skeleton >());
+  if (attic_idx->get_file_format_version() <= 7620)
   {
-    if (!(timestamp < it.object().timestamp)
-        && std::binary_search(searched_ids.begin(), searched_ids.end(), it.object().ref))
+    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
+          typename std::vector< Index >::const_iterator > attic_meta_db(attic_idx);
+
+    for (auto it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+        !(it == attic_meta_db.discrete_end()); ++it)
     {
-      typename std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
-          ::iterator meta_it = result.find(it.object().ref);
-      if (meta_it == result.end())
-	result.insert(std::make_pair(it.object().ref, it.object()));
-      else if (meta_it->second.timestamp < it.object().timestamp)
-	meta_it->second = it.object();
+      if (!(timestamp < it.object().timestamp)
+          && std::binary_search(searched_ids.begin(), searched_ids.end(), it.object().ref))
+      {
+        auto meta_it = result.find(it.object().ref);
+        if (meta_it == result.end())
+          result.insert(std::make_pair(it.object().ref, it.object()));
+        else if (meta_it->second.timestamp < it.object().timestamp)
+          meta_it->second = it.object();
+      }
+    }
+  }
+  else
+  {
+    Block_Backend< Index, Meta_Per_Changeset_Skeleton, typename std::vector< Index >::const_iterator >
+        attic_meta_db(attic_idx);
+
+    for (auto it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+        !(it == attic_meta_db.discrete_end()); ++it)
+    {
+      const auto& cset = it.object();
+      for (auto i : cset.get_refs())
+      {
+        if (!(timestamp < i.timestamp)
+            && std::binary_search(searched_ids.begin(), searched_ids.end(), typename Skeleton::Id_Type(i.ref)))
+        {
+          auto meta_it = result.find(i.ref);
+          if (meta_it == result.end())
+            result.insert(std::make_pair(
+                i.ref, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >(cset, i)));
+          else if (meta_it->second.timestamp < i.timestamp)
+            meta_it->second = OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >(cset, i);
+        }
+      }
     }
   }
 
   // Same thing with current meta data
-  Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-          typename std::vector< Index >::const_iterator >
-      meta_db(context.data_index(current_meta_file_properties< Skeleton >()));
-
-  for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-          typename std::vector< Index >::const_iterator >::Discrete_Iterator
-      it = meta_db.discrete_begin(idx_set.begin(), idx_set.end());
-      !(it == meta_db.discrete_end()); ++it)
+  auto current_idx = context.data_index(current_meta_file_properties< Skeleton >());
+  if (current_idx->get_file_format_version() <= 7620)
   {
-    if (!(timestamp < it.object().timestamp)
-        && std::binary_search(searched_ids.begin(), searched_ids.end(), it.object().ref))
+    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
+            typename std::vector< Index >::const_iterator > meta_db(current_idx);
+
+    for (auto it = meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+        !(it == meta_db.discrete_end()); ++it)
     {
-      typename std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
-          ::iterator meta_it = result.find(it.object().ref);
-      if (meta_it == result.end())
-	result.insert(std::make_pair(it.object().ref, it.object()));
-      else if (meta_it->second.timestamp < it.object().timestamp)
-	meta_it->second = it.object();
+      if (!(timestamp < it.object().timestamp)
+          && std::binary_search(searched_ids.begin(), searched_ids.end(), it.object().ref))
+      {
+        typename std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
+            ::iterator meta_it = result.find(it.object().ref);
+        if (meta_it == result.end())
+          result.insert(std::make_pair(it.object().ref, it.object()));
+        else if (meta_it->second.timestamp < it.object().timestamp)
+          meta_it->second = it.object();
+      }
+    }
+  }
+  else
+  {
+    Block_Backend< Index, Meta_Per_Changeset_Skeleton, typename std::vector< Index >::const_iterator >
+        meta_db(current_idx);
+
+    for (auto it = meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+        !(it == meta_db.discrete_end()); ++it)
+    {
+      const auto& cset = it.object();
+      for (auto i : cset.get_refs())
+      {
+        if (!(timestamp < i.timestamp)
+            && std::binary_search(searched_ids.begin(), searched_ids.end(), typename Skeleton::Id_Type(i.ref)))
+        {
+          auto meta_it = result.find(i.ref);
+          if (meta_it == result.end())
+            result.insert(std::make_pair(
+                i.ref, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >(cset, i)));
+          else if (meta_it->second.timestamp < i.timestamp)
+            meta_it->second = OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >(cset, i);
+        }
+      }
     }
   }
 

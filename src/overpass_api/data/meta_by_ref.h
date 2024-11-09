@@ -46,10 +46,12 @@ std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > meta_
   std::vector< Index > req = get_indexes_< Index, Skeleton >({ Id_Type(ref) }, context, true);
 
   std::vector< OSM_Element_Metadata_Skeleton< Id_Type > > result;
+
+  auto cur_idx = context.data_index(current_meta_file_properties< Skeleton >());
+  if (cur_idx->get_file_format_version() <= 7620)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >,
-        typename std::vector< Index >::const_iterator > current_meta_db(
-        context.data_index(current_meta_file_properties< Skeleton >()));
+        typename std::vector< Index >::const_iterator > current_meta_db(cur_idx);
     for (auto it = current_meta_db.discrete_begin(req.begin(), req.end());
         !(it == current_meta_db.discrete_end()); ++it)
     {
@@ -57,15 +59,47 @@ std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > meta_
         result.push_back(it.object());
     }
   }
+  else
+  {
+    Block_Backend< Index, Meta_Per_Changeset_Skeleton,
+        typename std::vector< Index >::const_iterator > current_meta_db(cur_idx);
+    for (auto it = current_meta_db.discrete_begin(req.begin(), req.end());
+        !(it == current_meta_db.discrete_end()); ++it)
+    {
+      const auto& cset = it.object();
+      for (auto i : cset.get_refs())
+      {
+        if (i.ref == ref)
+          result.push_back(OSM_Element_Metadata_Skeleton< Id_Type >(cset, i));
+      }
+    }
+  }
+
+  auto attic_idx = context.data_index(attic_meta_file_properties< Skeleton >());
+  if (attic_idx->get_file_format_version() <= 7620)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >,
-        typename std::vector< Index >::const_iterator > attic_meta_db(
-        context.data_index(attic_meta_file_properties< Skeleton >()));
+        typename std::vector< Index >::const_iterator > attic_meta_db(attic_idx);
     for (auto it = attic_meta_db.discrete_begin(req.begin(), req.end());
         !(it == attic_meta_db.discrete_end()); ++it)
     {
       if (it.object().ref == ref)
         result.push_back(it.object());
+    }
+  }
+  else
+  {
+    Block_Backend< Index, Meta_Per_Changeset_Skeleton,
+        typename std::vector< Index >::const_iterator > attic_meta_db(attic_idx);
+    for (auto it = attic_meta_db.discrete_begin(req.begin(), req.end());
+        !(it == attic_meta_db.discrete_end()); ++it)
+    {
+      const auto& cset = it.object();
+      for (auto i : cset.get_refs())
+      {
+        if (i.ref == ref)
+          result.push_back(OSM_Element_Metadata_Skeleton< Id_Type >(cset, i));
+      }
     }
   }
 

@@ -1127,20 +1127,43 @@ void eval_timespan_from_meta(
     std::map< Index, std::map< Id_Type, std::pair< uint64_t, uint64_t > > >& timestamp_by_id_by_idx,
     File_Blocks_Index_Base* file_index, const std::vector< Index >& idx_set, uint64_t timestamp)
 {
-  Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >,
-          typename std::vector< Index >::const_iterator >
-      attic_meta_db(file_index);
-
-  for (auto it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
-      !(it == attic_meta_db.discrete_end()); ++it)
+  if (file_index->get_file_format_version() <= 7620)
   {
-    auto tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
-    if (tit != timestamp_by_id_by_idx[it.index()].end())
+    Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::vector< Index >::const_iterator >
+        attic_meta_db(file_index);
+
+    for (auto it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+        !(it == attic_meta_db.discrete_end()); ++it)
     {
-      if (timestamp < it.object().timestamp)
-        tit->second.second = std::min(tit->second.second, it.object().timestamp);
-      else
-        tit->second.first = std::max(tit->second.first, it.object().timestamp);
+      auto tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
+      if (tit != timestamp_by_id_by_idx[it.index()].end())
+      {
+        if (timestamp < it.object().timestamp)
+          tit->second.second = std::min(tit->second.second, it.object().timestamp);
+        else
+          tit->second.first = std::max(tit->second.first, it.object().timestamp);
+      }
+    }
+  }
+  else
+  {
+    Block_Backend< Index, Meta_Per_Changeset_Skeleton, typename std::vector< Index >::const_iterator >
+        attic_meta_db(file_index);
+
+    for (auto it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+        !(it == attic_meta_db.discrete_end()); ++it)
+    {
+      for (const auto& j : it.object().get_refs())
+      {
+        auto tit = timestamp_by_id_by_idx[it.index()].find(j.ref);
+        if (tit != timestamp_by_id_by_idx[it.index()].end())
+        {
+          if (timestamp < j.timestamp)
+            tit->second.second = std::min(tit->second.second, j.timestamp);
+          else
+            tit->second.first = std::max(tit->second.first, j.timestamp);
+        }
+      }
     }
   }
 }
