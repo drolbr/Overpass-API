@@ -185,8 +185,12 @@ void clone_current_map_file(Transaction& transaction, std::string dest_db_dir, c
 template< typename Index, typename Skeleton >
 void clone_meta_file(Transaction& transaction, std::string dest_db_dir, const Clone_Settings& clone_settings)
 {
-  clone_matching_bin_file< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >(
-      *current_meta_file_properties< Skeleton >(), transaction, dest_db_dir, clone_settings);
+  if (transaction.data_index(current_meta_file_properties< Skeleton >())->get_file_format_version() <= 7620)
+    clone_matching_bin_file< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >(
+        *current_meta_file_properties< Skeleton >(), transaction, dest_db_dir, clone_settings);
+  else
+    clone_matching_bin_file< Index, Meta_Per_Changeset_Skeleton >(
+        *current_meta_file_properties< Skeleton >(), transaction, dest_db_dir, clone_settings);    
 }
 template< typename Index, typename Skeleton, typename Skel_or_Delta >
 void clone_attic_skel_file(Transaction& transaction, std::string dest_db_dir, const Clone_Settings& clone_settings)
@@ -239,8 +243,12 @@ void clone_attic_undeleted_file(Transaction& transaction, std::string dest_db_di
 template< typename Index, typename Skeleton >
 void clone_attic_meta_file(Transaction& transaction, std::string dest_db_dir, const Clone_Settings& clone_settings)
 {
-  clone_matching_bin_file< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >(
-      *attic_meta_file_properties< Skeleton >(), transaction, dest_db_dir, clone_settings);
+  if (transaction.data_index(attic_meta_file_properties< Skeleton >())->get_file_format_version() <= 7620)
+    clone_matching_bin_file< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >(
+        *attic_meta_file_properties< Skeleton >(), transaction, dest_db_dir, clone_settings);
+  else
+    clone_matching_bin_file< Index, Meta_Per_Changeset_Skeleton >(
+        *attic_meta_file_properties< Skeleton >(), transaction, dest_db_dir, clone_settings);
 }
 template< typename Skeleton >
 void clone_attic_local_tags_file(Transaction& transaction, std::string dest_db_dir, const Clone_Settings& clone_settings)
