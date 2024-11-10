@@ -120,22 +120,47 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, uint64 divi
     Ofstream_Collection node_attic_tags_local_out(db_dir + "after_node_attic_tags_", "_local.csv");
     Ofstream_Collection node_attic_tags_global_out(db_dir + "after_node_attic_tags_", "_global.csv");
 
-    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > nodes_meta_db
-        (transaction.data_index(meta_settings().NODES_META));
-    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >::Flat_Iterator
-        it(nodes_meta_db.flat_begin()); !(it == nodes_meta_db.flat_end()); ++it)
+    auto cur_meta_idx = transaction.data_index(meta_settings().NODES_META); 
+    if (cur_meta_idx->get_file_format_version() <= 7620)
     {
-      std::ofstream* out(node_meta_db_out.get(it.object().ref.val() / divisor));
-      (*out)<<std::dec<<it.object().ref.val()<<'\t'
-          <<it.object().version<<'\t'
-          <<((it.object().timestamp)>>26)<<' '
-          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
-          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
-          <<((it.object().timestamp & 0x1f000)>>12)<<' '
-          <<((it.object().timestamp & 0xfc0)>>6)<<' '
-          <<(it.object().timestamp & 0x3f)<<'\t'
-          <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
-          <<std::hex<<it.index().val()<<'\n';
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > nodes_meta_db
+          (cur_meta_idx);
+      for (auto it = nodes_meta_db.flat_begin(); !(it == nodes_meta_db.flat_end()); ++it)
+      {
+        std::ofstream* out(node_meta_db_out.get(it.object().ref.val() / divisor));
+        (*out)<<std::dec<<it.object().ref.val()<<'\t'
+            <<it.object().version<<'\t'
+            <<((it.object().timestamp)>>26)<<' '
+            <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+            <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+            <<((it.object().timestamp & 0x1f000)>>12)<<' '
+            <<((it.object().timestamp & 0xfc0)>>6)<<' '
+            <<(it.object().timestamp & 0x3f)<<'\t'
+            <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
+            <<std::hex<<it.index().val()<<'\n';
+      }
+    }
+    else
+    {
+      Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > nodes_meta_db(cur_meta_idx);
+      for (auto it = nodes_meta_db.flat_begin(); !(it == nodes_meta_db.flat_end()); ++it)
+      {
+        const auto& cset = it.object();
+        for (auto i : cset.get_refs())
+        {
+          std::ofstream* out(node_meta_db_out.get(i.ref / divisor));
+          (*out)<<std::dec<<i.ref<<'\t'
+              <<i.version<<'\t'
+              <<((i.timestamp)>>26)<<' '
+              <<((i.timestamp & 0x3c00000)>>22)<<' '
+              <<((i.timestamp & 0x3e0000)>>17)<<' '
+              <<((i.timestamp & 0x1f000)>>12)<<' '
+              <<((i.timestamp & 0xfc0)>>6)<<' '
+              <<(i.timestamp & 0x3f)<<'\t'
+              <<it.object().get_changeset()<<'\t'<<it.object().get_user_id()<<'\t'
+              <<std::hex<<it.index().val()<<'\n';
+        }
+      }
     }
 
     Block_Backend< Uint31_Index, Attic< Node_Skeleton > > nodes_db
@@ -181,22 +206,47 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, uint64 divi
       (*out)<<std::dec<<it.index().val()<<'\t'<<std::hex<<it.object().val()<<'\n';
     }
 
-    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > nodes_attic_meta_db
-        (transaction.data_index(attic_settings().NODES_META));
-    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >::Flat_Iterator
-        it(nodes_attic_meta_db.flat_begin()); !(it == nodes_attic_meta_db.flat_end()); ++it)
+    auto attic_meta_idx = transaction.data_index(attic_settings().NODES_META);
+    if (attic_meta_idx->get_file_format_version() <= 7620)
     {
-      std::ofstream* out(node_attic_meta_db_out.get(it.object().ref.val() / divisor));
-      (*out)<<std::dec<<it.object().ref.val()<<'\t'
-          <<it.object().version<<'\t'
-          <<((it.object().timestamp)>>26)<<' '
-          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
-          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
-          <<((it.object().timestamp & 0x1f000)>>12)<<' '
-          <<((it.object().timestamp & 0xfc0)>>6)<<' '
-          <<(it.object().timestamp & 0x3f)<<'\t'
-          <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
-          <<std::hex<<it.index().val()<<'\n';
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > nodes_attic_meta_db
+          (attic_meta_idx);
+      for (auto it = nodes_attic_meta_db.flat_begin(); !(it == nodes_attic_meta_db.flat_end()); ++it)
+      {
+        std::ofstream* out(node_attic_meta_db_out.get(it.object().ref.val() / divisor));
+        (*out)<<std::dec<<it.object().ref.val()<<'\t'
+            <<it.object().version<<'\t'
+            <<((it.object().timestamp)>>26)<<' '
+            <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+            <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+            <<((it.object().timestamp & 0x1f000)>>12)<<' '
+            <<((it.object().timestamp & 0xfc0)>>6)<<' '
+            <<(it.object().timestamp & 0x3f)<<'\t'
+            <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
+            <<std::hex<<it.index().val()<<'\n';
+      }
+    }
+    else
+    {
+      Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > nodes_attic_meta_db(attic_meta_idx);
+      for (auto it = nodes_attic_meta_db.flat_begin(); !(it == nodes_attic_meta_db.flat_end()); ++it)
+      {
+        const auto& cset = it.object();
+        for (auto i : cset.get_refs())
+        {
+          std::ofstream* out(node_attic_meta_db_out.get(i.ref / divisor));
+          (*out)<<std::dec<<i.ref<<'\t'
+              <<i.version<<'\t'
+              <<((i.timestamp)>>26)<<' '
+              <<((i.timestamp & 0x3c00000)>>22)<<' '
+              <<((i.timestamp & 0x3e0000)>>17)<<' '
+              <<((i.timestamp & 0x1f000)>>12)<<' '
+              <<((i.timestamp & 0xfc0)>>6)<<' '
+              <<(i.timestamp & 0x3f)<<'\t'
+              <<it.object().get_changeset()<<'\t'<<it.object().get_user_id()<<'\t'
+              <<std::hex<<it.index().val()<<'\n';
+        }
+      }
     }
 
     Block_Backend< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > > nodes_local_db
@@ -332,22 +382,47 @@ void dump_ways(Transaction& transaction, const std::string& db_dir, uint64 divis
     Ofstream_Collection way_attic_tags_local_out(db_dir + "after_way_attic_tags_", "_local.csv");
     Ofstream_Collection way_attic_tags_global_out(db_dir + "after_way_attic_tags_", "_global.csv");
 
-    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > ways_meta_db
-        (transaction.data_index(meta_settings().WAYS_META));
-    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::Flat_Iterator
-        it(ways_meta_db.flat_begin()); !(it == ways_meta_db.flat_end()); ++it)
+    auto cur_meta_idx = transaction.data_index(meta_settings().WAYS_META);
+    if (cur_meta_idx->get_file_format_version() <= 7620)
     {
-      std::ofstream* out(way_meta_db_out.get(it.object().ref.val() / divisor));
-      (*out)<<std::dec<<it.object().ref.val()<<'\t'
-          <<it.object().version<<'\t'
-          <<((it.object().timestamp)>>26)<<' '
-          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
-          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
-          <<((it.object().timestamp & 0x1f000)>>12)<<' '
-          <<((it.object().timestamp & 0xfc0)>>6)<<' '
-          <<(it.object().timestamp & 0x3f)<<'\t'
-          <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
-          <<std::hex<<it.index().val()<<'\n';
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > ways_meta_db
+          (cur_meta_idx);
+      for (auto it = ways_meta_db.flat_begin(); !(it == ways_meta_db.flat_end()); ++it)
+      {
+        std::ofstream* out(way_meta_db_out.get(it.object().ref.val() / divisor));
+        (*out)<<std::dec<<it.object().ref.val()<<'\t'
+            <<it.object().version<<'\t'
+            <<((it.object().timestamp)>>26)<<' '
+            <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+            <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+            <<((it.object().timestamp & 0x1f000)>>12)<<' '
+            <<((it.object().timestamp & 0xfc0)>>6)<<' '
+            <<(it.object().timestamp & 0x3f)<<'\t'
+            <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
+            <<std::hex<<it.index().val()<<'\n';
+      }
+    }
+    else
+    {
+      Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > ways_meta_db(cur_meta_idx);
+      for (auto it = ways_meta_db.flat_begin(); !(it == ways_meta_db.flat_end()); ++it)
+      {
+        const auto& cset = it.object();
+        for (auto i : cset.get_refs())
+        {
+          std::ofstream* out(way_meta_db_out.get(i.ref / divisor));
+          (*out)<<std::dec<<i.ref<<'\t'
+              <<i.version<<'\t'
+              <<((i.timestamp)>>26)<<' '
+              <<((i.timestamp & 0x3c00000)>>22)<<' '
+              <<((i.timestamp & 0x3e0000)>>17)<<' '
+              <<((i.timestamp & 0x1f000)>>12)<<' '
+              <<((i.timestamp & 0xfc0)>>6)<<' '
+              <<(i.timestamp & 0x3f)<<'\t'
+              <<it.object().get_changeset()<<'\t'<<it.object().get_user_id()<<'\t'
+              <<std::hex<<it.index().val()<<'\n';
+        }
+      }
     }
 
     Block_Backend< Uint31_Index, Attic< Way_Delta > > ways_db
@@ -391,22 +466,47 @@ void dump_ways(Transaction& transaction, const std::string& db_dir, uint64 divis
       (*out)<<std::dec<<it.index().val()<<'\t'<<std::hex<<it.object().val()<<'\n';
     }
 
-    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > ways_attic_meta_db
-        (transaction.data_index(attic_settings().WAYS_META));
-    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::Flat_Iterator
-        it(ways_attic_meta_db.flat_begin()); !(it == ways_attic_meta_db.flat_end()); ++it)
+    auto attic_meta_idx = transaction.data_index(attic_settings().WAYS_META);
+    if (attic_meta_idx->get_file_format_version() <= 7620)
     {
-      std::ofstream* out(way_attic_meta_db_out.get(it.object().ref.val() / divisor));
-      (*out)<<std::dec<<it.object().ref.val()<<'\t'
-          <<it.object().version<<'\t'
-          <<((it.object().timestamp)>>26)<<' '
-          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
-          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
-          <<((it.object().timestamp & 0x1f000)>>12)<<' '
-          <<((it.object().timestamp & 0xfc0)>>6)<<' '
-          <<(it.object().timestamp & 0x3f)<<'\t'
-          <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
-          <<std::hex<<it.index().val()<<'\n';
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > ways_attic_meta_db
+          (attic_meta_idx);
+      for (auto it = ways_attic_meta_db.flat_begin(); !(it == ways_attic_meta_db.flat_end()); ++it)
+      {
+        std::ofstream* out(way_attic_meta_db_out.get(it.object().ref.val() / divisor));
+        (*out)<<std::dec<<it.object().ref.val()<<'\t'
+            <<it.object().version<<'\t'
+            <<((it.object().timestamp)>>26)<<' '
+            <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+            <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+            <<((it.object().timestamp & 0x1f000)>>12)<<' '
+            <<((it.object().timestamp & 0xfc0)>>6)<<' '
+            <<(it.object().timestamp & 0x3f)<<'\t'
+            <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
+            <<std::hex<<it.index().val()<<'\n';
+      }
+    }
+    else
+    {
+      Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > ways_attic_meta_db(attic_meta_idx);
+      for (auto it = ways_attic_meta_db.flat_begin(); !(it == ways_attic_meta_db.flat_end()); ++it)
+      {
+        const auto& cset = it.object();
+        for (auto i : cset.get_refs())
+        {
+          std::ofstream* out(way_attic_meta_db_out.get(i.ref / divisor));
+          (*out)<<std::dec<<i.ref<<'\t'
+              <<i.version<<'\t'
+              <<((i.timestamp)>>26)<<' '
+              <<((i.timestamp & 0x3c00000)>>22)<<' '
+              <<((i.timestamp & 0x3e0000)>>17)<<' '
+              <<((i.timestamp & 0x1f000)>>12)<<' '
+              <<((i.timestamp & 0xfc0)>>6)<<' '
+              <<(i.timestamp & 0x3f)<<'\t'
+              <<it.object().get_changeset()<<'\t'<<it.object().get_user_id()<<'\t'
+              <<std::hex<<it.index().val()<<'\n';
+        }
+      }
     }
 
     Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > > ways_local_db

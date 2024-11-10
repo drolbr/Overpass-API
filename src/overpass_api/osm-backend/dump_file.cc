@@ -66,7 +66,7 @@ int main(int argc, char* args[])
 
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
 
     if (std::string("--nodes") == args[2])
     {
@@ -81,15 +81,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--nodes-meta") == args[2])
     {
-      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > db
-          (transaction.data_index(meta_settings().NODES_META));
-      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
-               ::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(meta_settings().NODES_META);
+      if (file_idx->get_file_format_version() <= 7620)
       {
-        std::cout<<std::hex<<it.index().val()<<'\t'
-            <<std::dec<<it.object().ref.val()<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().ref.val()<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          const auto& cset = it.object();
+          for (auto i : cset.get_refs())
+            std::cout<<std::hex<<it.index().val()<<'\t'
+                <<std::dec<<i.ref<<'\t'
+                <<i.timestamp<<'\n';
+        }
       }
     }
     else if (std::string("--node-tags-local") == args[2])
@@ -172,15 +185,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--attic-nodes-meta") == args[2])
     {
-      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().NODES_META));
-      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
-               ::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(attic_settings().NODES_META);
+      if (file_idx->get_file_format_version() <= 7620)
       {
-        std::cout<<std::hex<<it.index().val()<<'\t'
-            <<std::dec<<it.object().ref.val()<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().ref.val()<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          const auto& cset = it.object();
+          for (auto i : cset.get_refs())
+            std::cout<<std::hex<<it.index().val()<<'\t'
+                <<std::dec<<i.ref<<'\t'
+                <<i.timestamp<<'\n';
+        }
       }
     }
     else if (std::string("--attic-node-tags-local") == args[2])
@@ -298,15 +324,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--ways-meta") == args[2])
     {
-      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > db
-          (transaction.data_index(meta_settings().WAYS_META));
-      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
-               ::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(meta_settings().WAYS_META);
+      if (file_idx->get_file_format_version() <= 7620)
       {
-        std::cout<<std::hex<<it.index().val()<<'\t'
-            <<std::dec<<it.object().ref.val()<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().ref.val()<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          const auto& cset = it.object();
+          for (auto i : cset.get_refs())
+            std::cout<<std::hex<<it.index().val()<<'\t'
+                <<std::dec<<i.ref<<'\t'
+                <<i.timestamp<<'\n';
+        }
       }
     }
     else if (std::string("--way-tags-local") == args[2])
@@ -461,15 +500,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--attic-ways-meta") == args[2])
     {
-      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().WAYS_META));
-      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
-               ::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(attic_settings().WAYS_META);
+      if (file_idx->get_file_format_version() <= 7620)
       {
-        std::cout<<std::hex<<it.index().val()<<'\t'
-            <<std::dec<<it.object().ref.val()<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().ref.val()<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          const auto& cset = it.object();
+          for (auto i : cset.get_refs())
+            std::cout<<std::hex<<it.index().val()<<'\t'
+                <<std::dec<<i.ref<<'\t'
+                <<i.timestamp<<'\n';
+        }
       }
     }
     else if (std::string("--attic-way-tags-local") == args[2])
@@ -576,15 +628,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--rels-meta") == args[2])
     {
-      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > db
-          (transaction.data_index(meta_settings().RELATIONS_META));
-      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > >
-               ::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(meta_settings().RELATIONS_META);
+      if (file_idx->get_file_format_version() <= 7620)
       {
-        std::cout<<std::hex<<it.index().val()<<'\t'
-            <<std::dec<<it.object().ref.val()<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().ref.val()<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          const auto& cset = it.object();
+          for (auto i : cset.get_refs())
+            std::cout<<std::hex<<it.index().val()<<'\t'
+                <<std::dec<<i.ref<<'\t'
+                <<i.timestamp<<'\n';
+        }
       }
     }
     else if (std::string("--rel-tags-local") == args[2])
@@ -680,15 +745,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--attic-rels-meta") == args[2])
     {
-      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().RELATIONS_META));
-      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > >
-               ::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(attic_settings().RELATIONS_META);
+      if (file_idx->get_file_format_version() <= 7620)
       {
-        std::cout<<std::hex<<it.index().val()<<'\t'
-            <<std::dec<<it.object().ref.val()<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().ref.val()<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          const auto& cset = it.object();
+          for (auto i : cset.get_refs())
+            std::cout<<std::hex<<it.index().val()<<'\t'
+                <<std::dec<<i.ref<<'\t'
+                <<i.timestamp<<'\n';
+        }
       }
     }
     else if (std::string("--attic-rel-tags-local") == args[2])
