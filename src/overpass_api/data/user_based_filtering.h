@@ -32,24 +32,55 @@ std::vector< typename Object::Id_Type > touched_ids_by_users(
 {
   std::vector< typename Object::Id_Type > result;
 
+  auto cur_idx = context.data_index(current_meta_file_properties< Object >());
+  if (cur_idx->get_file_format_version() <= 7620)
   {
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > cur_meta_db(
-      context.data_index(current_meta_file_properties< Object >()));
-    for (auto it = cur_meta_db.range_begin(ranges); !(it == cur_meta_db.range_end()); ++it)
+    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > meta_db(cur_idx);
+    for (auto it = meta_db.range_begin(ranges); !(it == meta_db.range_end()); ++it)
     {
       if (user_ids.find(it.object().user_id) != user_ids.end()
           && (result.empty() || !(result.back() == it.object().ref)))
         result.push_back(it.object().ref);
     }
   }
+  else
   {
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_meta_db(
-      context.data_index(attic_meta_file_properties< Object >()));
-    for (auto it = attic_meta_db.range_begin(ranges); !(it == attic_meta_db.range_end()); ++it)
+    Block_Backend< Index, Meta_Per_Changeset_Skeleton > meta_db(cur_idx);
+    for (auto it = meta_db.range_begin(ranges); !(it == meta_db.range_end()); ++it)
+    {
+      const auto& cset = it.object();
+      for (auto i : cset.get_refs())
+      {
+        if (user_ids.find(cset.get_user_id()) != user_ids.end()
+            && (result.empty() || !(result.back() == i.ref)))
+          result.push_back(i.ref);
+      }
+    }
+  }
+
+  auto attic_idx = context.data_index(attic_meta_file_properties< Object >());
+  if (attic_idx->get_file_format_version() <= 7620)
+  {
+    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > meta_db(attic_idx);
+    for (auto it = meta_db.range_begin(ranges); !(it == meta_db.range_end()); ++it)
     {
       if (user_ids.find(it.object().user_id) != user_ids.end()
           && (result.empty() || !(result.back() == it.object().ref)))
         result.push_back(it.object().ref);
+    }
+  }
+  else
+  {
+    Block_Backend< Index, Meta_Per_Changeset_Skeleton > meta_db(attic_idx);
+    for (auto it = meta_db.range_begin(ranges); !(it == meta_db.range_end()); ++it)
+    {
+      const auto& cset = it.object();
+      for (auto i : cset.get_refs())
+      {
+        if (user_ids.find(cset.get_user_id()) != user_ids.end()
+            && (result.empty() || !(result.back() == i.ref)))
+          result.push_back(i.ref);
+      }
     }
   }
 
