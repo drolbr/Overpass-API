@@ -63,9 +63,9 @@ struct Relation
   std::vector< Uint31_Index > way_idxs;
   std::vector< std::pair< std::string, std::string > > tags;
 
-  Relation() : id(0u) {}
+  Relation() : id(0u), index(0) {}
 
-  Relation(Id_Type id_) : id(id_) {}
+  Relation(Id_Type id_) : id(id_), index(0) {}
 
   Relation(Id_Type id_, uint32 index_, const std::vector< Relation_Entry >& members_)
   : id(id_), index(index_), members(members_) {}

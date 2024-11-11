@@ -1138,9 +1138,10 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
       0, attic_skeletons, new_skeletons, moved_relations);
 
   // Compute which meta data really has changed
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > > attic_meta;
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > > attic_meta
+      = existing_meta;
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > > new_meta;
-  new_current_meta(new_data, existing_map_positions, existing_meta, attic_meta, new_meta);
+  new_current_meta(new_data, new_meta);
 
   // Compute which meta data has moved
   std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > new_positions

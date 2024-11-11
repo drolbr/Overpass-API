@@ -348,13 +348,8 @@ void new_current_skeletons
 template< typename Index, typename Element_Skeleton >
 void new_current_meta
     (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >& existing_map_positions,
-     const std::map< Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& existing_meta,
-     std::map< Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta,
      std::map< Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_meta)
 {
-  attic_meta = existing_meta;
-
   typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
       = new_data.data.begin();
   for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator

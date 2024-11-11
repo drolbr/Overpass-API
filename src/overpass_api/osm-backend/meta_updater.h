@@ -55,18 +55,6 @@ struct Meta_Equal_Id {
 };
 
 
-template < class TObject, class TCompFunc, class TEqualFunc >
-std::vector< TObject* > sort_elems_to_insert
-    (std::vector< TObject >& elems_to_insert,
-     TCompFunc& elem_comparator_by_id,
-     TEqualFunc& elem_equal_id);
-
-
-template < class TObject >
-void collect_new_indexes
-    (const std::vector< TObject* >& elems_ptr, std::map< uint32, uint32 >& new_index_by_id);
-
-
 template< class Id_Type >
 void process_meta_data
   (File_Blocks_Index_Base& file_blocks_index,
@@ -298,33 +286,12 @@ void merge_files
 
 //-----------------------------------------------------------------------------
 
-template < class TObject, class TCompFunc, class TEqualFunc >
-std::vector< TObject* > sort_elems_to_insert
-    (std::vector< TObject >& elems_to_insert,
-     TCompFunc& elem_comparator_by_id,
-     TEqualFunc& elem_equal_id)
-{
-  std::vector< TObject* > elems_ptr;
-  for (typename std::vector< TObject >::iterator it = elems_to_insert.begin();
-      it != elems_to_insert.end(); ++it)
-    elems_ptr.push_back(&*it);
-
-  // keep always the most recent (last) element of all equal elements
-  stable_sort(elems_ptr.begin(), elems_ptr.end(), elem_comparator_by_id);
-  typename std::vector< TObject* >::iterator elems_begin
-      (unique(elems_ptr.rbegin(), elems_ptr.rend(), elem_equal_id).base());
-  elems_ptr.erase(elems_ptr.begin(), elems_begin);
-
-  return elems_ptr;
-}
-
-template< class TObject >
-void collect_new_indexes
-    (const std::vector< TObject* >& elems_ptr, std::map< typename TObject::Id_Type, uint32 >& new_index_by_id)
-{
-  for (typename std::vector< TObject* >::const_iterator it = elems_ptr.begin();
-      it != elems_ptr.end(); ++it)
-    new_index_by_id[(*it)->id] = (*it)->index;
-}
+/*
+// Consumes to_merge which is anyway no longer needed afterwards
+// May alter data_by_id to remove objects where younger versions are already present
+template< typename Index, typename Skeleton >
+Meta_By_Changeset_Delta load_and_process_current(
+    const std::vector< Index >& extra_idxs, Meta_By_Changeset_Delta&& to_merge, Data_By_Id< Skeleton >& data_by_id);
+*/
 
 #endif

@@ -861,9 +861,10 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
       0, attic_skeletons, new_skeletons, moved_ways);
 
   // Compute which meta data really has changed
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_meta;
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_meta
+      = existing_meta;
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > new_meta;
-  new_current_meta(new_data, existing_map_positions, existing_meta, attic_meta, new_meta);
+  new_current_meta(new_data, new_meta);
 
   // Compute which meta data has moved
   std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions
@@ -1136,7 +1137,7 @@ void Way_Updater::merge_files(const std::vector< std::string >& froms, std::stri
       (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
   if (meta)
   {
-    ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >
+    ::merge_files< Uint31_Index, Meta_Per_Changeset_Skeleton >
         (from_transactions, into_transaction, *meta_settings().WAYS_META);
   }
 }

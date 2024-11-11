@@ -512,9 +512,10 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       0, attic_skeletons, new_skeletons, moved_nodes);
 
   // Compute which meta data really has changed
-  std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta;
+  std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta
+      = existing_meta;
   std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_meta;
-  new_current_meta(new_data, existing_map_positions, existing_meta, attic_meta, new_meta);
+  new_current_meta(new_data, new_meta);
 
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > attic_local_tags;
@@ -806,7 +807,7 @@ void Node_Updater::merge_files(const std::vector< std::string >& froms, std::str
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
   if (meta != Database_Meta_State::only_data)
   {
-    ::merge_files< Node::Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >
+    ::merge_files< Node::Index, Meta_Per_Changeset_Skeleton >
         (from_transactions, into_transaction, *meta_settings().NODES_META);
   }
 }
