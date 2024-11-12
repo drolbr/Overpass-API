@@ -158,6 +158,13 @@ public:
     raw_mode = false;
     refs.push_back(entry);
   }
+  
+  void move_refs_to(Meta_Per_Changeset_Skeleton& arg)
+  {
+    for (auto i : refs)
+      arg.refs.push_back(i);
+    refs.clear();
+  }
 
   uint32_t size_of() const
   {

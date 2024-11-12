@@ -23,6 +23,7 @@
 #include "../core/datatypes.h"
 #include "../core/settings.h"
 #include "../core/type_meta.h"
+#include "basic_updater.h"
 
 #include <algorithm>
 #include <map>
@@ -55,73 +56,6 @@ struct Meta_Equal_Id {
 };
 
 
-template< class Id_Type >
-void process_meta_data
-  (File_Blocks_Index_Base& file_blocks_index,
-   std::vector< std::pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
-   const std::vector< std::pair< Id_Type, bool > >& ids_to_modify,
-   const std::map< uint32, std::vector< Id_Type > >& to_delete,
-   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >& db_to_delete,
-   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >& db_to_insert)
-{
-  static Meta_Comparator_By_Id< Id_Type > meta_comparator_by_id;
-  static Meta_Equal_Id< Id_Type > meta_equal_id;
-
-  // fill db_to_delete
-  for (typename std::map< uint32, std::vector< Id_Type > >::const_iterator
-      it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    Uint31_Index idx(it->first);
-    for (typename std::vector< Id_Type >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      db_to_delete[idx].insert(OSM_Element_Metadata_Skeleton< Id_Type >(*it2));
-  }
-
-  // keep always the most recent (last) element of all equal elements
-  stable_sort
-      (meta_to_insert.begin(), meta_to_insert.end(), meta_comparator_by_id);
-  typename std::vector< std::pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >::iterator nodes_begin
-      (unique(meta_to_insert.rbegin(), meta_to_insert.rend(), meta_equal_id)
-       .base());
-  meta_to_insert.erase(meta_to_insert.begin(), nodes_begin);
-
-  // fill insert
-  typename std::vector< std::pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >::const_iterator
-      nit = meta_to_insert.begin();
-  for (typename std::vector< std::pair< Id_Type, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((nit != meta_to_insert.end()) && (it->first == nit->first.ref))
-    {
-      if (it->second)
-	db_to_insert[Uint31_Index(nit->second)].insert(nit->first);
-      ++nit;
-    }
-  }
-
-  meta_to_insert.clear();
-}
-
-
-template< class Id_Type >
-void process_meta_data
-  (File_Blocks_Index_Base& file_blocks_index,
-   std::vector< std::pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
-   const std::vector< std::pair< Id_Type, bool > >& ids_to_modify,
-   const std::map< uint32, std::vector< Id_Type > >& to_delete)
-{
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_delete;
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_insert;
-
-  process_meta_data(file_blocks_index, meta_to_insert, ids_to_modify,
-		    to_delete, db_to_delete, db_to_insert);
-
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > > user_db
-      (&file_blocks_index);
-  user_db.update(db_to_delete, db_to_insert);
-}
-
-
 template< typename Index, typename Object >
 void copy_idxs_by_id
     (const std::map< Index, std::set< Object > >& new_data, std::map< uint32, std::vector< uint32 > >& idxs_by_user_id)
@@ -142,51 +76,9 @@ void process_user_data(Transaction& transaction, std::map< uint32, std::string >
    std::map< uint32, std::vector< uint32 > >& idxs_by_user_id);
 
 
-template< typename Id_Type >
-void collect_old_meta_data
-  (File_Blocks_Index_Base& file_blocks_index,
-   const std::map< uint32, std::vector< Id_Type > >& to_delete,
-   std::map< Id_Type, uint32 >& new_index_by_id,
-   std::vector< std::pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert)
-{
-  std::map< Uint31_Index, std::vector< Id_Type > > to_delete_meta;
-  for (typename std::map< uint32, std::vector< Id_Type > >::const_iterator
-      it(to_delete.begin()); it != to_delete.end(); ++it)
-    to_delete_meta[Uint31_Index(it->first)] = it->second;
-
-  std::set< Uint31_Index > user_idxs;
-  for (typename std::map< uint32, std::vector< Id_Type > >::const_iterator
-      it(to_delete.begin()); it != to_delete.end(); ++it)
-    user_idxs.insert(Uint31_Index(it->first));
-
-  // collect meta_data on its old position
-  typename std::map< Uint31_Index, std::vector< Id_Type > >::const_iterator del_it = to_delete_meta.begin();
-
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-      meta_db(&file_blocks_index);
-  typename Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > >::Discrete_Iterator
-      meta_it(meta_db.discrete_begin(user_idxs.begin(), user_idxs.end()));
-  while (!(meta_it == meta_db.discrete_end()))
-  {
-    while ((del_it != to_delete_meta.end()) && (del_it->first < meta_it.index().val()))
-      ++del_it;
-    if (del_it == to_delete_meta.end())
-      break;
-
-    bool found = false;
-    for (typename std::vector< Id_Type >::const_iterator it = del_it->second.begin();
-        it != del_it->second.end(); ++it)
-      found |= (meta_it.object().ref == *it);
-
-    if (found)
-      meta_to_insert.push_back(std::make_pair(meta_it.object(), new_index_by_id[meta_it.object().ref]));
-    ++meta_it;
-  }
-}
-
-
 void rename_referred_file(const std::string& db_dir, const std::string& from, const std::string& to,
 			  const File_Properties& file_prop);
+
 
 class Transaction_Collection
 {
@@ -201,6 +93,7 @@ class Transaction_Collection
     std::vector< Transaction* > transactions;
 };
 
+
 template < typename TIndex, typename TObject >
 class Block_Backend_Collection
 {
@@ -212,6 +105,7 @@ class Block_Backend_Collection
     std::vector< Block_Backend< TIndex, TObject >* > dbs;
 };
 
+
 template < typename TIndex, typename TObject >
 Block_Backend_Collection< TIndex, TObject >::Block_Backend_Collection
     (Transaction_Collection& transactions, const File_Properties& file_prop)
@@ -221,6 +115,7 @@ Block_Backend_Collection< TIndex, TObject >::Block_Backend_Collection
     dbs.push_back(new Block_Backend< TIndex, TObject >((*it)->data_index(&file_prop)));
 }
 
+
 template < typename TIndex, typename TObject >
 Block_Backend_Collection< TIndex, TObject >::~Block_Backend_Collection()
 {
@@ -228,6 +123,7 @@ Block_Backend_Collection< TIndex, TObject >::~Block_Backend_Collection()
       it = dbs.begin(); it != dbs.end(); ++it)
     delete(*it);
 }
+
 
 template < typename TIndex, typename TObject >
 void merge_files
@@ -286,12 +182,136 @@ void merge_files
 
 //-----------------------------------------------------------------------------
 
-/*
+
+template< typename Index >
+struct Meta_By_Changeset_Delta
+{
+  std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > to_remove;
+  std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > to_add;
+};
+
+
+template< typename Index, typename Foo >
+std::vector< Index > merge_idxs(const std::map< Index, Foo >& to_add, const std::vector< Index >& extra_idxs)
+{
+  std::vector< Index > result = extra_idxs;
+
+  for (const auto& i : to_add)
+    result.push_back(i.first);
+
+  std::sort(result.begin(), result.end());
+  return result;
+}
+
+
+template< typename Skeleton >
+bool has_entry(const Data_By_Id< Skeleton >& data_by_id, uint64_t ref)
+{
+  auto it = std::lower_bound(data_by_id.data.begin(), data_by_id.data.end(),
+      Data_By_Id< Skeleton >::Entry(Uint31_Index(0ull), Skeleton(ref),
+          OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >()));
+  return it != data_by_id.data.end() && it->elem.id.val() == ref;
+}
+
+
 // Consumes to_merge which is anyway no longer needed afterwards
 // May alter data_by_id to remove objects where younger versions are already present
 template< typename Index, typename Skeleton >
-Meta_By_Changeset_Delta load_and_process_current(
-    const std::vector< Index >& extra_idxs, Meta_By_Changeset_Delta&& to_merge, Data_By_Id< Skeleton >& data_by_id);
-*/
+Meta_By_Changeset_Delta< Index > load_and_process_current(
+    const std::vector< Index >& extra_idxs,
+    Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    Meta_By_Changeset_Delta< Index >&& to_merge,
+    Data_By_Id< Skeleton >& data_by_id)
+{
+  Meta_By_Changeset_Delta< Index > result;
+  
+  std::vector< Index > req = merge_idxs(to_merge.to_add, extra_idxs);
+  Block_Backend< Index, Meta_Per_Changeset_Skeleton, typename std::vector< Index >::const_iterator > meta_db(
+      transaction.data_index(&cur_meta_file_properties));
+  auto db_it = meta_db.discrete_begin(req.begin(), req.end());
+  
+  auto extra_it = to_merge.to_add.begin();
+  
+  for (auto idx : req)
+  {
+    auto& loc_to_add = result.to_add[idx];
+    auto& loc_to_del = result.to_remove[idx];
+    
+    while (extra_it != to_merge.to_add.end() && extra_it->first < idx)
+      ++extra_it;  // Should never happen, but prevent infinite loop
+    while (!(db_it == meta_db.discrete_end()) && db_it.index() < idx)
+      ++db_it;  // Should never happen, but prevent infinite loop
+      
+    std::sort(extra_it->second.begin(), extra_it->second.end());
+
+    while (!(db_it == meta_db.discrete_end()) && db_it.index() == idx)
+    {
+      if (!db_it.object().get_is_redacted())
+      {
+        Meta_Per_Changeset_Skeleton* new_entries = nullptr;
+        if (extra_it != to_merge.to_add.end() && extra_it->first == idx)
+        {
+          auto merge_it = std::lower_bound(extra_it->second.begin(), extra_it->second.end(), db_it.object());
+          if (merge_it != extra_it->second.end() && merge_it->get_changeset() == db_it.object().get_changeset())
+            new_entries = &*merge_it;
+        }
+        
+        const auto& refs = db_it.object().get_refs();
+        auto ref_it = refs.begin();
+        while (ref_it != refs.end() && !has_entry(data_by_id, ref_it->ref)) 
+          ++ref_it;
+        
+        if (ref_it != refs.end())
+        {
+          Meta_Per_Changeset_Skeleton combined(
+              db_it.object().get_changeset(), db_it.object().get_is_redacted(), db_it.object().get_user_id());
+          Meta_Per_Changeset_Skeleton attic(
+              db_it.object().get_changeset(), db_it.object().get_is_redacted(), db_it.object().get_user_id());
+
+          for (auto it = refs.begin(); it != ref_it; ++it)
+            combined.add_ref(*it);
+          
+          while (ref_it != refs.end())
+          {
+            if (has_entry(data_by_id, ref_it->ref))
+              attic.add_ref(*ref_it);
+            else
+              combined.add_ref(*ref_it);
+
+            ++ref_it;
+          }
+          loc_to_del.push_back(attic);
+          
+          if (new_entries)
+            new_entries->move_refs_to(combined);
+          
+          loc_to_add.push_back(combined);
+        }
+        else if (new_entries)
+        {
+          Meta_Per_Changeset_Skeleton combined = db_it.object();
+          new_entries->move_refs_to(combined);
+          
+          loc_to_del.push_back(*new_entries);
+          loc_to_add.push_back(combined);
+        }
+      }
+      
+      ++db_it;
+    }
+    
+    if (extra_it != to_merge.to_add.end() && extra_it->first == idx)
+    {
+      for (auto i : extra_it->second)
+      {
+        if (!i.get_refs().empty())
+          loc_to_add.push_back(i);
+      }
+    }
+  }
+  
+  return result;
+}
+
 
 #endif
