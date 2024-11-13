@@ -95,10 +95,11 @@ class Global_Resource_Planner
 public:
   Global_Resource_Planner(
       uint32 global_available_time_, uint64 global_available_space_,
-      uint32 rate_limit_, bool allow_duplicate_queries_)
+      uint32 rate_limit_, bool allow_duplicate_queries_, bool exempt_client_zero_)
     : global_used_time(0), global_available_time(global_available_time_),
       global_used_space(0), global_available_space(global_available_space_),
       rate_limit(rate_limit_), allow_duplicate_queries(allow_duplicate_queries_),
+      exempt_client_zero(exempt_client_zero_),
       recent_average_used_time(15), recent_average_used_space(15),
       last_update_time(0), last_used_time(0), last_used_space(0), last_counted(0),
       average_used_time(0), average_used_space(0) {}
@@ -117,6 +118,7 @@ public:
   void set_total_available_space(uint64 global_available_space_) { global_available_space = global_available_space_; }
   void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
   void set_allow_duplicate_queries(bool allow_duplicate_queries_) { allow_duplicate_queries = allow_duplicate_queries_; }
+  void set_exempt_client_zero(bool exempt_client_zero_) { exempt_client_zero = exempt_client_zero_; }
 
   const std::vector< Reader_Entry >& get_active() const { return active; }
   bool is_active(pid_t client_pid) const;
@@ -140,6 +142,7 @@ private:
   uint64 global_available_space;
   uint32 rate_limit;
   bool allow_duplicate_queries;
+  bool exempt_client_zero;
 
   std::vector< uint32 > recent_average_used_time;
   std::vector< uint64 > recent_average_used_space;
@@ -294,6 +297,9 @@ public:
 
   void set_allow_duplicate_queries(bool allow_duplicate_queries)
   { global_resource_planner.set_allow_duplicate_queries(allow_duplicate_queries); }
+
+  void set_exempt_client_zero(bool exempt_client_zero)
+  { global_resource_planner.set_exempt_client_zero(exempt_client_zero); }
 
 private:
   Dispatcher_Socket socket;

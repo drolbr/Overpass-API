@@ -329,7 +329,7 @@ void Dispatcher_Client::request_read_and_idx(
   }
   if (ack == Dispatcher::RATE_LIMITED)
     throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::rate_limited");
-  else if (ack == Dispatcher::QUERY_REJECTED)
+  else if (ack == Dispatcher::QUERY_REJECTED || ack == 0)
     throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::timeout");
   else if (ack == Dispatcher::DUPLICATE_QUERY)
     throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::duplicate_query");

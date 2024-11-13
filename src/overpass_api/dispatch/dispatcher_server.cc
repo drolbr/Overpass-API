@@ -294,6 +294,9 @@ int main(int argc, char* argv[])
     else if (!(strncmp(argv[argpos], "--allow-duplicate-queries=", 26)))
       bit_limits = ((bit_limits & 0xfffffffc) | 0x2 |
           (((std::string)argv[argpos]).substr(26) == "yes" ? 0x1 : 0));
+    else if (!(strncmp(argv[argpos], "--limit-client-zero=", 20)))
+      bit_limits = ((bit_limits & 0xfffffff3) | 0x8 |
+          (((std::string)argv[argpos]).substr(26) == "yes" ? 0 : 0x1));
     else if (!(strncmp(argv[argpos], "--server-name=", 14)))
       server_name = ((std::string)argv[argpos]).substr(14);
     else
@@ -469,15 +472,15 @@ int main(int argc, char* argv[])
     if (attic)
       mode_.set_mode(Database_Meta_State::keep_attic);
     Database_Meta_State::Mode mode = mode_.value_or_autodetect(db_dir);
-    
+
     files_to_manage = osm_base_settings().bin_idxs();
 
     if (mode >= Database_Meta_State::keep_meta)
       files_to_manage.insert(
-          files_to_manage.end(), meta_settings().bin_idxs().begin(), meta_settings().bin_idxs().end());      
+          files_to_manage.end(), meta_settings().bin_idxs().begin(), meta_settings().bin_idxs().end());
     else
       suspicious_files_present |= assure_files_absent(db_dir, meta_settings().bin_idxs(), "--meta");
-    
+
     if (mode >= Database_Meta_State::keep_attic)
       files_to_manage.insert(
           files_to_manage.end(), attic_settings().bin_idxs().begin(), attic_settings().bin_idxs().end());
@@ -528,7 +531,7 @@ int main(int argc, char* argv[])
       std::cerr<<"getrlimit(RLIMIT_NOFILE, ..) failed: "<<errno<<' '<<strerror(errno)<<'\n';
       return errno;
     }
-    
+
     Logger logger(db_dir);
     Default_Dispatcher_Logger disp_logger(logger);
     if (max_allowed_space <= 0)
@@ -549,7 +552,9 @@ int main(int argc, char* argv[])
       dispatcher.set_rate_limit(rate_limit);
     if (bit_limits & 0x2)
       dispatcher.set_allow_duplicate_queries(bit_limits & 0x1);
-          
+    if (bit_limits & 0x8)
+      dispatcher.set_exempt_client_zero(bit_limits & 0x4);
+
     if (!server_name.empty())
     {
       try
@@ -561,7 +566,7 @@ int main(int argc, char* argv[])
         std::cout<<"exception: "<<e.what()<<'\n';
       }
     }
-    
+
     dispatcher.standby_loop(0);
   }
   catch (File_Error e)
