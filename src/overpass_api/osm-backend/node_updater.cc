@@ -490,6 +490,11 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       (existing_map_positions, *transaction, *osm_base_settings().NODES);
 
   // Collect all data of existing meta elements
+/*  Meta_By_Changeset_Timeless< Node::Index > meta_from_fresh = meta_from_fresh_data< Node::Index >(new_data);
+  Meta_By_Changeset_Delta< Node::Index > cur_meta_to_update = load_and_process_current(
+      existing_map_positions, *transaction, *meta_settings().NODES_META,
+      std::move(meta_from_fresh.current), new_data);
+*/
   std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
       = (meta != Database_Meta_State::only_data
           ? get_existing_meta< Node::Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >
@@ -547,6 +552,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   // Update meta
   if (meta != Database_Meta_State::only_data)
   {
+    //update_elements(
+    //    cur_meta_to_update.to_remove, cur_meta_to_update.to_add, *transaction, *meta_settings().NODES_META);
     update_elements(attic_meta, new_meta, *transaction, *meta_settings().NODES_META);
     callback->meta_finished();
   }
@@ -662,7 +669,9 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     }
 
     // Write changelog
-    update_elements({}, changelog, *transaction, *attic_settings().NODE_CHANGELOG);
+    update_elements(
+        std::map< Timestamp, std::set< Node_Skeleton::Id_Type > >{}, changelog,
+        *transaction, *attic_settings().NODE_CHANGELOG);
     callback->changelog_finished();
   }
 

@@ -1020,7 +1020,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     }
 
     // Write changelog
-    update_elements({}, changelog, *transaction, *attic_settings().WAY_CHANGELOG);
+    update_elements(
+        std::map< Timestamp, std::set< Way_Skeleton::Id_Type > >{}, changelog,
+        *transaction, *attic_settings().WAY_CHANGELOG);
     callback->changelog_finished();
   }
 

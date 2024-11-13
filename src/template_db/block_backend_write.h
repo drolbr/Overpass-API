@@ -366,6 +366,47 @@ private:
 };
 
 
+template< typename Index, typename Object >
+std::map< Index, Object_Set_Predicate< Object > > make_object_predicate(
+    const std::map< Index, std::set< Object > >& to_delete)
+{
+  std::map< Index, Object_Set_Predicate< Object > > to_delete_;
+  for (const auto& i : to_delete)
+    to_delete_.insert(std::make_pair(i.first, Object_Set_Predicate< Object >(i.second)));
+  return to_delete_;
+}
+
+
+template< typename Object >
+class Object_Vector_Predicate
+{
+public:
+  Object_Vector_Predicate(const std::vector< Object >& data_) : data(&data_) {}
+
+  bool match(const Object& obj) const
+  {
+    auto it = std::lower_bound(data->begin(), data->end(), obj);
+    return it != data->end() && !(obj < *it);
+  }
+
+  typedef Object Base_Object;
+
+private:
+  const std::vector< Object >* data;
+};
+
+
+template< typename Index, typename Object >
+std::map< Index, Object_Vector_Predicate< Object > > make_object_predicate(
+    const std::map< Index, std::vector< Object > >& to_delete)
+{
+  std::map< Index, Object_Vector_Predicate< Object > > to_delete_;
+  for (const auto& i : to_delete)
+    to_delete_.insert(std::make_pair(i.first, Object_Vector_Predicate< Object >(i.second)));
+  return to_delete_;
+}
+
+
 template< typename Index, typename Container, typename File_Blocks >
 void create_from_scratch(
     File_Handler< Index, File_Blocks >& file_handler,
@@ -848,10 +889,10 @@ void update_segments(
 
 
 template< typename Index, typename Object, typename Iterator >
-template< typename Container >
+template< typename Container1, typename Container2 >
 void Block_Backend< Index, Object, Iterator >::update(
-    const std::map< Index, std::set< Object > >& to_delete,
-    const std::map< Index, Container >& to_insert,
+    const std::map< Index, Container1 >& to_delete,
+    const std::map< Index, Container2 >& to_insert,
     std::map< Index, Delta_Count >* obj_count)
 {
   std::vector< Index > relevant_idxs;
@@ -869,9 +910,7 @@ void Block_Backend< Index, Object, Iterator >::update(
 
   File_Handler< Index, File_Blocks_ > handler(file_blocks, relevant_idxs, block_size, data_filename);
 
-  std::map< Index, Object_Set_Predicate< Object > > to_delete_;
-  for (const auto& i : to_delete)
-    to_delete_.insert(std::make_pair(i.first, Object_Set_Predicate< Object >(i.second)));
+  auto to_delete_ = make_object_predicate(to_delete);
 
   while (handler.file_it.lower_bound() != relevant_idxs.end())
   {

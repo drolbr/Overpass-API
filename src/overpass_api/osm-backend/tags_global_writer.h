@@ -329,7 +329,7 @@ struct Migrate_Loop_Flush
       callback->migration_flush();
       for (auto& i : db_to_insert)
         std::sort(i.second.begin(), i.second.end());
-      into_db.update({}, db_to_insert);
+      into_db.update(std::map< Tag_Index_Global_KVI, std::vector< Ref_Entry > >{}, db_to_insert);
       db_to_insert.clear();
       total = 0;
     }
@@ -340,7 +340,7 @@ struct Migrate_Loop_Flush
     callback->migration_flush_single_kv();
     for (auto& i : db_to_insert)
       std::sort(i.second.begin(), i.second.end());
-    into_db.update({}, db_to_insert);
+    into_db.update(std::map< Tag_Index_Global_KVI, std::vector< Ref_Entry > >{}, db_to_insert);
     db_to_insert.clear();
   }
 
@@ -349,7 +349,7 @@ struct Migrate_Loop_Flush
     callback->migration_flush();
     for (auto& i : db_to_insert)
       std::sort(i.second.begin(), i.second.end());
-    into_db.update({}, db_to_insert);
+    into_db.update(std::map< Tag_Index_Global_KVI, std::vector< Ref_Entry > >{}, db_to_insert);
   }
 
   Block_Backend< Target_Idx, Ref_Entry >& into_db;
@@ -443,7 +443,7 @@ void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& tr
   {
     Block_Backend< String_Index, Frequent_Value_Entry >
         db(transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()));
-    db.update({}, freq_to_insert);
+    db.update(std::map< String_Index, std::set< Frequent_Value_Entry > >{}, freq_to_insert);
   }
   callback->migration_completed();
 }
@@ -468,7 +468,7 @@ void migrate_attic_global_tags(Osm_Backend_Callback* callback, Transaction& tran
   {
     Block_Backend< String_Index, Frequent_Value_Entry >
         db(transaction.data_index(attic_global_tag_frequency_file_properties< Skeleton >()));
-    db.update({}, freq_to_insert);
+    db.update(std::map< String_Index, std::set< Frequent_Value_Entry > >{}, freq_to_insert);
   }
   callback->migration_completed();
 }

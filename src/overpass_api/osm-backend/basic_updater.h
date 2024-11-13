@@ -493,6 +493,17 @@ void update_elements
 }
 
 
+template< typename Index, typename Object >
+void update_elements
+    (const std::map< Index, std::vector< Object > >& attic_objects,
+     const std::map< Index, std::vector< Object > >& new_objects,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
+  db.update(attic_objects, new_objects);
+}
+
+
 template< typename Index, typename Id_Type >
 std::map< Id_Type, std::set< Index > > get_existing_idx_lists
     (const std::vector< Id_Type >& ids,
@@ -1154,6 +1165,110 @@ private:
   std::vector< clock_t > cpu_start_time;
   std::vector< uint64 > cpu_runtime;
 };
+
+
+//-----------------------------------------------------------------------------
+
+
+class Transaction_Collection
+{
+  public:
+    Transaction_Collection(Access_Mode access_mode, bool use_shadow,
+			   const std::string& db_dir, const std::vector< std::string >& file_name_extensions);
+    ~Transaction_Collection();
+
+    void remove_referred_files(const File_Properties& file_prop);
+
+    std::vector< std::string > file_name_extensions;
+    std::vector< Transaction* > transactions;
+};
+
+
+template < typename TIndex, typename TObject >
+class Block_Backend_Collection
+{
+  public:
+    Block_Backend_Collection
+        (Transaction_Collection& transactions, const File_Properties& file_prop);
+    ~Block_Backend_Collection();
+
+    std::vector< Block_Backend< TIndex, TObject >* > dbs;
+};
+
+
+template < typename TIndex, typename TObject >
+Block_Backend_Collection< TIndex, TObject >::Block_Backend_Collection
+    (Transaction_Collection& transactions, const File_Properties& file_prop)
+{
+  for (std::vector< Transaction* >::const_iterator it = transactions.transactions.begin();
+      it != transactions.transactions.end(); ++it)
+    dbs.push_back(new Block_Backend< TIndex, TObject >((*it)->data_index(&file_prop)));
+}
+
+
+template < typename TIndex, typename TObject >
+Block_Backend_Collection< TIndex, TObject >::~Block_Backend_Collection()
+{
+  for (typename std::vector< Block_Backend< TIndex, TObject >* >::const_iterator
+      it = dbs.begin(); it != dbs.end(); ++it)
+    delete(*it);
+}
+
+
+template < typename TIndex, typename TObject >
+void merge_files
+    (Transaction_Collection& from_transaction, Transaction& into_transaction,
+     const File_Properties& file_prop)
+{
+  {
+    std::map< TIndex, std::set< TObject > > db_to_delete;
+    std::map< TIndex, std::set< TObject > > db_to_insert;
+
+    uint32 item_count = 0;
+    Block_Backend_Collection< TIndex, TObject > from_dbs(from_transaction, file_prop);
+    std::vector< std::pair< typename Block_Backend< TIndex, TObject >::Flat_Iterator,
+        typename Block_Backend< TIndex, TObject >::Flat_Iterator > > from_its;
+    std::set< TIndex > current_idxs;
+    for (typename std::vector< Block_Backend< TIndex, TObject >* >::const_iterator
+        it = from_dbs.dbs.begin(); it != from_dbs.dbs.end(); ++it)
+    {
+      from_its.push_back(std::make_pair((*it)->flat_begin(), (*it)->flat_end()));
+      if (!(from_its.back().first == from_its.back().second))
+        current_idxs.insert(from_its.back().first.index());
+    }
+    while (!current_idxs.empty())
+    {
+      TIndex current_idx = *current_idxs.begin();
+      current_idxs.erase(current_idxs.begin());
+      for (typename std::vector< std::pair< typename Block_Backend< TIndex, TObject >::Flat_Iterator,
+	      typename Block_Backend< TIndex, TObject >::Flat_Iterator > >::iterator
+	  it = from_its.begin(); it != from_its.end(); ++it)
+      {
+	while (!(it->first == it->second) && (it->first.index() == current_idx))
+	{
+	  db_to_insert[it->first.index()].insert(it->first.object());
+	  ++(it->first);
+
+	  if (++item_count > 4*1024*1024)
+	  {
+	    Block_Backend< TIndex, TObject > into_db
+	        (into_transaction.data_index(&file_prop));
+	    into_db.update(db_to_delete, db_to_insert);
+	    db_to_insert.clear();
+	    item_count = 0;
+	  }
+	}
+	if (!(it->first == it->second))
+	  current_idxs.insert(it->first.index());
+      }
+    }
+
+    Block_Backend< TIndex, TObject > into_db
+        (into_transaction.data_index(&file_prop));
+    into_db.update(db_to_delete, db_to_insert);
+  }
+  from_transaction.remove_referred_files(file_prop);
+}
 
 
 #endif

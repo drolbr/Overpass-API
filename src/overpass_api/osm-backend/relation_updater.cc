@@ -1287,7 +1287,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     }
 
     // Write changelog
-    update_elements({}, changelog, *transaction, *attic_settings().RELATION_CHANGELOG);
+    update_elements(
+        std::map< Timestamp, std::set< Relation_Skeleton::Id_Type > >{}, changelog,
+        *transaction, *attic_settings().RELATION_CHANGELOG);
 
     flush_roles();
   }

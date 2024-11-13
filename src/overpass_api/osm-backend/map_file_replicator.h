@@ -119,7 +119,7 @@ uint64_t replicate_attic_map_file(
     {
       Block_Backend< typename Skeleton::Id_Type, Index > into_db(
           into_transaction.data_index(attic_idx_list_properties< Skeleton >()));
-      into_db.update({}, idx_lists);
+      into_db.update(std::map< typename Skeleton::Id_Type, std::set< Index > >{}, idx_lists);
     }
 
     id_lower_limit += flush_count;

@@ -130,7 +130,7 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
       callback->migration_flush();
       for (auto& i : db_to_insert)
         std::sort(i.second.begin(), i.second.end());
-      into_db.update({}, db_to_insert);
+      into_db.update(std::map< Timestamp, std::vector< typename Skeleton::Id_Type > >{}, db_to_insert);
       db_to_insert.clear();
       elem_cnt = 0;
     }
@@ -139,7 +139,7 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
   callback->migration_flush();
   for (auto& i : db_to_insert)
     std::sort(i.second.begin(), i.second.end());
-  into_db.update({}, db_to_insert);
+  into_db.update(std::map< Timestamp, std::vector< typename Skeleton::Id_Type > >{}, db_to_insert);
 
   callback->migration_completed();
 }
@@ -173,7 +173,7 @@ void migrate_meta(
         if (obj_cnt >= 64*1024*1024)
         {
           callback->migration_flush();
-          into_db.update({}, db_to_insert);
+          into_db.update(std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >{}, db_to_insert);
           db_to_insert.clear();
           obj_cnt = 0;
         }
@@ -190,7 +190,7 @@ void migrate_meta(
     for (const auto& j : changesets_by_id)
       into.push_back(j.second);
 
-    into_db.update({}, db_to_insert);
+    into_db.update(std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >{}, db_to_insert);
   }
 }
 
