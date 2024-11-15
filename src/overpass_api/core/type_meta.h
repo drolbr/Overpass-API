@@ -97,7 +97,13 @@ public:
     uint64_t timestamp;
     
     bool operator<(const Entry& rhs)
-    { return ref < rhs.ref; }
+    {
+      if (ref != rhs.ref)
+        return ref < rhs.ref;
+      return version < rhs.version;
+    }
+    bool operator==(const Entry& rhs)
+    { return ref == rhs.ref && version == rhs.version; }
   };
   
   typedef uint64_t Id_Type;
@@ -214,6 +220,7 @@ private:
       return;
       
     std::sort(refs.begin(), refs.end());
+    refs.erase(std::unique(refs.begin(), refs.end()), refs.end());
   
     cached_base_timestamp = std::numeric_limits< uint64_t >::max();
     for (const auto& i : refs)

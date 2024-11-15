@@ -131,7 +131,7 @@ struct File_Blocks_Index_Structure_Params
 
   uint32 block_count;
 
-  static const int FILE_FORMAT_VERSION = 7600;
+  static const int FILE_FORMAT_VERSION = 7621;
 };
 
 

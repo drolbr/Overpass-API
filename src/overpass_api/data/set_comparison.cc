@@ -394,7 +394,7 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
   std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > result;
 
   auto attic_idx = context.data_index(attic_meta_file_properties< Skeleton >());
-  if (attic_idx->get_file_format_version() <= 7620)
+  if (attic_idx->get_file_format_version() <= 7620 || attic_idx->get_data_file_name().find("nodes") == std::string::npos)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
           typename std::vector< Index >::const_iterator > attic_meta_db(attic_idx);
@@ -440,7 +440,7 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
 
   // Same thing with current meta data
   auto current_idx = context.data_index(current_meta_file_properties< Skeleton >());
-  if (current_idx->get_file_format_version() <= 7620)
+  if (current_idx->get_file_format_version() <= 7620 || current_idx->get_data_file_name().find("nodes") == std::string::npos)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
             typename std::vector< Index >::const_iterator > meta_db(current_idx);

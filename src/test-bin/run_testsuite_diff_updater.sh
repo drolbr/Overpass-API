@@ -48,9 +48,9 @@ $BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater_1/do_s
 date +%T
 $BASEDIR/bin/dispatcher --osm-base --db-dir=run/diff_updater_1/ &
 sleep 1
-rm -f run/diff_updater_1/transactions.log
+rm -f run/diff_updater_1/database.log
 $BASEDIR/bin/update_database --version=mock-up-diff <run/diff_updater_1/do_stdin.log
-cat run/diff_updater_1/transactions.log
+cat run/diff_updater_1/database.log
 $BASEDIR/bin/dispatcher --osm-base --terminate
 
 # collect the result

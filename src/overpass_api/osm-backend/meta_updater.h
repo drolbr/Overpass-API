@@ -57,17 +57,33 @@ struct Meta_Equal_Id {
 
 
 template< typename Index, typename Object >
-void copy_idxs_by_id
-    (const std::map< Index, std::set< Object > >& new_data, std::map< uint32, std::vector< uint32 > >& idxs_by_user_id)
+void copy_idxs_by_id(
+    const std::map< Index, std::set< Object > >& new_data,
+    std::map< uint32, std::vector< uint32 > >& idxs_by_user_id)
 {
-  for (typename std::map< Index, std::set< Object > >::const_iterator it = new_data.begin();
-       it != new_data.end(); ++it)
+  for (auto it = new_data.begin(); it != new_data.end(); ++it)
   {
     uint32 compressed_idx = (it->first.val() & 0xffffff00);
     if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
       compressed_idx = it->first.val();
-    for (typename std::set< Object >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       idxs_by_user_id[it2->user_id].push_back(compressed_idx);
+  }
+}
+
+
+template< typename Index >
+void copy_idxs_by_user_id(
+    const std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >& new_data,
+    std::map< uint32_t, std::vector< uint32_t > >& idxs_by_user_id)
+{
+  for (auto it = new_data.begin(); it != new_data.end(); ++it)
+  {
+    uint32 compressed_idx = (it->first.val() & 0xffffff00);
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+      compressed_idx = it->first.val();
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      idxs_by_user_id[it2->get_user_id()].push_back(compressed_idx);
   }
 }
 
@@ -76,11 +92,8 @@ void process_user_data(Transaction& transaction, std::map< uint32, std::string >
    std::map< uint32, std::vector< uint32 > >& idxs_by_user_id);
 
 
-void rename_referred_file(const std::string& db_dir, const std::string& from, const std::string& to,
-			  const File_Properties& file_prop);
-
-
-//-----------------------------------------------------------------------------
+void rename_referred_file(
+    const std::string& db_dir, const std::string& from, const std::string& to, const File_Properties& file_prop);
 
 
 template< typename Index >
@@ -114,6 +127,19 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
     std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
     Data_By_Id< Skeleton >& data_by_id);
+
+
+template< typename Index >
+std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
+
+
+// Consumes to_merge which is anyway no longer needed afterwards.
+template< typename Index >
+Meta_By_Changeset_Delta< Index > load_and_process_attic(
+    Transaction& transaction, const File_Properties& attic_meta_file_properties,
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);
 
 
 #endif

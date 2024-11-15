@@ -490,16 +490,10 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       (existing_map_positions, *transaction, *osm_base_settings().NODES);
 
   // Collect all data of existing meta elements
-/*  Meta_By_Changeset_Timeless< Node::Index > meta_from_fresh = meta_from_fresh_data< Node::Index >(new_data);
+  Meta_By_Changeset_Timeless< Node::Index > meta_from_fresh = meta_from_fresh_data< Node::Index >(new_data);
   Meta_By_Changeset_Delta< Node::Index > cur_meta_to_update = load_and_process_current(
       existing_map_positions, *transaction, *meta_settings().NODES_META,
       std::move(meta_from_fresh.current), new_data);
-*/
-  std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
-      = (meta != Database_Meta_State::only_data
-          ? get_existing_meta< Node::Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >
-              (existing_map_positions, *transaction, *meta_settings().NODES_META)
-          : std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());
 
 //   for (const auto& i : existing_map_positions)
 //     std::cout<<"DEBUG existing_map_positions "<<std::hex<<i.second.val()<<' '<<std::dec<<i.first.val()<<'\n';
@@ -515,12 +509,6 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   new_skeletons.clear();
   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
       0, attic_skeletons, new_skeletons, moved_nodes);
-
-  // Compute which meta data really has changed
-  std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta
-      = existing_meta;
-  std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_meta;
-  new_current_meta(new_data, new_meta);
 
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > attic_local_tags;
@@ -545,6 +533,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   update_map_positions(new_map_positions, *transaction, *osm_base_settings().NODES);
   callback->update_ids_finished();
 
+  std::map< uint32_t, std::vector< uint32_t > > idxs_by_user_id;
+
   // Update skeletons
   update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().NODES);
   callback->update_coords_finished();
@@ -552,10 +542,11 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   // Update meta
   if (meta != Database_Meta_State::only_data)
   {
-    //update_elements(
-    //    cur_meta_to_update.to_remove, cur_meta_to_update.to_add, *transaction, *meta_settings().NODES_META);
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().NODES_META);
+    update_elements(
+       cur_meta_to_update.to_remove, cur_meta_to_update.to_add, *transaction, *meta_settings().NODES_META);
     callback->meta_finished();
+
+    copy_idxs_by_user_id(cur_meta_to_update.to_add, idxs_by_user_id);
   }
 
   // Update local tags
@@ -575,8 +566,6 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     update_current_global_tags< Node_Skeleton >(attic_global_tags, new_global_tags, *transaction);
     callback->tags_global_finished();
   }
-
-  std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
   if (meta == Database_Meta_State::keep_attic)
   {
@@ -616,8 +605,6 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
         = strip_single_idxs(new_attic_idx_lists);
 
-    compute_new_attic_meta(new_data, existing_map_positions, attic_meta);
-
     // Compute tags
     std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_local_tags
         = compute_new_attic_local_tags(new_data,
@@ -629,8 +616,6 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     callback->compute_attic_finished();
 
     callback->attic_update_started();
-    // Prepare user indices
-    copy_idxs_by_id(attic_meta, idxs_by_id);
 
     // Update id indexes
     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().NODES);
@@ -651,10 +636,14 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     callback->undeleted_finished();
 
     // Add attic meta
-    update_elements
-        (std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >(),
-         attic_meta, *transaction, *attic_settings().NODES_META);
+    Meta_By_Changeset_Delta< Node::Index > attic_meta_to_update = load_and_process_attic(
+        *transaction, *attic_settings().NODES_META,
+        merge_meta(std::move(cur_meta_to_update.to_remove), std::move(meta_from_fresh.attic)));
+    update_elements(
+        attic_meta_to_update.to_remove, attic_meta_to_update.to_add, *transaction, *attic_settings().NODES_META);
     callback->meta_finished();
+
+    copy_idxs_by_user_id(attic_meta_to_update.to_add, idxs_by_user_id);
 
     // Update tags
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Node_Skeleton::Id_Type > > >(),
@@ -676,10 +665,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   }
 
   if (meta != Database_Meta_State::only_data)
-  {
-    copy_idxs_by_id(new_meta, idxs_by_id);
-    process_user_data(*transaction, user_by_id, idxs_by_id);
-  }
+    process_user_data(*transaction, user_by_id, idxs_by_user_id);
+
   callback->update_finished();
 
   new_data.data.clear();

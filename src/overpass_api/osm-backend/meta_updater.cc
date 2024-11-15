@@ -89,6 +89,9 @@ void process_user_data(Transaction& transaction, std::map< uint32, std::string >
 }
 
 
+//-----------------------------------------------------------------------------
+
+
 Transaction_Collection::Transaction_Collection
     (Access_Mode access_mode, bool use_shadow,
      const std::string& db_dir, const std::vector< std::string >& file_name_extensions_)
@@ -232,6 +235,21 @@ namespace
   }
 
 
+  template< typename Index, typename Unused >
+  std::vector< Index > extract_idxs(
+      const std::map< Index, Unused >& to_add)
+  {
+    std::vector< Index > result;
+
+    for (const auto& i : to_add)
+      result.push_back(i.first);
+
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+    return result;
+  }
+
+
   template< typename Skeleton >
   bool has_entry(const Data_By_Id< Skeleton >& data_by_id, uint64_t ref)
   {
@@ -243,10 +261,6 @@ namespace
 }
 
 
-// Consumes to_merge which is anyway no longer needed afterwards.
-// May alter data_by_id to remove objects where younger versions are already present - not yet implemented.
-// The remove part of the return value is populated such that it
-// can serve both for the update of current and record of attics to migrate.
 template< typename Index, typename Skeleton >
 Meta_By_Changeset_Delta< Index > load_and_process_current(
     const std::vector< std::pair< typename Skeleton::Id_Type, Index > >& extra_idxs,
@@ -272,8 +286,9 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
       ++extra_it;  // Should never happen, but prevent infinite loop
     while (!(db_it == meta_db.discrete_end()) && db_it.index() < idx)
       ++db_it;  // Should never happen, but prevent infinite loop
-      
-    std::sort(extra_it->second.begin(), extra_it->second.end());
+    
+    if (extra_it != to_merge.end() && extra_it->first == idx)
+      std::sort(extra_it->second.begin(), extra_it->second.end());
 
     while (!(db_it == meta_db.discrete_end()) && db_it.index() == idx)
     {
@@ -354,3 +369,113 @@ Meta_By_Changeset_Delta< Node::Index > load_and_process_current< Node::Index, No
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
     Data_By_Id< Node_Skeleton >& data_by_id);
+
+
+template< typename Index >
+std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs)
+{
+  for (auto& i : rhs)
+  {
+    auto& to = lhs[i.first];
+    auto it_to = to.begin();
+    
+    for (auto& j : i.second)
+    {
+      while (it_to != to.end() && it_to->get_changeset() < j.get_changeset())
+        ++it_to;
+      if (it_to != to.end() && it_to->get_changeset() == j.get_changeset())
+        j.move_refs_to(*it_to);
+    }
+    for (auto& j : i.second)
+    {
+      if (!j.get_refs().empty())
+        to.push_back(j);
+    }
+
+    std::sort(to.begin(), to.end());
+  }
+  return lhs;
+}
+
+
+template
+std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
+    std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
+    std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
+
+
+template< typename Index >
+Meta_By_Changeset_Delta< Index > load_and_process_attic(
+    Transaction& transaction, const File_Properties& attic_meta_file_properties,
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge)
+{
+  Meta_By_Changeset_Delta< Index > result;
+  
+  std::vector< Index > req = extract_idxs(to_merge);
+  Block_Backend< Index, Meta_Per_Changeset_Skeleton, typename std::vector< Index >::const_iterator > meta_db(
+      transaction.data_index(&attic_meta_file_properties));
+  auto db_it = meta_db.discrete_begin(req.begin(), req.end());
+  
+  auto extra_it = to_merge.begin();
+  
+  for (auto idx : req)
+  {
+    auto& loc_to_add = result.to_add[idx];
+    auto& loc_to_del = result.to_remove[idx];
+    
+    while (extra_it != to_merge.end() && extra_it->first < idx)
+      ++extra_it;  // Should never happen, but prevent infinite loop
+    while (!(db_it == meta_db.discrete_end()) && db_it.index() < idx)
+      ++db_it;  // Should never happen, but prevent infinite loop
+      
+    std::sort(extra_it->second.begin(), extra_it->second.end());
+
+    while (!(db_it == meta_db.discrete_end()) && db_it.index() == idx)
+    {
+      if (!db_it.object().get_is_redacted())
+      {
+        Meta_Per_Changeset_Skeleton* new_entries = nullptr;
+        if (extra_it != to_merge.end() && extra_it->first == idx)
+        {
+          auto merge_it = std::lower_bound(extra_it->second.begin(), extra_it->second.end(), db_it.object());
+          if (merge_it != extra_it->second.end() && merge_it->get_changeset() == db_it.object().get_changeset()
+              && !merge_it->get_refs().empty())
+            new_entries = &*merge_it;
+        }
+
+        if (new_entries)
+        {
+          Meta_Per_Changeset_Skeleton combined = db_it.object();
+          new_entries->move_refs_to(combined);
+          
+          loc_to_del.push_back(*new_entries);
+          loc_to_add.push_back(combined);
+        }
+      }
+      
+      ++db_it;
+    }
+    
+    if (extra_it != to_merge.end() && extra_it->first == idx)
+    {
+      for (auto i : extra_it->second)
+      {
+        if (!i.get_refs().empty())
+          loc_to_add.push_back(i);
+      }
+    }
+    
+    std::sort(loc_to_del.begin(), loc_to_del.end());
+    std::sort(loc_to_add.begin(), loc_to_add.end());
+  }
+  
+  return result;
+}
+
+
+template
+Meta_By_Changeset_Delta< Node::Index > load_and_process_attic(
+    Transaction& transaction, const File_Properties& attic_meta_file_properties,
+    std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);
