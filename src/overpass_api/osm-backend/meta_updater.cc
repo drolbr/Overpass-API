@@ -172,16 +172,14 @@ Meta_By_Changeset_Timeless< Index > meta_from_fresh_data(const Data_By_Id< Skele
     auto next_it = it+1;
     if (it->idx == Index(0u))
     {
-      auto idx = it->idx;
       if (it != data_by_id.data.begin())
       {
         auto prev_it = it-1;
         if (prev_it->elem.id == it->elem.id)
-          idx = prev_it->idx;
+          attic[prev_it->idx].push_back(it->meta);
       }
-      attic[idx].push_back(it->meta);
     }
-    if (next_it != data_by_id.data.end() && next_it->elem.id == it->elem.id)
+    else if (next_it != data_by_id.data.end() && next_it->elem.id == it->elem.id)
       attic[it->idx].push_back(it->meta);
     else
       current[it->idx].push_back(it->meta);
@@ -291,6 +289,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
   {
     auto& loc_to_add = result.to_add[idx];
     auto& loc_to_del = result.to_remove[idx];
+    std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > deletions_with_idx;
     
     while (extra_it != to_merge.end() && extra_it->first < idx)
       ++extra_it;  // Should never happen, but prevent infinite loop
@@ -299,7 +298,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
     
     if (extra_it != to_merge.end() && extra_it->first == idx)
       std::sort(extra_it->second.begin(), extra_it->second.end());
-
+    
     while (!(db_it == meta_db.discrete_end()) && db_it.index() == idx)
     {
       if (!db_it.object().get_is_redacted())
@@ -332,12 +331,21 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
 
           for (auto it = refs.begin(); it != ref_it; ++it)
             combined.add_ref(*it);
+
+          attic.add_ref(*ref_it);
+          if (ptr_new_obj->idx == Index(0u))
+            deletions_with_idx.push_back(ptr_new_obj->meta);
+          ++ref_it;
           
           while (ref_it != refs.end())
           {
             ptr_new_obj = get_entry(data_by_id, ref_it->ref);
             if (ptr_new_obj)
+            {
+              if (ptr_new_obj->idx == Index(0u))
+                deletions_with_idx.push_back(ptr_new_obj->meta);
               attic.add_ref(*ref_it);
+            }
             else
               combined.add_ref(*ref_it);
 
@@ -373,6 +381,36 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
     }
     
     std::sort(loc_to_del.begin(), loc_to_del.end());
+    if (!deletions_with_idx.empty())
+    {
+      std::sort(deletions_with_idx.begin(), deletions_with_idx.end(),
+          [](const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& lhs,
+              const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& rhs)
+          { return lhs.changeset < rhs.changeset; });
+      
+      std::vector< Meta_Per_Changeset_Skeleton > to;
+      auto del_it = deletions_with_idx.begin();
+      for (const auto& i : loc_to_del)
+      {
+        while (del_it->changeset < i.get_changeset())
+        {
+          to.push_back({ del_it->changeset, false, del_it->user_id });
+          while (del_it->changeset == to.back().get_changeset())
+          {
+            to.back().add_ref({ del_it->ref.val(), del_it->version, del_it->timestamp });
+            ++del_it;
+          }
+        }
+        to.push_back(i);
+        while (del_it->changeset == to.back().get_changeset())
+        {
+          to.back().add_ref({ del_it->ref.val(), del_it->version, del_it->timestamp });
+          ++del_it;
+        }
+      }
+      to.swap(loc_to_del);
+    }
+
     std::sort(loc_to_add.begin(), loc_to_add.end());
   }
   
