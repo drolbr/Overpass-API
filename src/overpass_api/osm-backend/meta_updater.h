@@ -142,4 +142,33 @@ Meta_By_Changeset_Delta< Index > load_and_process_attic(
     std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);
 
 
+/* Adds to attic_meta and new_meta the meta elements to delete resp. add from only
+   implicitly moved ways. */
+template< typename Id_Type >
+void new_implicit_meta
+    (const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >&
+         existing_meta,
+     const std::vector< std::pair< Id_Type, Uint31_Index > >& new_positions,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >& attic_meta,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >& new_meta)
+{
+  for (auto it_idx = existing_meta.begin(); it_idx != existing_meta.end(); ++it_idx)
+  {
+    std::set< OSM_Element_Metadata_Skeleton< Id_Type > >& handle(attic_meta[it_idx->first]);
+    for (auto it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+      handle.insert(*it);
+  }
+
+  for (auto it_idx = existing_meta.begin(); it_idx != existing_meta.end(); ++it_idx)
+  {
+    for (auto it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+    {
+      const Uint31_Index* idx = binary_pair_search(new_positions, it->ref);
+      if (idx)
+        new_meta[*idx].insert(*it);
+    }
+  }
+}
+
+
 #endif

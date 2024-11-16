@@ -94,13 +94,13 @@ int main(int argc, char* args[])
       }
       else
       {
-        Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
+        Block_Backend< Uint32_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
         for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
         {
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<i.ref<<'\t'
+                <<std::dec<<i.ref<<' '<<i.version<<'\t'
                 <<i.timestamp<<'\n';
         }
       }
@@ -198,13 +198,13 @@ int main(int argc, char* args[])
       }
       else
       {
-        Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
+        Block_Backend< Uint32_Index, Meta_Per_Changeset_Skeleton > db(file_idx);
         for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
         {
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<i.ref<<'\t'
+                <<std::dec<<i.ref<<' '<<i.version<<'\t'
                 <<i.timestamp<<'\n';
         }
       }
@@ -343,7 +343,7 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<i.ref<<'\t'
+                <<std::dec<<i.ref<<' '<<i.version<<'\t'
                 <<i.timestamp<<'\n';
         }
       }
@@ -519,7 +519,7 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<i.ref<<'\t'
+                <<std::dec<<i.ref<<' '<<i.version<<'\t'
                 <<i.timestamp<<'\n';
         }
       }
@@ -647,7 +647,7 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<i.ref<<'\t'
+                <<std::dec<<i.ref<<' '<<i.version<<'\t'
                 <<i.timestamp<<'\n';
         }
       }
@@ -764,7 +764,7 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<i.ref<<'\t'
+                <<std::dec<<i.ref<<' '<<i.version<<'\t'
                 <<i.timestamp<<'\n';
         }
       }

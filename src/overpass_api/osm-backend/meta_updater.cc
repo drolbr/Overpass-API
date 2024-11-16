@@ -170,8 +170,18 @@ Meta_By_Changeset_Timeless< Index > meta_from_fresh_data(const Data_By_Id< Skele
   for (auto it = data_by_id.data.begin(); it != data_by_id.data.end(); ++it)
   {
     auto next_it = it+1;
-    if (it->idx == Index(0u)
-        || (next_it != data_by_id.data.end() && next_it->elem.id == it->elem.id))
+    if (it->idx == Index(0u))
+    {
+      auto idx = it->idx;
+      if (it != data_by_id.data.begin())
+      {
+        auto prev_it = it-1;
+        if (prev_it->elem.id == it->elem.id)
+          idx = prev_it->idx;
+      }
+      attic[idx].push_back(it->meta);
+    }
+    if (next_it != data_by_id.data.end() && next_it->elem.id == it->elem.id)
       attic[it->idx].push_back(it->meta);
     else
       current[it->idx].push_back(it->meta);
@@ -251,12 +261,12 @@ namespace
 
 
   template< typename Skeleton >
-  bool has_entry(const Data_By_Id< Skeleton >& data_by_id, uint64_t ref)
+  const typename Data_By_Id< Skeleton >::Entry* get_entry(const Data_By_Id< Skeleton >& data_by_id, uint64_t ref)
   {
     auto it = std::lower_bound(data_by_id.data.begin(), data_by_id.data.end(), ref,
         [](const typename Data_By_Id< Skeleton >::Entry& entry, uint64_t ref)
         { return entry.elem.id.val() < ref; });
-    return it != data_by_id.data.end() && it->elem.id.val() == ref;
+    return (it != data_by_id.data.end() && it->elem.id.val() == ref) ? &*it : nullptr;
   }
 }
 
@@ -304,10 +314,16 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
         
         const auto& refs = db_it.object().get_refs();
         auto ref_it = refs.begin();
-        while (ref_it != refs.end() && !has_entry(data_by_id, ref_it->ref)) 
+        const typename Data_By_Id< Skeleton >::Entry* ptr_new_obj = nullptr;
+        while (ref_it != refs.end())
+        {
+          ptr_new_obj = get_entry(data_by_id, ref_it->ref);
+          if (ptr_new_obj)
+            break;
           ++ref_it;
+        }
         
-        if (ref_it != refs.end())
+        if (ptr_new_obj)
         {
           Meta_Per_Changeset_Skeleton combined(
               db_it.object().get_changeset(), db_it.object().get_is_redacted(), db_it.object().get_user_id());
@@ -319,7 +335,8 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
           
           while (ref_it != refs.end())
           {
-            if (has_entry(data_by_id, ref_it->ref))
+            ptr_new_obj = get_entry(data_by_id, ref_it->ref);
+            if (ptr_new_obj)
               attic.add_ref(*ref_it);
             else
               combined.add_ref(*ref_it);

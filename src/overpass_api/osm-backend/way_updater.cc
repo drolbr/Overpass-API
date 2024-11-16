@@ -814,9 +814,10 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
              (existing_map_positions, *transaction, *meta_settings().WAYS_META) :
          std::map< Way::Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > >());
 
-  // Collect all data of existing meta elements
   std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > implicitly_moved_positions
       = make_id_idx_directory(implicitly_moved_skeletons);
+
+  // Collect all data of existing meta elements
   std::map< Way::Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > > implicitly_moved_meta
       = (meta ? get_existing_meta< Way::Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >
              (implicitly_moved_positions, *transaction, *meta_settings().WAYS_META) :
