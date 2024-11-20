@@ -318,6 +318,7 @@ int main(int argc, char* argv[])
       "  --time=number: Set the time unit  limit for the total of all running processes to this value in bytes.\n"
       "  --rate-limit=number: Set the maximum allowed number of concurrent accesses from a single IP.\n"
       "  --allow-duplicate-queries=(yes|no): Set whether the dispatcher shall block duplicate queries.\n"
+      "  --limit-client-zero=(yes|no): Set whether requests from localhost are exempt from resource control.\n"
       "  --server-name: Set the server name used in status and error messages.\n";
 
       return 0;
