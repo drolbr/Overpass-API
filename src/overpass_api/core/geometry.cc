@@ -47,15 +47,14 @@ double Bbox_Double::center_lon() const
 
 bool Bbox_Double::contains(const Point_Double& point) const
 {
-  if (point.lat < south || point.lat > north)
+  if (point.lat + 5e-8 < south || point.lat - 5e-8 > north)
     return false;
 
   if (east >= west)
-    return point.lon >= west && point.lon <= east;
+    return point.lon + 5e-8 >= west && point.lon - 5e-8 <= east;
 
-  return point.lon >= west || point.lon <= east;
+  return point.lon + 5e-8 >= west || point.lon - 5e-8 <= east;
 }
-
 
 bool Bbox_Double::intersects(const Point_Double& from, const Point_Double& to) const
 {
@@ -67,48 +66,55 @@ bool Bbox_Double::intersects(const Point_Double& from, const Point_Double& to) c
     to_lon += 360.;
 
   double delta_from = 0;
-  if (from.lat < south)
+  if (from.lat + 5e-8 < south)
   {
-    if (to.lat < south)
+    if (to.lat + 5e-8 < south)
       return false;
-    // Otherwise just adjust from.lat and from.lon
-    delta_from = (to_lon - from_lon)*(south - from.lat)/(to.lat - from.lat);
+    if (to.lat - 5e-8 > from.lat)
+      delta_from = (to_lon - from_lon)*(south - from.lat)/(to.lat - from.lat);
+      // Asserted: (south, from_lon + delta_from) is a point on the segment
   }
-  else if (from.lat > north)
+  else if (from.lat - 5e-8 > north)
   {
-    if (to.lat > north)
+    if (to.lat - 5e-8 > north)
       return false;
-    // Otherwise just adjust from.lat and from.lon
-    delta_from = (to_lon - from_lon)*(north - from.lat)/(to.lat - from.lat);
+    if (to.lat + 5e-8 < from.lat)
+      delta_from = (to_lon - from_lon)*(north - from.lat)/(to.lat - from.lat);
+      // Asserted: (north, from_lon + delta_from) is a point on the segment
   }
 
-  if (to.lat < south)
+  if (to.lat + 5e-8 < south && from.lat - 5e-8 > to.lat)
     // Adjust to.lat and to.lon
     to_lon += (from_lon - to_lon)*(south - to.lat)/(from.lat - to.lat);
-  else if (to.lat > north)
+    // Asserted: (south, to_lon) is a point on the segment 
+  else if (to.lat - 5e-8 > north && from.lat + 5e-8 < to.lat)
     // Adjust to.lat and to.lon
     to_lon += (from_lon - to_lon)*(north - to.lat)/(from.lat - to.lat);
+    // Asserted: (north, to_lon) is a point on the segment 
   from_lon += delta_from;
+  
+  // Asserted: (std::min(north, std::max(south, from.lat)), from_lon) is on the segment
+  // Asserted: (std::min(north, std::max(south, to.lat)), to_lon) is on the segment
 
   // Now we know that both latitudes are between south and north.
-  // Thus we only need to check whether the segment touches the bbox in its east-west-extension.
+  // Thus we only need to check whether the segment touches the bbox in its east-west-extent.
   // Note that the lons have now values between -180.0 and 360.0.
   double min_lon = std::min(from_lon, to_lon);
   double max_lon = std::max(from_lon, to_lon);
   if (west <= east)
   {
     if (max_lon < 180.)
-      return min_lon <= east && max_lon >= west;
+      return min_lon - 5e-8 <= east && max_lon + 5e-8 >= west;
     else if (min_lon > 180.)
-      return min_lon - 360. <= east && max_lon - 360. >= west;
+      return min_lon - 5e-8 - 360. <= east && max_lon + 5e-8 - 360. >= west;
 
-    return min_lon <= east && max_lon - 360. >= west;
+    return min_lon - 5e-8 <= east && max_lon + 5e-8 - 360. >= west;
   }
 
   if (max_lon < 180.)
-    return min_lon <= east || max_lon >= west;
+    return min_lon - 5e-8 <= east || max_lon + 5e-8 >= west;
   else if (min_lon > 180.)
-    return min_lon - 360. <= east || max_lon - 360. >= west;
+    return min_lon - 5e-8 - 360. <= east || max_lon + 5e-8 - 360. >= west;
 
   return true;
 }
