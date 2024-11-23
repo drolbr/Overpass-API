@@ -266,6 +266,56 @@ namespace
         { return entry.elem.id.val() < ref; });
     return (it != data_by_id.data.end() && it->elem.id.val() == ref) ? &*it : nullptr;
   }
+
+
+  // This class has two tasks:
+  // - mark those refs that also exist in data_by_id thus can no longer be current
+  // - record deletion metas to splice them at the idx of the no longer current meta
+  template< typename Skeleton >
+  struct New_Current_Tracker
+  {
+    //bool screen_ref(uint64_t ref);
+    void splice_deletions(std::vector< Meta_Per_Changeset_Skeleton >& loc_to_del);
+    
+    //Data_By_Id< Skeleton >& data_by_id;
+    std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > deletions_with_idx;
+  };
+
+
+  template< typename Skeleton >
+  void New_Current_Tracker< Skeleton >::splice_deletions(
+      std::vector< Meta_Per_Changeset_Skeleton >& loc_to_del)
+  {
+    if (!deletions_with_idx.empty())
+    {
+      std::sort(deletions_with_idx.begin(), deletions_with_idx.end(),
+          [](const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& lhs,
+              const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& rhs)
+          { return lhs.changeset < rhs.changeset; });
+      
+      std::vector< Meta_Per_Changeset_Skeleton > to;
+      auto del_it = deletions_with_idx.begin();
+      for (const auto& i : loc_to_del)
+      {
+        while (del_it->changeset < i.get_changeset())
+        {
+          to.push_back({ del_it->changeset, false, del_it->user_id });
+          while (del_it->changeset == to.back().get_changeset())
+          {
+            to.back().add_ref({ del_it->ref.val(), del_it->version, del_it->timestamp });
+            ++del_it;
+          }
+        }
+        to.push_back(i);
+        while (del_it->changeset == to.back().get_changeset())
+        {
+          to.back().add_ref({ del_it->ref.val(), del_it->version, del_it->timestamp });
+          ++del_it;
+        }
+      }
+      to.swap(loc_to_del);
+    }
+  }
 }
 
 
@@ -289,7 +339,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
   {
     auto& loc_to_add = result.to_add[idx];
     auto& loc_to_del = result.to_remove[idx];
-    std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > deletions_with_idx;
+    New_Current_Tracker< Skeleton > new_current_tracker;
     
     while (extra_it != to_merge.end() && extra_it->first < idx)
       ++extra_it;  // Should never happen, but prevent infinite loop
@@ -334,7 +384,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
 
           attic.add_ref(*ref_it);
           if (ptr_new_obj->idx == Index(0u))
-            deletions_with_idx.push_back(ptr_new_obj->meta);
+            new_current_tracker.deletions_with_idx.push_back(ptr_new_obj->meta);
           ++ref_it;
           
           while (ref_it != refs.end())
@@ -343,7 +393,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
             if (ptr_new_obj)
             {
               if (ptr_new_obj->idx == Index(0u))
-                deletions_with_idx.push_back(ptr_new_obj->meta);
+                new_current_tracker.deletions_with_idx.push_back(ptr_new_obj->meta);
               attic.add_ref(*ref_it);
             }
             else
@@ -381,35 +431,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
     }
     
     std::sort(loc_to_del.begin(), loc_to_del.end());
-    if (!deletions_with_idx.empty())
-    {
-      std::sort(deletions_with_idx.begin(), deletions_with_idx.end(),
-          [](const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& lhs,
-              const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& rhs)
-          { return lhs.changeset < rhs.changeset; });
-      
-      std::vector< Meta_Per_Changeset_Skeleton > to;
-      auto del_it = deletions_with_idx.begin();
-      for (const auto& i : loc_to_del)
-      {
-        while (del_it->changeset < i.get_changeset())
-        {
-          to.push_back({ del_it->changeset, false, del_it->user_id });
-          while (del_it->changeset == to.back().get_changeset())
-          {
-            to.back().add_ref({ del_it->ref.val(), del_it->version, del_it->timestamp });
-            ++del_it;
-          }
-        }
-        to.push_back(i);
-        while (del_it->changeset == to.back().get_changeset())
-        {
-          to.back().add_ref({ del_it->ref.val(), del_it->version, del_it->timestamp });
-          ++del_it;
-        }
-      }
-      to.swap(loc_to_del);
-    }
+    new_current_tracker.splice_deletions(loc_to_del);
 
     std::sort(loc_to_add.begin(), loc_to_add.end());
   }
