@@ -372,10 +372,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
         
         if (!attic_refs.empty())
         {
-          Meta_Per_Changeset_Skeleton attic(
-              db_it.object().get_changeset(), db_it.object().get_is_redacted(), db_it.object().get_user_id());
-          for (auto i : attic_refs)
-            attic.add_ref(i);
+          Meta_Per_Changeset_Skeleton attic(item, std::move(attic_refs));
           loc_to_del.push_back(attic);
 
           if (new_entries)

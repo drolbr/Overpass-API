@@ -110,6 +110,9 @@ public:
   
   Meta_Per_Changeset_Skeleton(uint64_t changeset_, bool is_redacted_, uint64_t user_id_)
       : changeset(changeset_), is_redacted(is_redacted_), user_id(user_id_) {}
+      
+  Meta_Per_Changeset_Skeleton(const Meta_Per_Changeset_Skeleton& base, std::vector< Entry >&& refs_)
+      : changeset(base.changeset), is_redacted(base.is_redacted), user_id(base.user_id), refs(refs_) {}
 
   Meta_Per_Changeset_Skeleton(void* data)
   {
