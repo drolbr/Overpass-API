@@ -126,7 +126,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
     const std::vector< std::pair< typename Skeleton::Id_Type, Index > >& extra_idxs,
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
     std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
-    Data_By_Id< Skeleton >& data_by_id);
+    const Data_By_Id< Skeleton >& data_by_id);
 
 
 template< typename Index >

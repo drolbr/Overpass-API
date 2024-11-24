@@ -258,28 +258,32 @@ namespace
   }
 
 
-  template< typename Skeleton >
-  const typename Data_By_Id< Skeleton >::Entry* get_entry(const Data_By_Id< Skeleton >& data_by_id, uint64_t ref)
-  {
-    auto it = std::lower_bound(data_by_id.data.begin(), data_by_id.data.end(), ref,
-        [](const typename Data_By_Id< Skeleton >::Entry& entry, uint64_t ref)
-        { return entry.elem.id.val() < ref; });
-    return (it != data_by_id.data.end() && it->elem.id.val() == ref) ? &*it : nullptr;
-  }
-
-
   // This class has two tasks:
   // - mark those refs that also exist in data_by_id thus can no longer be current
   // - record deletion metas to splice them at the idx of the no longer current meta
   template< typename Skeleton >
   struct New_Current_Tracker
   {
-    //bool screen_ref(uint64_t ref);
+    const bool screen_ref(uint64_t ref);
     void splice_deletions(std::vector< Meta_Per_Changeset_Skeleton >& loc_to_del);
     
-    //Data_By_Id< Skeleton >& data_by_id;
+    const Data_By_Id< Skeleton >& data_by_id;
     std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > deletions_with_idx;
   };
+
+
+  template< typename Skeleton >
+  const bool New_Current_Tracker< Skeleton >::screen_ref(uint64_t ref)
+  {
+    auto it = std::lower_bound(data_by_id.data.begin(), data_by_id.data.end(), ref,
+        [](const typename Data_By_Id< Skeleton >::Entry& entry, uint64_t ref)
+        { return entry.elem.id.val() < ref; });
+    if (it == data_by_id.data.end() || it->elem.id.val() != ref)
+      return false;
+    if (it->idx.val() == 0)
+      deletions_with_idx.push_back(it->meta);
+    return true;
+  }
 
 
   template< typename Skeleton >
@@ -324,7 +328,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
     const std::vector< std::pair< typename Skeleton::Id_Type, Index > >& extra_idxs,
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
     std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
-    Data_By_Id< Skeleton >& data_by_id)
+    const Data_By_Id< Skeleton >& data_by_id)
 {
   Meta_By_Changeset_Delta< Index > result;
   
@@ -339,7 +343,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
   {
     auto& loc_to_add = result.to_add[idx];
     auto& loc_to_del = result.to_remove[idx];
-    New_Current_Tracker< Skeleton > new_current_tracker;
+    New_Current_Tracker< Skeleton > new_current_tracker{ data_by_id };
     
     while (extra_it != to_merge.end() && extra_it->first < idx)
       ++extra_it;  // Should never happen, but prevent infinite loop
@@ -363,16 +367,10 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
         
         const auto& refs = db_it.object().get_refs();
         auto ref_it = refs.begin();
-        const typename Data_By_Id< Skeleton >::Entry* ptr_new_obj = nullptr;
-        while (ref_it != refs.end())
-        {
-          ptr_new_obj = get_entry(data_by_id, ref_it->ref);
-          if (ptr_new_obj)
-            break;
+        while (ref_it != refs.end() && !new_current_tracker.screen_ref(ref_it->ref))
           ++ref_it;
-        }
         
-        if (ptr_new_obj)
+        if (ref_it != refs.end())
         {
           Meta_Per_Changeset_Skeleton combined(
               db_it.object().get_changeset(), db_it.object().get_is_redacted(), db_it.object().get_user_id());
@@ -383,19 +381,12 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
             combined.add_ref(*it);
 
           attic.add_ref(*ref_it);
-          if (ptr_new_obj->idx == Index(0u))
-            new_current_tracker.deletions_with_idx.push_back(ptr_new_obj->meta);
           ++ref_it;
           
           while (ref_it != refs.end())
           {
-            ptr_new_obj = get_entry(data_by_id, ref_it->ref);
-            if (ptr_new_obj)
-            {
-              if (ptr_new_obj->idx == Index(0u))
-                new_current_tracker.deletions_with_idx.push_back(ptr_new_obj->meta);
+            if (new_current_tracker.screen_ref(ref_it->ref))
               attic.add_ref(*ref_it);
-            }
             else
               combined.add_ref(*ref_it);
 
@@ -445,7 +436,7 @@ Meta_By_Changeset_Delta< Node::Index > load_and_process_current< Node::Index, No
     const std::vector< std::pair< Node_Skeleton::Id_Type, Node::Index > >& extra_idxs,
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
-    Data_By_Id< Node_Skeleton >& data_by_id);
+    const Data_By_Id< Node_Skeleton >& data_by_id);
 
 
 template< typename Index >
