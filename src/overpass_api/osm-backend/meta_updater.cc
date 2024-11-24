@@ -366,23 +366,15 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
         }
         
         Meta_Per_Changeset_Skeleton item = db_it.object();
-        auto attic_refs = item.move_refs_if(
+        Meta_Per_Changeset_Skeleton attic(item, item.move_refs_if(
             [&new_current_tracker](Meta_Per_Changeset_Skeleton::Entry e)
-            { return new_current_tracker.screen_ref(e.ref); });
+            { return new_current_tracker.screen_ref(e.ref); }));
         
-        if (!attic_refs.empty())
+        if (!attic.get_refs().empty() || new_entries)
         {
-          Meta_Per_Changeset_Skeleton attic(item, std::move(attic_refs));
           loc_to_del.push_back(attic);
-
           if (new_entries)
             new_entries->move_refs_to(item);
-          loc_to_add.push_back(item);
-        }
-        else if (new_entries)
-        {
-          new_entries->move_refs_to(item);          
-          loc_to_del.push_back(*new_entries);
           loc_to_add.push_back(item);
         }
       }
