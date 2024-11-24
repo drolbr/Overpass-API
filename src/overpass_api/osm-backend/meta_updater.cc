@@ -365,45 +365,26 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
             new_entries = &*merge_it;
         }
         
-        const auto& refs = db_it.object().get_refs();
-        auto ref_it = refs.begin();
-        while (ref_it != refs.end() && !new_current_tracker.screen_ref(ref_it->ref))
-          ++ref_it;
+        Meta_Per_Changeset_Skeleton item = db_it.object();
+        auto attic_refs = item.move_refs_if(
+            [&new_current_tracker](Meta_Per_Changeset_Skeleton::Entry e)
+            { return new_current_tracker.screen_ref(e.ref); });
         
-        if (ref_it != refs.end())
+        if (!attic_refs.empty())
         {
-          Meta_Per_Changeset_Skeleton combined(
-              db_it.object().get_changeset(), db_it.object().get_is_redacted(), db_it.object().get_user_id());
           Meta_Per_Changeset_Skeleton attic(
               db_it.object().get_changeset(), db_it.object().get_is_redacted(), db_it.object().get_user_id());
-
-          for (auto it = refs.begin(); it != ref_it; ++it)
-            combined.add_ref(*it);
-
-          attic.add_ref(*ref_it);
-          ++ref_it;
-          
-          while (ref_it != refs.end())
-          {
-            if (new_current_tracker.screen_ref(ref_it->ref))
-              attic.add_ref(*ref_it);
-            else
-              combined.add_ref(*ref_it);
-
-            ++ref_it;
-          }
+          for (auto i : attic_refs)
+            attic.add_ref(i);
           loc_to_del.push_back(attic);
-          
+
           if (new_entries)
-            new_entries->move_refs_to(combined);
-          
-          loc_to_add.push_back(combined);
+            new_entries->move_refs_to(item);
+          loc_to_add.push_back(item);
         }
         else if (new_entries)
         {
-          Meta_Per_Changeset_Skeleton combined = db_it.object();
-          new_entries->move_refs_to(combined);
-          
+          new_entries->move_refs_to(item);          
           loc_to_del.push_back(*new_entries);
           loc_to_add.push_back(combined);
         }

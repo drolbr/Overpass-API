@@ -171,6 +171,28 @@ public:
       arg.refs.push_back(i);
     refs.clear();
   }
+  
+  template< typename Func >
+  std::vector< Entry > move_refs_if(Func f)
+  {
+    std::vector< Entry > result;
+    
+    auto to_it = refs.begin();
+    for (auto from_it = refs.begin(); from_it != refs.end(); ++from_it)
+    {
+      if (f(*from_it))
+        result.push_back(*from_it);
+      else
+      {
+        if (from_it != to_it)
+          *to_it = *from_it;
+        ++to_it;
+      }
+    }
+    refs.erase(to_it, refs.end());
+    
+    return result;
+  }
 
   uint32_t size_of() const
   {
