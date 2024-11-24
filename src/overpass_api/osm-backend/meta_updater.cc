@@ -320,6 +320,19 @@ namespace
       to.swap(loc_to_del);
     }
   }
+  
+  
+  Meta_Per_Changeset_Skeleton* by_changeset(
+      std::vector< Meta_Per_Changeset_Skeleton >& data, uint64_t changeset)
+  {
+    auto merge_it = std::lower_bound(
+        data.begin(), data.end(), changeset, 
+        [](const Meta_Per_Changeset_Skeleton& lhs, uint64_t rhs)
+        { return lhs.get_changeset() < rhs; });
+    if (merge_it != data.end() && merge_it->get_changeset() == changeset)
+      return &*merge_it;
+    return nullptr;
+  }
 }
 
 
@@ -357,13 +370,8 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
     {
       if (!db_it.object().get_is_redacted())
       {
-        Meta_Per_Changeset_Skeleton* new_entries = nullptr;
-        if (extra_it != to_merge.end() && extra_it->first == idx)
-        {
-          auto merge_it = std::lower_bound(extra_it->second.begin(), extra_it->second.end(), db_it.object());
-          if (merge_it != extra_it->second.end() && merge_it->get_changeset() == db_it.object().get_changeset())
-            new_entries = &*merge_it;
-        }
+        Meta_Per_Changeset_Skeleton* new_entries = (extra_it != to_merge.end() && extra_it->first == idx
+            ? by_changeset(extra_it->second, db_it.object().get_changeset()) : nullptr);
         
         Meta_Per_Changeset_Skeleton item = db_it.object();
         Meta_Per_Changeset_Skeleton attic(item, item.move_refs_if(
@@ -474,14 +482,8 @@ Meta_By_Changeset_Delta< Index > load_and_process_attic(
     {
       if (!db_it.object().get_is_redacted())
       {
-        Meta_Per_Changeset_Skeleton* new_entries = nullptr;
-        if (extra_it != to_merge.end() && extra_it->first == idx)
-        {
-          auto merge_it = std::lower_bound(extra_it->second.begin(), extra_it->second.end(), db_it.object());
-          if (merge_it != extra_it->second.end() && merge_it->get_changeset() == db_it.object().get_changeset()
-              && !merge_it->get_refs().empty())
-            new_entries = &*merge_it;
-        }
+        Meta_Per_Changeset_Skeleton* new_entries = (extra_it != to_merge.end() && extra_it->first == idx
+            ? by_changeset(extra_it->second, db_it.object().get_changeset()) : nullptr);
 
         if (new_entries)
         {
