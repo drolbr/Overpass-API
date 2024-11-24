@@ -386,7 +386,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
         {
           new_entries->move_refs_to(item);          
           loc_to_del.push_back(*new_entries);
-          loc_to_add.push_back(combined);
+          loc_to_add.push_back(item);
         }
       }
       
