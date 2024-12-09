@@ -220,6 +220,8 @@ Meta_By_Changeset_Timeless< Index > meta_from_fresh_data(const Data_By_Id< Skele
 
 template
 Meta_By_Changeset_Timeless< Node::Index > meta_from_fresh_data(const Data_By_Id< Node_Skeleton >& data_by_id);
+template
+Meta_By_Changeset_Timeless< Way::Index > meta_from_fresh_data(const Data_By_Id< Way_Skeleton >& data_by_id);
 
 
 //-----------------------------------------------------------------------------
@@ -333,13 +335,117 @@ namespace
       return &*merge_it;
     return nullptr;
   }
+  
+  
+  // Combined changesets that appear multiple times into one proper with multiple entries
+  void collate_changesets(std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > >& arg)
+  {
+    for (auto& idx_metas : arg)
+    {
+      std::sort(idx_metas.second.begin(), idx_metas.second.end());
+      auto from_it = idx_metas.second.begin();
+      if (from_it != idx_metas.second.end())
+      {
+        auto to_it = idx_metas.second.begin();
+        for (++from_it; from_it != idx_metas.second.end(); ++from_it)
+        {
+          if (from_it->get_changeset() == to_it->get_changeset())
+            from_it->move_refs_to(*to_it);
+          else
+          {
+            ++to_it;
+            if (from_it != to_it)
+              *to_it = *from_it;
+          }
+        }
+        ++to_it;
+        idx_metas.second.erase(to_it, idx_metas.second.end());
+      }
+    }
+  }
 }
+
+
+template< typename Skeleton >
+Meta_By_Changeset_Triple load_and_process_moved_current(
+    Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    const std::map< Uint31_Index, std::set< Skeleton > >& implicitly_moved_skeletons,
+    std::vector< std::pair< typename Skeleton::Id_Type, Uint31_Index > > new_positions)
+{
+  Meta_By_Changeset_Triple result;
+
+  std::vector< Uint31_Index > req = extract_idxs(implicitly_moved_skeletons);
+  Block_Backend< Uint31_Index, Meta_Per_Changeset_Skeleton, std::vector< Uint31_Index >::const_iterator > meta_db(
+      transaction.data_index(&cur_meta_file_properties));
+  auto db_it = meta_db.discrete_begin(req.begin(), req.end());
+  
+  auto extra_it = implicitly_moved_skeletons.begin();
+
+  for (auto idx : req)
+  {
+    auto& loc_to_add = result.stripped_moved[idx];
+    auto& loc_to_del = result.new_attic[idx];
+
+    while (extra_it != implicitly_moved_skeletons.end() && extra_it->first < idx)
+      ++extra_it;  // Should never happen, but prevent infinite loop
+    while (!(db_it == meta_db.discrete_end()) && db_it.index() < idx)
+      ++db_it;  // Should never happen, but prevent infinite loop
+
+    if (extra_it == implicitly_moved_skeletons.end() || !(idx == extra_it->first))
+      continue;
+    
+    while (!(db_it == meta_db.discrete_end()) && db_it.index() == idx)
+    {
+      if (!db_it.object().get_is_redacted())
+      {
+        Meta_Per_Changeset_Skeleton item = db_it.object();
+        Meta_Per_Changeset_Skeleton attic(item, item.move_refs_if(
+            [extra_it](Meta_Per_Changeset_Skeleton::Entry e)
+            { return extra_it->second.find(typename Skeleton::Id_Type(e.ref)) != extra_it->second.end(); }));
+        
+        if (!attic.get_refs().empty())
+        {
+          loc_to_del.push_back(attic);
+          loc_to_add.push_back(item);
+        }
+      }
+      
+      ++db_it;
+    }
+  }
+  
+  for (const auto& idx_metas : result.new_attic)
+  {
+    for (const auto& meta : idx_metas.second)
+    {
+      for (const auto& entry : meta.get_refs())
+      {
+        auto new_idx = std::lower_bound(new_positions.begin(), new_positions.end(), entry.ref,
+            [](std::pair< typename Skeleton::Id_Type, Uint31_Index > arg, uint64_t ref)
+            { return arg.first.val() < ref; });
+        if (new_idx != new_positions.end() && new_idx->first.val() == entry.ref)
+          result.new_current[new_idx->second].push_back(Meta_Per_Changeset_Skeleton(meta, { entry }));
+      }
+    }
+  }
+  collate_changesets(result.new_current);
+  
+  return result;
+}
+
+
+template
+Meta_By_Changeset_Triple load_and_process_moved_current(
+    Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    const std::map< Uint31_Index, std::set< Way_Skeleton > >& implicitly_moved_skeletons,
+    std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions);
 
 
 template< typename Index, typename Skeleton >
 Meta_By_Changeset_Delta< Index > load_and_process_current(
     const std::vector< std::pair< typename Skeleton::Id_Type, Index > >& extra_idxs,
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& stripped_moved,
     std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
     const Data_By_Id< Skeleton >& data_by_id)
 {
@@ -351,6 +457,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
   auto db_it = meta_db.discrete_begin(req.begin(), req.end());
   
   auto extra_it = to_merge.begin();
+  auto moved_it = stripped_moved.begin();
   
   for (auto idx : req)
   {
@@ -362,9 +469,18 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
       ++extra_it;  // Should never happen, but prevent infinite loop
     while (!(db_it == meta_db.discrete_end()) && db_it.index() < idx)
       ++db_it;  // Should never happen, but prevent infinite loop
-    
+
+    while (moved_it != stripped_moved.end() && moved_it->first < idx)
+    {
+      // attic processed through a different path
+      result.to_add[moved_it->first] = moved_it->second;
+      ++moved_it;
+    }
+
     if (extra_it != to_merge.end() && extra_it->first == idx)
       std::sort(extra_it->second.begin(), extra_it->second.end());
+    if (moved_it != stripped_moved.end() && moved_it->first < idx)
+      std::sort(moved_it->second.begin(), moved_it->second.end());
     
     while (!(db_it == meta_db.discrete_end()) && db_it.index() == idx)
     {
@@ -372,8 +488,10 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
       {
         Meta_Per_Changeset_Skeleton* new_entries = (extra_it != to_merge.end() && extra_it->first == idx
             ? by_changeset(extra_it->second, db_it.object().get_changeset()) : nullptr);
+        Meta_Per_Changeset_Skeleton* already_stripped = (moved_it != stripped_moved.end() && moved_it->first == idx
+            ? by_changeset(moved_it->second, db_it.object().get_changeset()) : nullptr);
         
-        Meta_Per_Changeset_Skeleton item = db_it.object();
+        Meta_Per_Changeset_Skeleton item = already_stripped ? *already_stripped : db_it.object();
         Meta_Per_Changeset_Skeleton attic(item, item.move_refs_if(
             [&new_current_tracker](Meta_Per_Changeset_Skeleton::Entry e)
             { return new_current_tracker.screen_ref(e.ref); }));
@@ -404,6 +522,13 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
 
     std::sort(loc_to_add.begin(), loc_to_add.end());
   }
+
+  while (moved_it != stripped_moved.end())
+  {
+    // attic processed through a different path
+    result.to_add[moved_it->first] = moved_it->second;
+    ++moved_it;
+  }
   
   return result;
 }
@@ -413,8 +538,16 @@ template
 Meta_By_Changeset_Delta< Node::Index > load_and_process_current< Node::Index, Node_Skeleton >(
     const std::vector< std::pair< Node_Skeleton::Id_Type, Node::Index > >& extra_idxs,
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& stripped_moved,
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
     const Data_By_Id< Node_Skeleton >& data_by_id);
+template
+Meta_By_Changeset_Delta< Way::Index > load_and_process_current< Way::Index, Way_Skeleton >(
+    const std::vector< std::pair< Way_Skeleton::Id_Type, Way::Index > >& extra_idxs,
+    Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& stripped_moved,
+    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
+    const Data_By_Id< Way_Skeleton >& data_by_id);
 
 
 template< typename Index >
@@ -425,6 +558,10 @@ std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
   for (auto& i : rhs)
   {
     auto& to = lhs[i.first];
+    
+    std::sort(i.second.begin(), i.second.end());
+    std::sort(to.begin(), to.end());
+    
     auto it_to = to.begin();
     
     for (auto& j : i.second)
@@ -450,6 +587,10 @@ template
 std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
+template
+std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
+    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
+    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
 
 
 template< typename Index >

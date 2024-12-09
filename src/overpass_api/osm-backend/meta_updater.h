@@ -96,6 +96,26 @@ void rename_referred_file(
     const std::string& db_dir, const std::string& from, const std::string& to, const File_Properties& file_prop);
 
 
+struct Meta_By_Changeset_Triple
+{
+  std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > > stripped_moved;
+  std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > > new_attic;
+  std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > > new_current;
+};
+
+
+// Processes the metas of implicitly moved skeletons
+// Returns
+// - the changesets stripped from the entries that no longer are current because moved
+// - the newly created attic entries resulting from moving the metas to attic
+// - the newly created current entries resulting from moving the metas to their new current index
+template< typename Skeleton >
+Meta_By_Changeset_Triple load_and_process_moved_current(
+    Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    const std::map< Uint31_Index, std::set< Skeleton > >& implicitly_moved_skeletons,
+    std::vector< std::pair< typename Skeleton::Id_Type, Uint31_Index > > new_positions);
+
+
 template< typename Index >
 struct Meta_By_Changeset_Timeless
 {
@@ -125,6 +145,7 @@ template< typename Index, typename Skeleton >
 Meta_By_Changeset_Delta< Index > load_and_process_current(
     const std::vector< std::pair< typename Skeleton::Id_Type, Index > >& extra_idxs,
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& stripped_moved,
     std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
     const Data_By_Id< Skeleton >& data_by_id);
 

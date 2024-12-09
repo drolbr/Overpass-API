@@ -489,12 +489,6 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       = get_existing_skeletons< Uint32_Index, Node_Skeleton >
       (existing_map_positions, *transaction, *osm_base_settings().NODES);
 
-  // Collect all data of existing meta elements
-  Meta_By_Changeset_Timeless< Node::Index > meta_from_fresh = meta_from_fresh_data< Node::Index >(new_data);
-  Meta_By_Changeset_Delta< Node::Index > cur_meta_to_update = load_and_process_current(
-      existing_map_positions, *transaction, *meta_settings().NODES_META,
-      std::move(meta_from_fresh.current), new_data);
-
 //   for (const auto& i : existing_map_positions)
 //     std::cout<<"DEBUG existing_map_positions "<<std::hex<<i.second.val()<<' '<<std::dec<<i.first.val()<<'\n';
   // Collect all data of existing tags
@@ -523,6 +517,12 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   // TODO: old code
   std::map< uint32, std::vector< Node::Id_Type > > to_delete;
   update_node_ids(to_delete, 0, new_map_positions);
+
+  // Collect all data of existing meta elements
+  Meta_By_Changeset_Timeless< Node::Index > meta_from_fresh = meta_from_fresh_data< Node::Index >(new_data);
+  Meta_By_Changeset_Delta< Node::Index > cur_meta_to_update = load_and_process_current(
+      existing_map_positions, *transaction, *meta_settings().NODES_META,
+      {}, std::move(meta_from_fresh.current), new_data);
 
   callback->update_started();
   callback->prepare_delete_tags_finished();

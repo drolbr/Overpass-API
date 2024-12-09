@@ -860,6 +860,8 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   // Compute and add implicitly moved ways
   new_implicit_skeletons(new_node_idx_by_id, implicitly_moved_skeletons,
       0, attic_skeletons, new_skeletons, moved_ways);
+  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions
+      = make_id_idx_directory(new_skeletons);
 
   // Compute which meta data really has changed
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_meta
@@ -868,8 +870,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   new_current_meta(new_data, new_meta);
 
   // Compute which meta data has moved
-  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions
-      = make_id_idx_directory(new_skeletons);
   new_implicit_meta(implicitly_moved_meta, new_positions, attic_meta, new_meta);
 
   // Compute which tags really have changed
@@ -882,6 +882,16 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   add_deleted_skeletons(attic_skeletons, new_positions);
   callback->compute_finished();
 
+  // Collect all data of existing meta elements
+/*  Meta_By_Changeset_Timeless< Way::Index > meta_from_fresh = meta_from_fresh_data< Way::Index >(new_data);
+  Meta_By_Changeset_Triple moved_meta = load_and_process_moved_current(
+      *transaction, *meta_settings().WAYS_META, implicitly_moved_skeletons, new_positions);
+  Meta_By_Changeset_Delta< Way::Index > cur_meta_to_update = load_and_process_current(
+      existing_map_positions, *transaction, *meta_settings().WAYS_META,
+      std::move(moved_meta.stripped_moved), std::move(meta_from_fresh.current), new_data);
+  cur_meta_to_update.to_remove = merge_meta(
+      std::move(cur_meta_to_update.to_remove), std::move(moved_meta.new_attic));
+*/
   callback->update_started();
   callback->prepare_delete_tags_finished();
 
