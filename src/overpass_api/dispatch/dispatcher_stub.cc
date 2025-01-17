@@ -98,6 +98,8 @@ Dispatcher_Stub::Dispatcher_Stub
       full_hash(hash(sanitize_string(xml_raw, false))),
       anon_hash(hash(sanitize_string(xml_raw, true))), client_token(0)
 {
+  const uint32_t MAX_LOG_SIZE = 8192;
+  
   if (max_allowed_time > 0)
     set_limits(2*max_allowed_time + 60, 2*max_allowed_space + 1024*1024*1024);
 
@@ -110,7 +112,11 @@ Dispatcher_Stub::Dispatcher_Stub
     dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
     Logger db_logger(dispatcher_client->get_db_dir());
     Logger client_logger(dispatcher_client->get_db_dir(), basic_settings().client_logfile_name);
-    client_logger.annotated_log("requesting " + escape_cstr(xml_raw));
+    if (xml_raw.size() <= MAX_LOG_SIZE)
+      client_logger.annotated_log("requesting " + escape_cstr(xml_raw));
+    else
+      client_logger.annotated_log("requesting " + escape_cstr(
+          xml_raw.substr(0, MAX_LOG_SIZE/2) + " ... " + xml_raw.substr(xml_raw.size() - MAX_LOG_SIZE/2)));
     try
     {
       db_logger.annotated_log("request_read_and_idx() start");
