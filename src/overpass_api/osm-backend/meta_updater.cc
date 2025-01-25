@@ -479,7 +479,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
 
     if (extra_it != to_merge.end() && extra_it->first == idx)
       std::sort(extra_it->second.begin(), extra_it->second.end());
-    if (moved_it != stripped_moved.end() && moved_it->first < idx)
+    if (moved_it != stripped_moved.end() && moved_it->first == idx)
       std::sort(moved_it->second.begin(), moved_it->second.end());
     
     while (!(db_it == meta_db.discrete_end()) && db_it.index() == idx)
@@ -491,11 +491,16 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
         Meta_Per_Changeset_Skeleton* already_stripped = (moved_it != stripped_moved.end() && moved_it->first == idx
             ? by_changeset(moved_it->second, db_it.object().get_changeset()) : nullptr);
         
-        Meta_Per_Changeset_Skeleton item = already_stripped ? *already_stripped : db_it.object();
+        Meta_Per_Changeset_Skeleton item = db_it.object();
+        if (already_stripped)
+        {
+          item = Meta_Per_Changeset_Skeleton{ item, {} };
+          already_stripped->move_refs_to(item);
+        }
         Meta_Per_Changeset_Skeleton attic(item, item.move_refs_if(
             [&new_current_tracker](Meta_Per_Changeset_Skeleton::Entry e)
             { return new_current_tracker.screen_ref(e.ref); }));
-        
+
         if (!attic.get_refs().empty() || new_entries)
         {
           loc_to_del.push_back(attic);
@@ -515,6 +520,18 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
         if (!i.get_refs().empty())
           loc_to_add.push_back(i);
       }
+
+      ++extra_it;
+    }
+    if (moved_it != stripped_moved.end() && moved_it->first == idx)
+    {
+      for (auto i : moved_it->second)
+      {
+        if (!i.get_refs().empty())
+          loc_to_add.push_back(i);
+      }
+      
+      ++moved_it;
     }
     
     std::sort(loc_to_del.begin(), loc_to_del.end());
@@ -593,6 +610,62 @@ std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
     std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
 
 
+namespace
+{
+  template< typename Index >
+  Index compute_idx_per_desc_timestamps(uint64_t timestamp, const std::vector< Attic< Index > >& desc)
+  {
+    auto it = desc.begin();
+    while (it != desc.end() && timestamp < it->timestamp)
+      ++it;
+    if (it != desc.begin())
+      --it;
+    return *it;
+  }
+}
+
+
+template< typename Index, typename Id_Type >
+std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > realign_idx_on_meta(
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& arg,
+    const std::map< Id_Type, std::vector< Attic< Index > > >& new_attic_idx_by_id_and_time)
+{
+  std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > result;
+  
+  for (const auto& idx_pair : arg)
+  {
+    for (const auto& chgset : idx_pair.second)
+    {
+      for (const auto& entry : chgset.get_refs())
+      {
+        auto attic_idx_it = new_attic_idx_by_id_and_time.find(entry.ref);
+        Index idx = idx_pair.first;
+        if (attic_idx_it != new_attic_idx_by_id_and_time.end()
+            && !attic_idx_it->second.empty() && attic_idx_it->second.front().timestamp > entry.timestamp)
+          idx = compute_idx_per_desc_timestamps(entry.timestamp, attic_idx_it->second);
+        
+        auto& res_vec = result[idx];
+        auto res_it = res_vec.begin();
+        while (res_it != res_vec.end() && res_it->get_changeset() < chgset.get_changeset())
+          ++res_it;
+        if (res_it == res_vec.end() || chgset.get_changeset() < res_it->get_changeset())
+          res_it = res_vec.insert(res_it, { chgset, {} });
+        
+        res_it->add_ref(entry);
+      }
+    }
+  }
+
+  return result;
+}
+
+
+template
+std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > > realign_idx_on_meta(
+    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& arg,
+    const std::map< Way_Skeleton::Id_Type, std::vector< Attic< Way::Index > > >& new_attic_idx_by_id_and_time);
+
+
 template< typename Index >
 Meta_By_Changeset_Delta< Index > load_and_process_attic(
     Transaction& transaction, const File_Properties& attic_meta_file_properties,
@@ -660,3 +733,7 @@ template
 Meta_By_Changeset_Delta< Node::Index > load_and_process_attic(
     Transaction& transaction, const File_Properties& attic_meta_file_properties,
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);
+template
+Meta_By_Changeset_Delta< Way::Index > load_and_process_attic(
+    Transaction& transaction, const File_Properties& attic_meta_file_properties,
+    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);

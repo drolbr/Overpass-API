@@ -34,6 +34,18 @@
 #include <sys/stat.h>
 
 
+/* General remarks about data flow for meta updates:
+ * - Latest (i.e. current) versions of then exisiting objects are extracted in meta_from_fresh_data(..)
+ *   into current based on their index from new_data. ...
+ * - Other versions of then existing objects are extracted in meta_from_fresh_data(..)
+ *   into attic based on their index from new_data. ...
+ * - Each earliest version of a then deleted object is discovered not before load_and_process_current(..)
+ *   because it is the earliest time at which the proper index is known.
+ * - Other version of a then deleted object are extracted in meta_from_fresh_data(..)
+ *   into attic based on their index from new_data.
+ * By design of the database, versions of deletions are never current even if they are the latest version.
+*/
+
 template< typename Id_Type >
 struct Meta_Comparator_By_Id {
   bool operator()
@@ -154,6 +166,12 @@ template< typename Index >
 std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
     std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
     std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
+
+
+template< typename Index, typename Id_Type >
+std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > realign_idx_on_meta(
+    std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > >&& arg,
+    const std::map< Id_Type, std::vector< Attic< Index > > >& new_attic_idx_by_id_and_time);
 
 
 // Consumes to_merge which is anyway no longer needed afterwards.
