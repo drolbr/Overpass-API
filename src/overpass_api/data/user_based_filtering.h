@@ -33,7 +33,7 @@ std::vector< typename Object::Id_Type > touched_ids_by_users(
   std::vector< typename Object::Id_Type > result;
 
   auto cur_idx = context.data_index(current_meta_file_properties< Object >());
-  if (cur_idx->get_file_format_version() <= 7620 || cur_idx->get_data_file_name().find("nodes") == std::string::npos)
+  if (cur_idx->get_file_format_version() <= 7620 || cur_idx->get_data_file_name().find("relations") != std::string::npos)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > meta_db(cur_idx);
     for (auto it = meta_db.range_begin(ranges); !(it == meta_db.range_end()); ++it)
@@ -59,7 +59,7 @@ std::vector< typename Object::Id_Type > touched_ids_by_users(
   }
 
   auto attic_idx = context.data_index(attic_meta_file_properties< Object >());
-  if (attic_idx->get_file_format_version() <= 7620 || attic_idx->get_data_file_name().find("nodes") == std::string::npos)
+  if (attic_idx->get_file_format_version() <= 7620 || attic_idx->get_data_file_name().find("relations") != std::string::npos)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > meta_db(attic_idx);
     for (auto it = meta_db.range_begin(ranges); !(it == meta_db.range_end()); ++it)

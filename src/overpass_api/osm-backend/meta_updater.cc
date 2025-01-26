@@ -303,17 +303,17 @@ namespace
       auto del_it = deletions_with_idx.begin();
       for (const auto& i : loc_to_del)
       {
-        while (del_it->changeset < i.get_changeset())
+        while (del_it != deletions_with_idx.end() && del_it->changeset < i.get_changeset())
         {
           to.push_back({ del_it->changeset, false, del_it->user_id });
-          while (del_it->changeset == to.back().get_changeset())
+          while (del_it != deletions_with_idx.end() && del_it->changeset == to.back().get_changeset())
           {
             to.back().add_ref({ del_it->ref.val(), del_it->version, del_it->timestamp });
             ++del_it;
           }
         }
         to.push_back(i);
-        while (del_it->changeset == to.back().get_changeset())
+        while (del_it != deletions_with_idx.end() && del_it->changeset == to.back().get_changeset())
         {
           to.back().add_ref({ del_it->ref.val(), del_it->version, del_it->timestamp });
           ++del_it;
@@ -441,6 +441,24 @@ Meta_By_Changeset_Triple load_and_process_moved_current(
     std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions);
 
 
+namespace
+{
+  template< typename Skeleton >
+  std::vector< uint64_t > extract_changesets_with_deletions(const Data_By_Id< Skeleton >& data_by_id)
+  {
+    std::vector< uint64_t > result;
+    for (const auto& entry : data_by_id.data)
+    {
+      if (entry.idx.val() == 0 && (result.empty() || result.back() != entry.meta.changeset))
+        result.push_back(entry.meta.changeset);
+    }
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+    return result;
+  }
+}
+
+
 template< typename Index, typename Skeleton >
 Meta_By_Changeset_Delta< Index > load_and_process_current(
     const std::vector< std::pair< typename Skeleton::Id_Type, Index > >& extra_idxs,
@@ -450,6 +468,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
     const Data_By_Id< Skeleton >& data_by_id)
 {
   Meta_By_Changeset_Delta< Index > result;
+  std::vector< uint64_t > chgsets_w_dels = extract_changesets_with_deletions(data_by_id);
   
   std::vector< Index > req = merge_idxs(to_merge, extra_idxs);
   Block_Backend< Index, Meta_Per_Changeset_Skeleton, typename std::vector< Index >::const_iterator > meta_db(
@@ -500,8 +519,9 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
         Meta_Per_Changeset_Skeleton attic(item, item.move_refs_if(
             [&new_current_tracker](Meta_Per_Changeset_Skeleton::Entry e)
             { return new_current_tracker.screen_ref(e.ref); }));
-
-        if (!attic.get_refs().empty() || new_entries)
+        
+        if (!attic.get_refs().empty() || already_stripped || new_entries
+            || std::binary_search(chgsets_w_dels.begin(), chgsets_w_dels.end(), item.get_changeset()))
         {
           loc_to_del.push_back(attic);
           if (new_entries)
@@ -619,7 +639,12 @@ namespace
     while (it != desc.end() && timestamp < it->timestamp)
       ++it;
     if (it != desc.begin())
+    {
+      bool time_equal = (timestamp == it->timestamp);
       --it;
+      if (time_equal && it->val() == 0) // Special rule to put deletions at the last index of the object
+        ++it;
+    }
     return *it;
   }
 }
