@@ -1127,7 +1127,7 @@ void eval_timespan_from_meta(
     std::map< Index, std::map< Id_Type, std::pair< uint64_t, uint64_t > > >& timestamp_by_id_by_idx,
     File_Blocks_Index_Base* file_index, const std::vector< Index >& idx_set, uint64_t timestamp)
 {
-  if (file_index->get_file_format_version() <= 7620 || file_index->get_data_file_name().find("relations") != std::string::npos)
+  if (file_index->get_file_format_version() <= 7620)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::vector< Index >::const_iterator >
         attic_meta_db(file_index);

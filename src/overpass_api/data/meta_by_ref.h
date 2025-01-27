@@ -48,7 +48,7 @@ std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > meta_
   std::vector< OSM_Element_Metadata_Skeleton< Id_Type > > result;
 
   auto cur_idx = context.data_index(current_meta_file_properties< Skeleton >());
-  if (cur_idx->get_file_format_version() <= 7620 || cur_idx->get_data_file_name().find("relations") != std::string::npos)
+  if (cur_idx->get_file_format_version() <= 7620)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >,
         typename std::vector< Index >::const_iterator > current_meta_db(cur_idx);
@@ -76,7 +76,7 @@ std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > meta_
   }
 
   auto attic_idx = context.data_index(attic_meta_file_properties< Skeleton >());
-  if (attic_idx->get_file_format_version() <= 7620 || attic_idx->get_data_file_name().find("relations") != std::string::npos)
+  if (attic_idx->get_file_format_version() <= 7620)
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >,
         typename std::vector< Index >::const_iterator > attic_meta_db(attic_idx);

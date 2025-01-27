@@ -808,20 +808,8 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
       = get_implicitly_moved_skeletons
           (attic_node_skeletons, existing_skeletons, *transaction, *osm_base_settings().WAYS);
 
-  // Collect all data of existing meta elements
-//   std::map< Way::Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > > existing_meta
-//       = (meta ? get_existing_meta< Way::Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >
-//              (existing_map_positions, *transaction, *meta_settings().WAYS_META) :
-//          std::map< Way::Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > >());
-
   std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > implicitly_moved_positions
       = make_id_idx_directory(implicitly_moved_skeletons);
-
-  // Collect all data of existing meta elements
-//   std::map< Way::Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > > implicitly_moved_meta
-//       = (meta ? get_existing_meta< Way::Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >
-//              (implicitly_moved_positions, *transaction, *meta_settings().WAYS_META) :
-//          std::map< Way::Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > >());
 
   // Collect all data of existing tags
   std::vector< Tag_Entry< Way_Skeleton::Id_Type > > existing_local_tags;
@@ -862,15 +850,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
       0, attic_skeletons, new_skeletons, moved_ways);
   std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions
       = make_id_idx_directory(new_skeletons);
-
-  // Compute which meta data really has changed
-//   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_meta
-//       = existing_meta;
-//   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > new_meta;
-//   new_current_meta(new_data, new_meta);
-
-  // Compute which meta data has moved
-//   new_implicit_meta(implicitly_moved_meta, new_positions, attic_meta, new_meta);
 
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > attic_local_tags;
@@ -920,7 +899,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   {
     update_elements(
        cur_meta_to_update.to_remove, cur_meta_to_update.to_add, *transaction, *meta_settings().WAYS_META);
-//     update_elements(attic_meta, new_meta, *transaction, *meta_settings().WAYS_META);
     callback->meta_finished();
 
     copy_idxs_by_user_id(cur_meta_to_update.to_add, idxs_by_user_id);
@@ -939,8 +917,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     update_current_global_tags< Way_Skeleton >(attic_global_tags, new_global_tags, *transaction);
     callback->tags_global_finished();
   }
-
-//   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
   if (meta == Database_Meta_State::keep_attic)
   {
@@ -984,11 +960,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
 
     // Assert: In new_attic_idx_by_id_and_time each second is descending in timestamps
 
-    // Compute new meta data
-//     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
-//         new_attic_meta = compute_new_attic_meta(new_attic_idx_by_id_and_time,
-//             compute_meta_by_id_and_time(new_data, attic_meta), new_meta);
-
     // Compute tags
     std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > > new_attic_local_tags
         = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
@@ -1005,8 +976,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
         = strip_single_idxs(new_attic_idx_lists);
 
-    // Prepare user indices
-//     copy_idxs_by_id(new_attic_meta, idxs_by_id);
     callback->compute_attic_finished();
 
     callback->attic_update_started();
@@ -1036,9 +1005,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
             new_attic_idx_by_id_and_time));
     update_elements(
         attic_meta_to_update.to_remove, attic_meta_to_update.to_add, *transaction, *attic_settings().WAYS_META);
-//     update_elements
-//         (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >(),
-//          new_attic_meta, *transaction, *attic_settings().WAYS_META);
     callback->meta_finished();
 
     copy_idxs_by_user_id(attic_meta_to_update.to_add, idxs_by_user_id);
@@ -1064,15 +1030,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
 
   if (meta != Database_Meta_State::only_data)
     process_user_data(*transaction, user_by_id, idxs_by_user_id);
-//   {
-//     copy_idxs_by_id(new_meta, idxs_by_id);
-//     process_user_data(*transaction, user_by_id, idxs_by_id);
-//   }
   callback->update_finished();
 
   new_data.data.clear();
-//   ways_meta_to_insert.clear();
-//   ways_meta_to_delete.clear();
 
   if (!external_transaction)
     delete transaction;

@@ -1082,19 +1082,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
           (attic_node_skeletons, attic_way_skeletons,
            existing_skeletons, *transaction, *osm_base_settings().RELATIONS);
 
-  // Collect all data of existing meta elements
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > > existing_meta
-      = (meta ? get_existing_meta< Relation::Index, OSM_Element_Metadata_Skeleton< Relation::Id_Type > >
-             (existing_map_positions, *transaction, *meta_settings().RELATIONS_META) :
-         std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > >());
-
-  // Collect all data of existing meta elements
   std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > implicitly_moved_positions
       = make_id_idx_directory(implicitly_moved_skeletons);
-  std::map< Relation::Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > > implicitly_moved_meta
-      = (meta ? get_existing_meta< Relation::Index, OSM_Element_Metadata_Skeleton< Relation::Id_Type > >
-             (implicitly_moved_positions, *transaction, *meta_settings().RELATIONS_META) :
-         std::map< Relation::Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > >());
 
   // Collect all data of existing tags
   std::vector< Tag_Entry< Relation_Skeleton::Id_Type > > existing_local_tags;
@@ -1136,17 +1125,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
   // Compute and add implicitly moved relations
   new_implicit_skeletons(new_node_idx_by_id, new_way_idx_by_id, implicitly_moved_skeletons,
       0, attic_skeletons, new_skeletons, moved_relations);
-
-  // Compute which meta data really has changed
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > > attic_meta
-      = existing_meta;
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > > new_meta;
-  new_current_meta(new_data, new_meta);
-
-  // Compute which meta data has moved
   std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > new_positions
       = make_id_idx_directory(new_skeletons);
-  new_implicit_meta(implicitly_moved_meta, new_positions, attic_meta, new_meta);
 
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Relation_Skeleton::Id_Type > > attic_local_tags;
@@ -1156,6 +1136,18 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
 
   add_deleted_skeletons(attic_skeletons, new_positions);
+
+  // Collect all data of existing meta elements
+  Meta_By_Changeset_Timeless< Relation::Index > meta_from_fresh = meta_from_fresh_data< Relation::Index >(new_data);
+  Meta_By_Changeset_Triple moved_meta = load_and_process_moved_current(
+      *transaction, *meta_settings().RELATIONS_META, implicitly_moved_skeletons, new_positions);
+  Meta_By_Changeset_Delta< Relation::Index > cur_meta_to_update = load_and_process_current(
+      existing_map_positions, *transaction, *meta_settings().RELATIONS_META,
+      std::move(moved_meta.stripped_moved), std::move(meta_from_fresh.current), new_data);
+  cur_meta_to_update.to_remove = merge_meta(
+      std::move(cur_meta_to_update.to_remove), std::move(moved_meta.new_attic));
+  cur_meta_to_update.to_add = merge_meta(
+      std::move(cur_meta_to_update.to_add), std::move(moved_meta.new_current));
 
   callback->update_started();
   callback->prepare_delete_tags_finished();
@@ -1170,9 +1162,17 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
   update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().RELATIONS);
   callback->update_coords_finished();
 
+  std::map< uint32_t, std::vector< uint32_t > > idxs_by_user_id;
+
   // Update meta
   if (meta)
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().RELATIONS_META);
+  {
+    update_elements(
+       cur_meta_to_update.to_remove, cur_meta_to_update.to_add, *transaction, *meta_settings().RELATIONS_META);
+    callback->meta_finished();
+
+    copy_idxs_by_user_id(cur_meta_to_update.to_add, idxs_by_user_id);
+  }
 
   // Update local tags
   update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().RELATION_TAGS_LOCAL);
@@ -1190,8 +1190,6 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   flush_roles();
   callback->flush_roles_finished();
-
-  std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
   if (meta == Database_Meta_State::keep_attic)
   {
@@ -1232,11 +1230,6 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     std::map< Relation_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > > new_attic_idx_by_id_and_time =
         compute_new_attic_idx_by_id_and_time(new_data, new_skeletons, new_attic_skeletons);
 
-    // Compute new meta data
-    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > >
-        new_attic_meta = compute_new_attic_meta(new_attic_idx_by_id_and_time,
-            compute_meta_by_id_and_time(new_data, attic_meta), new_meta);
-
     // Compute tags
     std::map< Tag_Index_Local, std::set< Attic< Relation_Skeleton::Id_Type > > > new_attic_local_tags
         = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
@@ -1254,9 +1247,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
         = strip_single_idxs(new_attic_idx_lists);
 
-    // Prepare user indices
-    copy_idxs_by_id(new_attic_meta, idxs_by_id);
+    callback->compute_attic_finished();
 
+    callback->attic_update_started();
     // Update id indexes
     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().RELATIONS);
 
@@ -1273,9 +1266,16 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
                     new_undeleted, *transaction, *attic_settings().RELATIONS_UNDELETED);
 
     // Add attic meta
-    update_elements
-        (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > >(),
-         new_attic_meta, *transaction, *attic_settings().RELATIONS_META);
+    Meta_By_Changeset_Delta< Way::Index > attic_meta_to_update = load_and_process_attic(
+        *transaction, *attic_settings().RELATIONS_META,
+        realign_idx_on_meta(
+            merge_meta(std::move(cur_meta_to_update.to_remove), std::move(meta_from_fresh.attic)),
+            new_attic_idx_by_id_and_time));
+    update_elements(
+        attic_meta_to_update.to_remove, attic_meta_to_update.to_add, *transaction, *attic_settings().RELATIONS_META);
+    callback->meta_finished();
+
+    copy_idxs_by_user_id(attic_meta_to_update.to_add, idxs_by_user_id);
 
     // Update tags
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
@@ -1295,15 +1295,10 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
   }
 
   if (meta != Database_Meta_State::only_data)
-  {
-    copy_idxs_by_id(new_meta, idxs_by_id);
-    process_user_data(*transaction, user_by_id, idxs_by_id);
-  }
+    process_user_data(*transaction, user_by_id, idxs_by_user_id);
   callback->update_finished();
 
   new_data.data.clear();
-//   rels_meta_to_delete.clear();
-//   rels_meta_to_insert.clear();
 
   new_skeletons.clear();
   attic_skeletons.clear();

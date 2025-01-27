@@ -112,7 +112,7 @@ Meta_File_Reader< Index, Id_Type >::Meta_File_Reader
   : used_indices(generate_index_query(items))
 {
   auto meta_idx = transaction.data_index(&meta_file_prop);
-  if (meta_idx->get_file_format_version() <= 7620 || meta_idx->get_data_file_name().find("relations") != std::string::npos)
+  if (meta_idx->get_file_format_version() <= 7620)
   {
     plain_meta_db.reset(
         new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >(meta_idx));

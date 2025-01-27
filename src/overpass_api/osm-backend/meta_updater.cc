@@ -222,6 +222,8 @@ template
 Meta_By_Changeset_Timeless< Node::Index > meta_from_fresh_data(const Data_By_Id< Node_Skeleton >& data_by_id);
 template
 Meta_By_Changeset_Timeless< Way::Index > meta_from_fresh_data(const Data_By_Id< Way_Skeleton >& data_by_id);
+template
+Meta_By_Changeset_Timeless< Relation::Index > meta_from_fresh_data(const Data_By_Id< Relation_Skeleton >& data_by_id);
 
 
 //-----------------------------------------------------------------------------
@@ -439,6 +441,11 @@ Meta_By_Changeset_Triple load_and_process_moved_current(
     Transaction& transaction, const File_Properties& cur_meta_file_properties,
     const std::map< Uint31_Index, std::set< Way_Skeleton > >& implicitly_moved_skeletons,
     std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions);
+template
+Meta_By_Changeset_Triple load_and_process_moved_current(
+    Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    const std::map< Uint31_Index, std::set< Relation_Skeleton > >& implicitly_moved_skeletons,
+    std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > new_positions);
 
 
 namespace
@@ -585,6 +592,13 @@ Meta_By_Changeset_Delta< Way::Index > load_and_process_current< Way::Index, Way_
     std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& stripped_moved,
     std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
     const Data_By_Id< Way_Skeleton >& data_by_id);
+template
+Meta_By_Changeset_Delta< Relation::Index > load_and_process_current< Relation::Index, Relation_Skeleton >(
+    const std::vector< std::pair< Relation_Skeleton::Id_Type, Relation::Index > >& extra_idxs,
+    Transaction& transaction, const File_Properties& cur_meta_file_properties,
+    std::map< Relation::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& stripped_moved,
+    std::map< Relation::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge,
+    const Data_By_Id< Relation_Skeleton >& data_by_id);
 
 
 template< typename Index >
@@ -625,9 +639,9 @@ std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
 template
-std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
-    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
-    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
+std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > > merge_meta(
+    std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > >&& lhs,
+    std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > >&& rhs);
 
 
 namespace
@@ -686,9 +700,9 @@ std::map< Index, std::vector< Meta_Per_Changeset_Skeleton > > realign_idx_on_met
 
 
 template
-std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > > realign_idx_on_meta(
-    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& arg,
-    const std::map< Way_Skeleton::Id_Type, std::vector< Attic< Way::Index > > >& new_attic_idx_by_id_and_time);
+std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > > realign_idx_on_meta(
+    std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > >&& arg,
+    const std::map< Uint32_Index, std::vector< Attic< Uint31_Index > > >& new_attic_idx_by_id_and_time);
 
 
 template< typename Index >
@@ -759,6 +773,6 @@ Meta_By_Changeset_Delta< Node::Index > load_and_process_attic(
     Transaction& transaction, const File_Properties& attic_meta_file_properties,
     std::map< Node::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);
 template
-Meta_By_Changeset_Delta< Way::Index > load_and_process_attic(
+Meta_By_Changeset_Delta< Uint31_Index > load_and_process_attic(
     Transaction& transaction, const File_Properties& attic_meta_file_properties,
-    std::map< Way::Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);
+    std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);

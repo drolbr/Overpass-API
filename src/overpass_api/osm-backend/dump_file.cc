@@ -629,7 +629,7 @@ int main(int argc, char* args[])
     else if (std::string("--rels-meta") == args[2])
     {
       auto file_idx = transaction.data_index(meta_settings().RELATIONS_META);
-      if (true)//(file_idx->get_file_format_version() <= 7620)
+      if (file_idx->get_file_format_version() <= 7620)
       {
         Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > db(file_idx);
         for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
@@ -746,7 +746,7 @@ int main(int argc, char* args[])
     else if (std::string("--attic-rels-meta") == args[2])
     {
       auto file_idx = transaction.data_index(attic_settings().RELATIONS_META);
-      if (true)//(file_idx->get_file_format_version() <= 7620)
+      if (file_idx->get_file_format_version() <= 7620)
       {
         Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > db(file_idx);
         for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
