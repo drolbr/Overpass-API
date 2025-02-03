@@ -59,7 +59,14 @@ struct Data_By_Id
     }
   };
 
+  struct Simple_Ref
+  {
+    typename Element_Skeleton::Id_Type ref;
+    uint64_t version;
+  };
+
   std::vector< Entry > data;
+  std::vector< Simple_Ref > redactions;
 };
 
 

@@ -776,3 +776,54 @@ template
 Meta_By_Changeset_Delta< Uint31_Index > load_and_process_attic(
     Transaction& transaction, const File_Properties& attic_meta_file_properties,
     std::map< Uint31_Index, std::vector< Meta_Per_Changeset_Skeleton > >&& to_merge);
+
+
+template< typename Index, typename Skeleton >
+std::vector< Index > lookup_relevant_idxs(
+    const std::vector< typename Data_By_Id< Skeleton >::Simple_Ref >& refs,
+    Transaction& transaction,
+    const File_Properties& random_file_props, const File_Properties& list_file_props)
+{
+  std::vector< Index > result;
+  std::vector< typename Skeleton::Id_Type > ids_in_list;
+
+  if (!refs.empty())
+  {
+    Random_File< typename Skeleton::Id_Type, Index > random(
+        transaction.random_index(&random_file_props));
+    typename Skeleton::Id_Type last_ref = refs[0].ref;
+    for (auto it = refs.begin(); it != refs.end(); ++it)
+    {
+      if (it->ref == last_ref && it != refs.begin())
+        continue;
+
+      Index idx = random.get(it->ref.val());
+      if (idx.val() == 0xff)
+        ids_in_list.push_back(it->ref);
+      else if (idx.val() > 0)
+        result.push_back(idx);
+      
+      last_ref = it->ref;
+    }
+  }
+
+  if (!ids_in_list.empty())
+  {
+    Block_Backend< typename Skeleton::Id_Type, Index > db(
+        transaction.data_index(&list_file_props));
+    for (auto it = db.discrete_begin(ids_in_list.begin(), ids_in_list.end()); !(it == db.discrete_end()); ++it)
+      result.push_back(it.object());
+  }
+
+  std::sort(result.begin(), result.end());
+  result.erase(std::unique(result.begin(), result.end()), result.end());
+
+  return result;
+}
+
+
+template
+std::vector< Uint32_Index > lookup_relevant_idxs< Uint32_Index, Node_Skeleton >(
+    const std::vector< typename Data_By_Id< Node_Skeleton >::Simple_Ref >& refs,
+    Transaction& transaction,
+    const File_Properties& random_file_props, const File_Properties& list_file_props);

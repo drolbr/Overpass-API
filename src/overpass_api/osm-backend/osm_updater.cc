@@ -62,6 +62,7 @@ namespace
   const int IN_RELATIONS = 3;
   int modify_mode = 0;
   const int DELETE = 1;
+  const int REDACT = 2;
   uint flush_limit = 4*1024*1024;
   OSM_Element_Metadata* meta;
 
@@ -182,6 +183,8 @@ namespace
   {
     if (modify_mode == DELETE)
       node_updater->set_id_deleted(current_node.id, meta);
+    else if (modify_mode == REDACT)
+      node_updater->set_id_redacted(current_node.id, meta->version);
     else
       node_updater->set_node(current_node, meta);
     if (osm_element_count >= flush_limit)
@@ -243,6 +246,8 @@ namespace
   {
     if (modify_mode == DELETE)
       way_updater->set_id_deleted(current_way.id, meta);
+    else if (modify_mode == REDACT)
+      way_updater->set_id_redacted(current_way.id, meta->version);
     else
       way_updater->set_way(current_way, meta);
     if (osm_element_count >= flush_limit)
@@ -262,6 +267,8 @@ namespace
   {
     if (modify_mode == DELETE)
       relation_updater->set_id_deleted(current_relation.id, meta);
+    else if (modify_mode == REDACT)
+      relation_updater->set_id_redacted(current_relation.id, meta->version);
     else
       relation_updater->set_relation(current_relation, meta);
     if (osm_element_count >= flush_limit)
@@ -348,16 +355,20 @@ void node_start(const char *el, const char **attr)
     node_start(attr);
   else if (!strcmp(el, "delete"))
     modify_mode = DELETE;
+  else if (!strcmp(el, "redact"))
+    modify_mode = REDACT;
 }
+
 
 void node_end(const char *el)
 {
   if (!strcmp(el, "node"))
     node_end();
-  else if (!strcmp(el, "delete"))
+  else if (!strcmp(el, "delete") || !strcmp(el, "redact"))
     modify_mode = 0;
   ++osm_element_count;
 }
+
 
 void way_start(const char *el, const char **attr)
 {
@@ -372,16 +383,20 @@ void way_start(const char *el, const char **attr)
     way_start(attr);
   else if (!strcmp(el, "delete"))
     modify_mode = DELETE;
+  else if (!strcmp(el, "redact"))
+    modify_mode = REDACT;
 }
+
 
 void way_end(const char *el)
 {
   if (!strcmp(el, "way"))
     way_end();
-  else if (!strcmp(el, "delete"))
+  else if (!strcmp(el, "delete") || !strcmp(el, "redact"))
     modify_mode = 0;
   ++osm_element_count;
 }
+
 
 void relation_start(const char *el, const char **attr)
 {
@@ -396,16 +411,20 @@ void relation_start(const char *el, const char **attr)
     relation_start(attr);
   else if (!strcmp(el, "delete"))
     modify_mode = DELETE;
+  else if (!strcmp(el, "redact"))
+    modify_mode = REDACT;
 }
+
 
 void relation_end(const char *el)
 {
   if (!strcmp(el, "relation"))
     relation_end();
-  else if (!strcmp(el, "delete"))
+  else if (!strcmp(el, "delete") || !strcmp(el, "redact"))
     modify_mode = 0;
   ++osm_element_count;
 }
+
 
 void start(const char *el, const char **attr)
 {
@@ -426,7 +445,10 @@ void start(const char *el, const char **attr)
     relation_start(attr);
   else if (!strcmp(el, "delete"))
     modify_mode = DELETE;
+  else if (!strcmp(el, "redact"))
+    modify_mode = REDACT;
 }
+
 
 void end(const char *el)
 {
@@ -436,7 +458,7 @@ void end(const char *el)
     way_end();
   else if (!strcmp(el, "relation"))
     relation_end();
-  else if (!strcmp(el, "delete"))
+  else if (!strcmp(el, "delete") || !strcmp(el, "redact"))
     modify_mode = 0;
   ++osm_element_count;
 }
@@ -477,6 +499,7 @@ void Osm_Updater::finish_updater()
   callback->parser_succeeded();
 }
 
+
 void Osm_Updater::parse_file_completely(FILE* in)
 {
   callback->parser_started();
@@ -485,20 +508,24 @@ void Osm_Updater::parse_file_completely(FILE* in)
   finish_updater();
 }
 
+
 void parse_nodes_only(FILE* in)
 {
   parse(in, node_start, node_end);
 }
+
 
 void parse_ways_only(FILE* in)
 {
   parse(in, way_start, way_end);
 }
 
+
 void parse_relations_only(FILE* in)
 {
   parse(in, relation_start, relation_end);
 }
+
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& data_version_,
 			 Database_Meta_State meta_, unsigned int flush_limit_)
@@ -538,6 +565,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
     ::meta = new OSM_Element_Metadata();
 }
 
+
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, std::string db_dir, const std::string& data_version_,
      Database_Meta_State meta_, unsigned int flush_limit_)
@@ -573,6 +601,7 @@ Osm_Updater::Osm_Updater
   signal(SIGTERM, sigterm);
 }
 
+
 void Osm_Updater::flush()
 {
   delete node_updater_;
@@ -606,6 +635,7 @@ void Osm_Updater::flush()
     dispatcher_client = 0;
   }
 }
+
 
 Osm_Updater::~Osm_Updater()
 {

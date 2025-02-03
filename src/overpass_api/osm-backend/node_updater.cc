@@ -674,6 +674,12 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   nodes_to_insert.clear();
 //   nodes_meta_to_insert.clear();
 //   nodes_meta_to_delete.clear();
+  
+  if (!new_data.redactions.empty())
+  {
+    auto foo = lookup_relevant_idxs< Uint32_Index, Node_Skeleton >(
+        new_data.redactions, *transaction, *attic_settings().NODES, *attic_settings().NODE_IDX_LIST);
+  }
 
   if (!external_transaction)
     delete transaction;

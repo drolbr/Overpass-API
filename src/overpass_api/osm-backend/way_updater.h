@@ -54,6 +54,11 @@ struct Way_Updater
       user_by_id[meta->user_id] = meta->user_name;
   }
 
+  void set_id_redacted(Way::Id_Type id, const uint32_t version)
+  {
+    new_data.redactions.push_back({ id, version });
+  }
+
   void set_way(const Way& way,
 	       const OSM_Element_Metadata* meta = 0)
   {
