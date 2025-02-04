@@ -827,3 +827,95 @@ std::vector< Uint32_Index > lookup_relevant_idxs< Uint32_Index, Node_Skeleton >(
     const std::vector< typename Data_By_Id< Node_Skeleton >::Simple_Ref >& refs,
     Transaction& transaction,
     const File_Properties& random_file_props, const File_Properties& list_file_props);
+
+
+// Assert: refs are sorted by ref
+template< typename Index, typename Simple_Ref >
+Meta_By_Changeset_Delta< Index > load_and_process_redactions(
+    const std::vector< Simple_Ref >& refs, const std::vector< Index >& req,
+    Transaction& transaction, const File_Properties& attic_meta_file_properties)
+{
+  Meta_By_Changeset_Delta< Index > result;
+  
+  Block_Backend< Index, Meta_Per_Changeset_Skeleton, typename std::vector< Index >::const_iterator > meta_db(
+      transaction.data_index(&attic_meta_file_properties));
+  auto db_it = meta_db.discrete_begin(req.begin(), req.end());
+  
+  for (auto idx : req)
+  {
+    std::vector< Meta_Per_Changeset_Skeleton > found_redacted;
+    auto& loc_to_add = result.to_add[idx];
+    auto& loc_to_del = result.to_remove[idx];
+    
+    while (!(db_it == meta_db.discrete_end()) && db_it.index() < idx)
+      ++db_it;  // Should never happen, but prevent infinite loop
+      
+    while (!(db_it == meta_db.discrete_end()) && db_it.index() == idx)
+    {
+      if (db_it.object().get_is_redacted())
+        found_redacted.push_back(db_it.object());
+      else
+      {
+        Meta_Per_Changeset_Skeleton item(db_it.object());
+        Meta_Per_Changeset_Skeleton redactions(item, item.move_refs_if(
+            [&refs](Meta_Per_Changeset_Skeleton::Entry e)
+            {
+              auto it = std::lower_bound(refs.begin(), refs.end(), Simple_Ref{ e.ref, e.version });
+              return it != refs.end() && it->ref.val() == e.ref && it->version == e.version;
+            }));
+        
+        if (!redactions.get_refs().empty())
+        {
+          loc_to_add.push_back(item);
+          loc_to_del.push_back({ item, {} });
+          found_redacted.push_back(redactions);
+        }
+      }
+      
+      ++db_it;
+    }
+    
+    if (!found_redacted.empty())
+    {
+      std::sort(found_redacted.begin(), found_redacted.end());
+      auto cur = found_redacted.begin();
+      ++cur;
+      auto last = found_redacted.begin();
+      
+      while (cur != found_redacted.end())
+      {
+        if (cur->get_changeset() == last->get_changeset())
+        {
+          while (cur != found_redacted.end() && cur->get_changeset() == last->get_changeset())
+          {
+            cur->move_refs_to(*last); 
+            ++cur;
+          }
+          loc_to_del.push_back({ *last, {} });
+          loc_to_add.push_back(*last);
+          if (cur == found_redacted.end())
+            break;
+          
+          last = cur;
+          ++cur;
+        }
+        else
+        {
+          ++last;
+          ++cur;
+        }
+      }
+    }
+    
+    std::sort(loc_to_del.begin(), loc_to_del.end());
+    std::sort(loc_to_add.begin(), loc_to_add.end());    
+  }
+  
+  return result;
+}
+
+
+template
+Meta_By_Changeset_Delta< Uint32_Index > load_and_process_redactions(
+    const std::vector< Data_By_Id< Node_Skeleton >::Simple_Ref >& refs, const std::vector< Uint32_Index >& req,
+    Transaction& transaction, const File_Properties& attic_meta_file_properties);

@@ -218,4 +218,11 @@ std::vector< Index > lookup_relevant_idxs(
     const File_Properties& random_file_props, const File_Properties& list_file_props);
 
 
+// Assert: refs are sorted by ref
+template< typename Index, typename Simple_Ref >
+Meta_By_Changeset_Delta< Index > load_and_process_redactions(
+    const std::vector< Simple_Ref >& refs, const std::vector< Index >& req,
+    Transaction& transaction, const File_Properties& attic_meta_file_properties);
+
+
 #endif

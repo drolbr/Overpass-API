@@ -63,6 +63,15 @@ struct Data_By_Id
   {
     typename Element_Skeleton::Id_Type ref;
     uint64_t version;
+    
+    bool operator<(const Simple_Ref& rhs) const
+    {
+      if (ref < rhs.ref)
+        return true;
+      if (rhs.ref < ref)
+        return false;
+      return version < rhs.version;
+    }
   };
 
   std::vector< Entry > data;
