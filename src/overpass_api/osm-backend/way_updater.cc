@@ -1033,6 +1033,17 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   callback->update_finished();
 
   new_data.data.clear();
+  
+  if (!new_data.redactions.empty())
+  {
+    Meta_By_Changeset_Delta< Uint31_Index > to_redact = load_and_process_redactions(
+        new_data.redactions, lookup_relevant_idxs< Uint31_Index, Way_Skeleton >(
+            new_data.redactions, *transaction,
+            *osm_base_settings().WAYS, *attic_settings().WAYS, *attic_settings().WAY_IDX_LIST),
+        *transaction, *attic_settings().WAYS_META);
+    update_elements(
+        to_redact.to_remove, to_redact.to_add, *transaction, *attic_settings().WAYS_META);    
+  }
 
   if (!external_transaction)
     delete transaction;

@@ -679,7 +679,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   {
     Meta_By_Changeset_Delta< Uint32_Index > to_redact = load_and_process_redactions(
         new_data.redactions, lookup_relevant_idxs< Uint32_Index, Node_Skeleton >(
-            new_data.redactions, *transaction, *attic_settings().NODES, *attic_settings().NODE_IDX_LIST),
+            new_data.redactions, *transaction,
+            *osm_base_settings().NODES, *attic_settings().NODES, *attic_settings().NODE_IDX_LIST),
         *transaction, *attic_settings().NODES_META);
     update_elements(
         to_redact.to_remove, to_redact.to_add, *transaction, *attic_settings().NODES_META);    

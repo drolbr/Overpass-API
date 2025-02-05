@@ -215,7 +215,8 @@ template< typename Index, typename Skeleton >
 std::vector< Index > lookup_relevant_idxs(
     const std::vector< typename Data_By_Id< Skeleton >::Simple_Ref >& refs,
     Transaction& transaction,
-    const File_Properties& random_file_props, const File_Properties& list_file_props);
+    const File_Properties& random_current_file_props, const File_Properties& random_attic_file_props,
+    const File_Properties& list_file_props);
 
 
 // Assert: refs are sorted by ref

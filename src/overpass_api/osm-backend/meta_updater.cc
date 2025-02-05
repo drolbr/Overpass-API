@@ -782,22 +782,38 @@ template< typename Index, typename Skeleton >
 std::vector< Index > lookup_relevant_idxs(
     const std::vector< typename Data_By_Id< Skeleton >::Simple_Ref >& refs,
     Transaction& transaction,
-    const File_Properties& random_file_props, const File_Properties& list_file_props)
+    const File_Properties& random_current_file_props, const File_Properties& random_attic_file_props,
+    const File_Properties& list_file_props)
 {
   std::vector< Index > result;
   std::vector< typename Skeleton::Id_Type > ids_in_list;
 
   if (!refs.empty())
   {
-    Random_File< typename Skeleton::Id_Type, Index > random(
-        transaction.random_index(&random_file_props));
+    Random_File< typename Skeleton::Id_Type, Index > current(
+        transaction.random_index(&random_current_file_props));
     typename Skeleton::Id_Type last_ref = refs[0].ref;
     for (auto it = refs.begin(); it != refs.end(); ++it)
     {
       if (it->ref == last_ref && it != refs.begin())
         continue;
 
-      Index idx = random.get(it->ref.val());
+      Index idx = current.get(it->ref.val());
+      if (idx.val() > 0)
+        result.push_back(idx);
+      
+      last_ref = it->ref;
+    }
+
+    Random_File< typename Skeleton::Id_Type, Index > attic(
+        transaction.random_index(&random_attic_file_props));
+    last_ref = refs[0].ref;
+    for (auto it = refs.begin(); it != refs.end(); ++it)
+    {
+      if (it->ref == last_ref && it != refs.begin())
+        continue;
+
+      Index idx = attic.get(it->ref.val());
       if (idx.val() == 0xff)
         ids_in_list.push_back(it->ref);
       else if (idx.val() > 0)
@@ -826,7 +842,20 @@ template
 std::vector< Uint32_Index > lookup_relevant_idxs< Uint32_Index, Node_Skeleton >(
     const std::vector< typename Data_By_Id< Node_Skeleton >::Simple_Ref >& refs,
     Transaction& transaction,
-    const File_Properties& random_file_props, const File_Properties& list_file_props);
+    const File_Properties& random_current_file_props, const File_Properties& random_attic_file_props,
+    const File_Properties& list_file_props);
+template
+std::vector< Uint31_Index > lookup_relevant_idxs< Uint31_Index, Way_Skeleton >(
+    const std::vector< typename Data_By_Id< Way_Skeleton >::Simple_Ref >& refs,
+    Transaction& transaction,
+    const File_Properties& random_current_file_props, const File_Properties& random_attic_file_props,
+    const File_Properties& list_file_props);
+template
+std::vector< Uint31_Index > lookup_relevant_idxs< Uint31_Index, Relation_Skeleton >(
+    const std::vector< typename Data_By_Id< Relation_Skeleton >::Simple_Ref >& refs,
+    Transaction& transaction,
+    const File_Properties& random_current_file_props, const File_Properties& random_attic_file_props,
+    const File_Properties& list_file_props);
 
 
 // Assert: refs are sorted by ref
@@ -844,6 +873,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_redactions(
   for (auto idx : req)
   {
     std::vector< Meta_Per_Changeset_Skeleton > found_redacted;
+    std::vector< Meta_Per_Changeset_Skeleton > to_redact;
     auto& loc_to_add = result.to_add[idx];
     auto& loc_to_del = result.to_remove[idx];
     
@@ -857,7 +887,9 @@ Meta_By_Changeset_Delta< Index > load_and_process_redactions(
       else
       {
         Meta_Per_Changeset_Skeleton item(db_it.object());
-        Meta_Per_Changeset_Skeleton redactions(item, item.move_refs_if(
+        Meta_Per_Changeset_Skeleton redactions(
+            { item.get_changeset(), true, item.get_user_id() },
+            item.move_refs_if(
             [&refs](Meta_Per_Changeset_Skeleton::Entry e)
             {
               auto it = std::lower_bound(refs.begin(), refs.end(), Simple_Ref{ e.ref, e.version });
@@ -868,47 +900,34 @@ Meta_By_Changeset_Delta< Index > load_and_process_redactions(
         {
           loc_to_add.push_back(item);
           loc_to_del.push_back({ item, {} });
-          found_redacted.push_back(redactions);
+          to_redact.push_back(redactions);
         }
       }
       
       ++db_it;
     }
     
-    if (!found_redacted.empty())
+    std::sort(to_redact.begin(), to_redact.end());
+    std::sort(found_redacted.begin(), found_redacted.end());
+
+    auto it_found = found_redacted.begin();
+    for (auto& redactions : to_redact)
     {
-      std::sort(found_redacted.begin(), found_redacted.end());
-      auto cur = found_redacted.begin();
-      ++cur;
-      auto last = found_redacted.begin();
+      while (it_found != found_redacted.end() && it_found->get_changeset() < redactions.get_changeset())
+        ++it_found;
       
-      while (cur != found_redacted.end())
+      if (it_found != found_redacted.end() && it_found->get_changeset() == redactions.get_changeset())
       {
-        if (cur->get_changeset() == last->get_changeset())
-        {
-          while (cur != found_redacted.end() && cur->get_changeset() == last->get_changeset())
-          {
-            cur->move_refs_to(*last); 
-            ++cur;
-          }
-          loc_to_del.push_back({ *last, {} });
-          loc_to_add.push_back(*last);
-          if (cur == found_redacted.end())
-            break;
-          
-          last = cur;
-          ++cur;
-        }
-        else
-        {
-          ++last;
-          ++cur;
-        }
+        redactions.move_refs_to(*it_found);
+        loc_to_del.push_back(redactions);
+        loc_to_add.push_back(*it_found);
       }
+      else
+        loc_to_add.push_back(redactions);
     }
     
     std::sort(loc_to_del.begin(), loc_to_del.end());
-    std::sort(loc_to_add.begin(), loc_to_add.end());    
+    std::sort(loc_to_add.begin(), loc_to_add.end());
   }
   
   return result;
@@ -918,4 +937,12 @@ Meta_By_Changeset_Delta< Index > load_and_process_redactions(
 template
 Meta_By_Changeset_Delta< Uint32_Index > load_and_process_redactions(
     const std::vector< Data_By_Id< Node_Skeleton >::Simple_Ref >& refs, const std::vector< Uint32_Index >& req,
+    Transaction& transaction, const File_Properties& attic_meta_file_properties);
+template
+Meta_By_Changeset_Delta< Uint31_Index > load_and_process_redactions(
+    const std::vector< Data_By_Id< Way_Skeleton >::Simple_Ref >& refs, const std::vector< Uint31_Index >& req,
+    Transaction& transaction, const File_Properties& attic_meta_file_properties);
+template
+Meta_By_Changeset_Delta< Uint31_Index > load_and_process_redactions(
+    const std::vector< Data_By_Id< Relation_Skeleton >::Simple_Ref >& refs, const std::vector< Uint31_Index >& req,
     Transaction& transaction, const File_Properties& attic_meta_file_properties);

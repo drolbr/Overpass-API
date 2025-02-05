@@ -1303,6 +1303,17 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
   new_skeletons.clear();
   attic_skeletons.clear();
   new_attic_skeletons.clear();
+  
+  if (!new_data.redactions.empty())
+  {
+    Meta_By_Changeset_Delta< Uint31_Index > to_redact = load_and_process_redactions(
+        new_data.redactions, lookup_relevant_idxs< Uint31_Index, Relation_Skeleton >(
+            new_data.redactions, *transaction,
+            *osm_base_settings().RELATIONS, *attic_settings().RELATIONS, *attic_settings().RELATION_IDX_LIST),
+        *transaction, *attic_settings().RELATIONS_META);
+    update_elements(
+        to_redact.to_remove, to_redact.to_add, *transaction, *attic_settings().RELATIONS_META);    
+  }
 
   if (!external_transaction)
     delete transaction;

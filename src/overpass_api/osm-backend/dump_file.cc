@@ -100,7 +100,7 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<cset.get_changeset()<<' '
+                <<std::dec<<cset.get_changeset()<<' '<<cset.get_is_redacted()<<'\t'
                 <<i.ref<<' '<<i.version<<'\t'<<i.timestamp<<'\n';
         }
       }
@@ -204,7 +204,7 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<cset.get_changeset()<<' '
+                <<std::dec<<cset.get_changeset()<<' '<<cset.get_is_redacted()<<'\t'
                 <<i.ref<<' '<<i.version<<'\t'<<i.timestamp<<'\n';
         }
       }
@@ -343,7 +343,7 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<cset.get_changeset()<<' '
+                <<std::dec<<cset.get_changeset()<<' '<<cset.get_is_redacted()<<'\t'
                 <<i.ref<<' '<<i.version<<'\t'<<i.timestamp<<'\n';
         }
       }
@@ -519,7 +519,7 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<cset.get_changeset()<<' '
+                <<std::dec<<cset.get_changeset()<<' '<<cset.get_is_redacted()<<'\t'
                 <<i.ref<<' '<<i.version<<'\t'<<i.timestamp<<'\n';
         }
       }
@@ -647,8 +647,8 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<i.ref<<' '<<i.version<<'\t'
-                <<i.timestamp<<'\n';
+                <<std::dec<<cset.get_changeset()<<' '<<cset.get_is_redacted()<<'\t'
+                <<i.ref<<' '<<i.version<<'\t'<<i.timestamp<<'\n';
         }
       }
     }
@@ -764,8 +764,8 @@ int main(int argc, char* args[])
           const auto& cset = it.object();
           for (auto i : cset.get_refs())
             std::cout<<std::hex<<it.index().val()<<'\t'
-                <<std::dec<<i.ref<<' '<<i.version<<'\t'
-                <<i.timestamp<<'\n';
+                <<std::dec<<cset.get_changeset()<<' '<<cset.get_is_redacted()<<'\t'
+                <<i.ref<<' '<<i.version<<'\t'<<i.timestamp<<'\n';
         }
       }
     }
