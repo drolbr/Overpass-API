@@ -25,7 +25,7 @@
 #include <string>
 
 
-std::string iso_string(uint64 timestamp)
+std::string iso_string(uint64_t timestamp)
 {
   return Timestamp(timestamp).str();
 }

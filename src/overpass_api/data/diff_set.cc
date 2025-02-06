@@ -128,9 +128,12 @@ const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_
 
 
 void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Context > >& different_nodes,
-    uint32 output_mode, Output_Handler* output,
+    uint32 output_mode, Output_Handler::Diff_Printer* output,
     const std::map< uint32, std::string >& users, bool add_deletion_information)
 {
+  if (output == nullptr)
+    return;
+  
   for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator
       it = different_nodes.begin(); it != different_nodes.end(); ++it)
   {
@@ -188,7 +191,7 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
 
 
 void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context > >& different_ways,
-    uint32 output_mode, Output_Handler* output,
+    uint32 output_mode, Output_Handler::Diff_Printer* output,
     const std::map< uint32, std::string >& users, bool add_deletion_information)
 {
   for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::const_iterator it = different_ways.begin();
@@ -255,7 +258,7 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
 
 void print_relations(
     const std::vector< std::pair< Relation_With_Context, Relation_With_Context > >& different_relations,
-    uint32 output_mode, Output_Handler* output,
+    uint32 output_mode, Output_Handler::Diff_Printer* output,
     const std::map< uint32, std::string >& users, const std::map< uint32, std::string >& roles,
     bool add_deletion_information)
 {
@@ -342,9 +345,15 @@ void print_diff_set(const Diff_Set& result,
     const std::map< uint32, std::string >& users, const std::map< uint32, std::string >& roles,
     bool add_deletion_information)
 {
-  print_nodes(result.different_nodes, output_mode, output, users, add_deletion_information);
-  print_ways(result.different_ways, output_mode, output, users, add_deletion_information);
-  print_relations(result.different_relations, output_mode, output, users, roles, add_deletion_information);
+  auto diff_printer = output->get_diff_printer();
+  if (diff_printer)
+  {
+    print_nodes(result.different_nodes, output_mode, diff_printer, users, add_deletion_information);
+    print_ways(result.different_ways, output_mode, diff_printer, users, add_deletion_information);
+    print_relations(result.different_relations, output_mode, diff_printer, users, roles, add_deletion_information);
+  }
+  else
+    output->display_error("This output format does not support diff output!");
 
   print_deriveds(result.lhs_deriveds, result.rhs_deriveds, output_mode, output);
 }

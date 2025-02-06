@@ -20,9 +20,11 @@
 #define DE__OSM3S___OVERPASS_API__FRONTEND__WEB_OUTPUT_H
 
 
-#include "../core/datatypes.h"
+#include "../core/error_output.h"
 #include "basic_formats.h"
-#include "output_handler.h"
+
+
+class Output_Handler;
 
 
 struct Web_Output : public Error_Output

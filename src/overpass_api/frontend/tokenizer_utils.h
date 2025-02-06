@@ -20,7 +20,6 @@
 #define DE__OSM3S___OVERPASS_API__FRONTEND__TOKENIZER_UTILS_H
 
 #include "decode_text.h"
-#include "../core/datatypes.h"
 #include "../../expat/map_ql_input.h"
 
 

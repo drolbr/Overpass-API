@@ -21,7 +21,7 @@
 
 
 #include "../../expat/map_ql_input.h"
-#include "../core/datatypes.h"
+#include "../core/error_output.h"
 #include "output_handler.h"
 
 

@@ -18,6 +18,7 @@
 
 #include "resource_manager.h"
 #include "scripting_core.h"
+#include "../frontend/output_handler.h"
 #include "../frontend/web_output.h"
 #include "../frontend/user_interface.h"
 #include "../statements/osm_script.h"

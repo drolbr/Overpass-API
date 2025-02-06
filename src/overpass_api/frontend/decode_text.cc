@@ -16,6 +16,7 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../core/error_output.h"
 #include "decode_text.h"
 
 

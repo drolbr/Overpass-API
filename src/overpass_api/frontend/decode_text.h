@@ -20,9 +20,10 @@
 #define DE__OSM3S___OVERPASS_API__FRONTEND__DECODE_TEXT_H
 
 
-#include "../core/datatypes.h"
 #include <string>
 
+
+class Error_Output;
 
 std::string decode_to_utf8(const std::string& token, std::string::size_type& pos, Error_Output* error_output);
 

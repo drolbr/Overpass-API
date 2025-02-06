@@ -416,8 +416,9 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
     }
     else
     {
-      parsed_query.set_output_handler(
-          format_parser->new_output_handler(parsed_query.get_input_params(), &token, error_output));
+      if (!parsed_query.get_output_handler())
+        parsed_query.set_output_handler(
+            format_parser->new_output_handler(parsed_query.get_input_params(), &token, error_output));
       if (parsed_query.get_output_handler())
       {
         result.push_back("output-config");

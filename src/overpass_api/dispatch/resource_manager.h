@@ -28,6 +28,7 @@
 #include "../data/user_data_cache.h"
 
 
+class Error_Output;
 class Statement;
 
 

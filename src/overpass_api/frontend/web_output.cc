@@ -18,6 +18,7 @@
 
 #include "../../expat/escape_xml.h"
 #include "output.h"
+#include "output_handler.h"
 #include "web_output.h"
 
 #include <iomanip>

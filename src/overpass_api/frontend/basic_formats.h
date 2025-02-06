@@ -20,10 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__FRONTEND__BASIC_FORMATS_H
 
 
-#include "../core/datatypes.h"
-
-
-std::string iso_string(uint64 timestamp);
+std::string iso_string(uint64_t timestamp);
 
 
 std::string copyright_notice(const std::string& db_dir);

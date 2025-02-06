@@ -17,7 +17,8 @@
  */
 
 #include "../core/settings.h"
-#include "../frontend/tokenizer_utils.h"
+#include "../frontend/decode_text.h"
+#include "../frontend/output_handler.h"
 #include "../frontend/web_output.h"
 #include "../../template_db/dispatcher_client.h"
 
@@ -39,42 +40,30 @@ public:
 
   virtual void print_global_bbox(const Bbox_Double& bbox) {}
 
-  virtual void print_item(const Node_Skeleton& skel,
+  void print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
-      const Feature_Action& action = keep,
-      const Node_Skeleton* new_skel = 0,
-      const Opaque_Geometry* new_geometry = 0,
-      const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0) {}
+      const Feature_Action& action = keep) override {}
 
-  virtual void print_item(const Way_Skeleton& skel,
+  void print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
-      const Feature_Action& action = keep,
-      const Way_Skeleton* new_skel = 0,
-      const Opaque_Geometry* new_geometry = 0,
-      const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0) {}
+      const Feature_Action& action = keep) override {}
 
-  virtual void print_item(const Relation_Skeleton& skel,
+  void print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
       const std::map< uint32, std::string >* roles,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
-      const Feature_Action& action = keep,
-      const Relation_Skeleton* new_skel = 0,
-      const Opaque_Geometry* new_geometry = 0,
-      const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0) {}
+      const Feature_Action& action = keep) override {}
 
   virtual void print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
@@ -121,7 +110,7 @@ int main(int argc, char *argv[])
       std::string timestamp;
       {
         std::ifstream version((dispatcher_client.get_db_dir() + "osm_base_version").c_str());
-        getline(version, timestamp);
+        std::getline(version, timestamp);
         timestamp = decode_json(timestamp, 0, 0);
       }
       error_output.write_payload_header(dispatcher_client.get_db_dir(), timestamp, "", true);

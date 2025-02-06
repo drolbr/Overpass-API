@@ -16,7 +16,10 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../core/error_output.h"
 #include "tokenizer_utils.h"
+
+#include <map>
 
 
 std::string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,

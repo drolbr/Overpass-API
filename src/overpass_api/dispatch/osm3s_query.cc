@@ -20,6 +20,7 @@
 #include "../../template_db/dispatcher.h"
 #include "../frontend/console_output.h"
 #include "../frontend/user_interface.h"
+#include "../frontend/output_handler.h"
 #include "../frontend/web_output.h"
 #include "../osm-backend/clone_database.h"
 #include "../statements/osm_script.h"

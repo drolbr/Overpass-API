@@ -19,7 +19,7 @@
 #ifndef DE__OSM3S___OVERPASS_API__FRONTEND__CONSOLE_OUTPUT_H
 #define DE__OSM3S___OVERPASS_API__FRONTEND__CONSOLE_OUTPUT_H
 
-#include "../core/datatypes.h"
+#include "../core/error_output.h"
 
 
 struct Console_Output : public Error_Output
@@ -52,5 +52,6 @@ private:
   bool static_errors;
   uint log_level;
 };
+
 
 #endif

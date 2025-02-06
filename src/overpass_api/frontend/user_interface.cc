@@ -35,7 +35,7 @@
 namespace
 {
   std::string autocomplete
-      (std::string& input, Error_Output* error_output, uint32 max_input_size)
+      (std::string& input, Error_Output* error_output, uint32_t max_input_size)
   {
     unsigned int pos(0), line_number(1);
     while ((pos < input.size()) && (isspace(input[pos])))
@@ -107,7 +107,7 @@ namespace
 }
 
 std::map< std::string, std::string > get_xml_cgi(
-    Error_Output* error_output, uint32 max_input_size,
+    Error_Output* error_output, uint32_t max_input_size,
     Http_Methods& http_method, std::string& allow_header, bool& has_origin)
 {
   // Check for various HTTP headers
@@ -246,7 +246,7 @@ std::map< std::string, std::string > get_xml_cgi(
 }
 
 
-std::string get_xml_console(Error_Output* error_output, uint32 max_input_size)
+std::string get_xml_console(Error_Output* error_output, uint32_t max_input_size)
 {
   if (error_output)
     error_output->add_encoding_remark("Please enter your query and terminate it with CTRL+D.");
@@ -269,14 +269,14 @@ std::string probe_client_identifier()
 }
 
 
-uint32 parse_ipv4_address(const std::string ip_addr)
+uint32_t parse_ipv4_address(const std::string ip_addr)
 {
   if (ip_addr == "")
     return 0;
 
   std::string::size_type pos = ip_addr.find(".");
   std::string::size_type old_pos = 0;
-  uint32 client_token = 0;
+  uint32_t client_token = 0;
 
   // Try IPv4 address format
   while (pos != std::string::npos)
@@ -311,9 +311,9 @@ int decode_hex(std::string representation)
 }
 
 
-std::vector< uint16 > parse_short_ipv6_address(std::string ip_addr)
+std::vector< uint16_t > parse_short_ipv6_address(std::string ip_addr)
 {
-  std::vector< uint16 > ipv6_address;
+  std::vector< uint16_t > ipv6_address;
 
   // Try shortened IPv6 address format
   std::string::size_type upper_end = ip_addr.find("::");
@@ -328,7 +328,7 @@ std::vector< uint16 > parse_short_ipv6_address(std::string ip_addr)
   }
   ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos, upper_end - old_pos).c_str()));
 
-  std::vector< uint16 > lower_ipv6_address;
+  std::vector< uint16_t > lower_ipv6_address;
   old_pos = upper_end + 2;
   pos = ip_addr.find(":", old_pos);
   while (pos != std::string::npos)
@@ -340,16 +340,16 @@ std::vector< uint16 > parse_short_ipv6_address(std::string ip_addr)
   lower_ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos).c_str()));
 
   ipv6_address.resize(8, 0);
-  for (std::vector< uint16 >::size_type i = 0; i < lower_ipv6_address.size(); ++i)
+  for (std::vector< uint16_t >::size_type i = 0; i < lower_ipv6_address.size(); ++i)
     ipv6_address[i + 8 - lower_ipv6_address.size()] = lower_ipv6_address[i];
 
   return ipv6_address;
 }
 
 
-std::vector< uint16 > parse_full_ipv6_address(std::string ip_addr)
+std::vector< uint16_t > parse_full_ipv6_address(std::string ip_addr)
 {
-  std::vector< uint16 > ipv6_address;
+  std::vector< uint16_t > ipv6_address;
 
   std::string::size_type pos = ip_addr.find(":");
   std::string::size_type old_pos = 0;
@@ -367,7 +367,7 @@ std::vector< uint16 > parse_full_ipv6_address(std::string ip_addr)
 }
 
 
-uint32 probe_client_token()
+uint32_t probe_client_token()
 {
   std::string ip_addr = probe_client_identifier();
   if (ip_addr == "")
@@ -376,7 +376,7 @@ uint32 probe_client_token()
   if (ip_addr.find(".") != std::string::npos)
     return parse_ipv4_address(ip_addr);
 
-  std::vector< uint16 > ipv6_address = (ip_addr.find("::") == std::string::npos ?
+  std::vector< uint16_t > ipv6_address = (ip_addr.find("::") == std::string::npos ?
       parse_full_ipv6_address(ip_addr) :
       parse_short_ipv6_address(ip_addr));
 

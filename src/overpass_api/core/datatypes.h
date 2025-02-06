@@ -336,37 +336,6 @@ struct Set
 };
 
 
-struct Error_Output
-{
-  virtual void add_encoding_error(const std::string& error) = 0;
-  virtual void add_parse_error(const std::string& error, int line_number) = 0;
-  virtual void add_static_error(const std::string& error, int line_number) = 0;
-  // void add_sanity_error(const std::string& error);
-
-  virtual void add_encoding_remark(const std::string& error) = 0;
-  virtual void add_parse_remark(const std::string& error, int line_number) = 0;
-  virtual void add_static_remark(const std::string& error, int line_number) = 0;
-  // void add_sanity_remark(const std::string& error);
-
-  virtual void runtime_error(const std::string& error) = 0;
-  virtual void runtime_remark(const std::string& error) = 0;
-
-  virtual void display_statement_progress
-    (uint timer, const std::string& name, int progress, int line_number,
-     const std::vector< std::pair< uint, uint > >& stack) = 0;
-
-  virtual bool display_encoding_errors() = 0;
-  virtual bool display_parse_errors() = 0;
-  virtual bool display_static_errors() = 0;
-
-  static const uint QUIET = 1;
-  static const uint CONCISE = 2;
-  static const uint PROGRESS = 3;
-  static const uint ASSISTING = 4;
-  static const uint VERBOSE = 5;
-};
-
-
 class Area_Usage_Listener
 {
   public:

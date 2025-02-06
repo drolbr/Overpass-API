@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "../core/datatypes.h"
+#include "../core/error_output.h"
 #include "../core/parsed_query.h"
 #include "../core/settings.h"
 #include "../data/constraints.h"
