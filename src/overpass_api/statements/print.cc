@@ -259,7 +259,7 @@ Extra_Data::~Extra_Data()
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Node_Skeleton& skel,
+void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Node_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0)
 {
@@ -268,7 +268,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Way_Skeleton& skel,
+void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Way_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0)
 {
@@ -279,7 +279,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0)
 {
@@ -290,7 +290,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Relation_Skeleton& skel,
+void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Relation_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0)
 {
@@ -301,7 +301,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0)
 {
@@ -312,7 +312,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Area_Skeleton& skel,
+void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Area_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0)
 {
@@ -321,7 +321,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Derived_Structure& skel,
+void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Derived_Structure& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0)
 {
@@ -334,7 +334,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
 
 template< class TIndex, class TObject >
 void quadtile_
-    (const std::map< TIndex, std::vector< TObject > >& items, Output_Handler& output,
+    (const std::map< TIndex, std::vector< TObject > >& items, Output_Handler::Data_Printer& output,
      Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   typename std::map< TIndex, std::vector< TObject > >::const_iterator
@@ -357,7 +357,7 @@ void quadtile_
 template< class Index, class Object >
 void tags_quadtile_
     (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
-     Output_Handler& output,
+     Output_Handler::Data_Printer& output,
      Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   Tag_Store< Index, Object > tag_store(*rman.get_transaction());
@@ -391,7 +391,7 @@ void tags_quadtile_
 template< class Index, class Object >
 void tags_quadtile_attic_
     (Extra_Data& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
-     Output_Handler& output,
+     Output_Handler::Data_Printer& output,
      Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   Tag_Store< Index, Object > tag_store(transaction);
@@ -493,7 +493,7 @@ std::vector< Maybe_Attic_Ref< Index, Object > > collect_items_by_id(
 
 template< class Index, class Object >
 void by_id
-  (const std::map< Index, std::vector< Object > >& items, Output_Handler& output,
+  (const std::map< Index, std::vector< Object > >& items, Output_Handler::Data_Printer& output,
    Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
@@ -512,7 +512,7 @@ template< class Index, class Object >
 void by_id
   (const std::map< Index, std::vector< Object > >& items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-   Output_Handler& output,
+   Output_Handler::Data_Printer& output,
    Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(items, attic_items);
@@ -596,7 +596,7 @@ typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
 template< class Index, class Object >
 void tags_by_id
   (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
-   uint32 FLUSH_SIZE, Output_Handler& output,
+   uint32 FLUSH_SIZE, Output_Handler::Data_Printer& output,
    Resource_Manager& rman, Meta_Collector< Index, typename Object::Id_Type >* meta_printer,
    Tag_Store< Index, Object >& tag_store, uint32 limit, uint32& element_count)
 {
@@ -647,7 +647,7 @@ template< class Index, class Object >
 void tags_by_id_attic
   (const std::map< Index, std::vector< Object > >& current_items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-   Extra_Data& extra_data, uint32 FLUSH_SIZE, Output_Handler& output,
+   Extra_Data& extra_data, uint32 FLUSH_SIZE, Output_Handler::Data_Printer& output,
    Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(current_items, attic_items);
@@ -725,7 +725,7 @@ template< class Index, class Object >
 void tags_by_id
   (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-   unsigned int mode, uint32 FLUSH_SIZE, Output_Handler& output, Resource_Manager& rman,
+   unsigned int mode, uint32 FLUSH_SIZE, Output_Handler::Data_Printer& output, Resource_Manager& rman,
    uint32 limit, uint32& element_count)
 {
   if (mode & Output_Mode::META)
@@ -817,6 +817,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 
   Extra_Data extra_data(rman, *this, *output_items, mode, feature_action, south, north, west, east);
   Output_Handler& output_handler = *dynamic_cast< Output_Handler* >(rman.get_global_settings().get_output_handler());
+  auto& data_printer = *output_handler.get_data_printer();
   uint32 element_count = 0;
 
   if (order == order_by_id)
@@ -824,35 +825,35 @@ void Print_Statement::execute(Resource_Manager& rman)
     if (mode & Output_Mode::TAGS)
     {
       tags_by_id(extra_data, output_items->nodes, output_items->attic_nodes, mode, NODE_FLUSH_SIZE,
-		 output_handler, rman, limit, element_count);
+		 data_printer, rman, limit, element_count);
       tags_by_id(extra_data, output_items->ways, output_items->attic_ways, mode, WAY_FLUSH_SIZE,
-		 output_handler, rman, limit, element_count);
+		 data_printer, rman, limit, element_count);
       tags_by_id(extra_data, output_items->relations, output_items->attic_relations, mode, RELATION_FLUSH_SIZE,
-		 output_handler, rman, limit, element_count);
+		 data_printer, rman, limit, element_count);
 
       if (rman.get_area_transaction())
       {
 	Tag_Store< Uint31_Index, Area_Skeleton > tag_store(*rman.get_transaction());
-	tags_by_id(extra_data, output_items->areas, AREA_FLUSH_SIZE, output_handler, rman,
+	tags_by_id(extra_data, output_items->areas, AREA_FLUSH_SIZE, data_printer, rman,
 		   (Meta_Collector< Uint31_Index, Area_Skeleton::Id_Type >*)0,
 		   tag_store, limit, element_count);
       }
 
       Tag_Store< Uint31_Index, Derived_Structure > tag_store;
-      tags_by_id(extra_data, output_items->deriveds, std::numeric_limits< uint32 >::max(), output_handler, rman,
+      tags_by_id(extra_data, output_items->deriveds, std::numeric_limits< uint32 >::max(), data_printer, rman,
           (Meta_Collector< Uint31_Index, Derived_Structure::Id_Type >*)0, tag_store, limit, element_count);
     }
     else
     {
       by_id(output_items->nodes, output_items->attic_nodes,
-            output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+            data_printer, *rman.get_transaction(), extra_data, limit, element_count);
       by_id(output_items->ways, output_items->attic_ways,
-            output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+            data_printer, *rman.get_transaction(), extra_data, limit, element_count);
       by_id(output_items->relations, output_items->attic_relations,
-            output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+            data_printer, *rman.get_transaction(), extra_data, limit, element_count);
       if (rman.get_area_transaction())
-        by_id(output_items->areas, output_handler, *rman.get_area_transaction(), extra_data, limit, element_count);
-      by_id(output_items->deriveds, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+        by_id(output_items->areas, data_printer, *rman.get_area_transaction(), extra_data, limit, element_count);
+      by_id(output_items->deriveds, data_printer, *rman.get_transaction(), extra_data, limit, element_count);
     }
   }
   else
@@ -860,48 +861,48 @@ void Print_Statement::execute(Resource_Manager& rman)
     if (mode & Output_Mode::TAGS)
     {
       tags_quadtile_(extra_data, output_items->nodes,
-		    output_handler, rman, *rman.get_transaction(), limit, element_count);
+		    data_printer, rman, *rman.get_transaction(), limit, element_count);
 
       if (rman.get_desired_timestamp() != NOW)
         tags_quadtile_attic_(extra_data, output_items->attic_nodes,
-                      output_handler, rman, *rman.get_transaction(), limit, element_count);
+                      data_printer, rman, *rman.get_transaction(), limit, element_count);
 
       tags_quadtile_(extra_data, output_items->ways,
-		    output_handler, rman, *rman.get_transaction(), limit, element_count);
+		    data_printer, rman, *rman.get_transaction(), limit, element_count);
 
       if (rman.get_desired_timestamp() != NOW)
         tags_quadtile_attic_(extra_data, output_items->attic_ways,
-                      output_handler, rman, *rman.get_transaction(), limit, element_count);
+                      data_printer, rman, *rman.get_transaction(), limit, element_count);
 
       tags_quadtile_(extra_data, output_items->relations,
-		    output_handler, rman, *rman.get_transaction(), limit, element_count);
+		    data_printer, rman, *rman.get_transaction(), limit, element_count);
 
       if (rman.get_desired_timestamp() != NOW)
         tags_quadtile_attic_(extra_data, output_items->attic_relations,
-                      output_handler, rman, *rman.get_transaction(), limit, element_count);
+                      data_printer, rman, *rman.get_transaction(), limit, element_count);
 
       if (rman.get_area_transaction())
         tags_quadtile_(extra_data, output_items->areas,
-		      output_handler, rman, *rman.get_area_transaction(), limit, element_count);
+		      data_printer, rman, *rman.get_area_transaction(), limit, element_count);
 
       tags_quadtile_(extra_data, output_items->deriveds,
-                    output_handler, rman, *rman.get_transaction(), limit, element_count);
+                    data_printer, rman, *rman.get_transaction(), limit, element_count);
     }
     else
     {
-      quadtile_(output_items->nodes, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
-      quadtile_(output_items->attic_nodes, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->nodes, data_printer, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->attic_nodes, data_printer, *rman.get_transaction(), extra_data, limit, element_count);
 
-      quadtile_(output_items->ways, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
-      quadtile_(output_items->attic_ways, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->ways, data_printer, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->attic_ways, data_printer, *rman.get_transaction(), extra_data, limit, element_count);
 
-      quadtile_(output_items->relations, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
-      quadtile_(output_items->attic_relations, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->relations, data_printer, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->attic_relations, data_printer, *rman.get_transaction(), extra_data, limit, element_count);
 
       if (rman.get_area_transaction())
-        quadtile_(output_items->areas, output_handler, *rman.get_area_transaction(), extra_data, limit, element_count);
+        quadtile_(output_items->areas, data_printer, *rman.get_area_transaction(), extra_data, limit, element_count);
 
-      quadtile_(output_items->deriveds, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->deriveds, data_printer, *rman.get_transaction(), extra_data, limit, element_count);
     }
   }
 

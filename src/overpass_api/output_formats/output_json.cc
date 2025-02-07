@@ -104,7 +104,7 @@ void print_tags(const std::vector< std::pair< std::string, std::string > >* tags
 }
 
 
-void Output_JSON::print_item(const Node_Skeleton& skel,
+void Output_JSON::Data_Printer::print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
@@ -146,7 +146,7 @@ void print_bounds(const Opaque_Geometry& geometry, Output_Mode mode)
 }
 
 
-void Output_JSON::print_item(const Way_Skeleton& skel,
+void Output_JSON::Data_Printer::print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
@@ -199,7 +199,7 @@ void Output_JSON::print_item(const Way_Skeleton& skel,
 }
 
 
-void Output_JSON::print_item(const Relation_Skeleton& skel,
+void Output_JSON::Data_Printer::print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
@@ -373,7 +373,7 @@ void print_geometry(const Opaque_Geometry& geometry, Output_Mode mode)
 }
 
 
-void Output_JSON::print_item(const Derived_Skeleton& skel,
+void Output_JSON::Data_Printer::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode,

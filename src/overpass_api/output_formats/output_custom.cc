@@ -33,38 +33,41 @@ bool Output_Custom::write_http_headers()
 void Output_Custom::write_payload_header
     (const std::string& db_dir_, const std::string& timestamp_, const std::string& area_timestamp_)
 {
-  db_dir = db_dir_;
+  data_printer.db_dir = db_dir_;
   timestamp = timestamp_;
   area_timestamp = area_timestamp_;
 }
 
 
-std::string process_template(const std::string& raw_template, unsigned int count)
+namespace
 {
-  std::ostringstream result;
-  std::string::size_type old_pos = 0;
-  std::string::size_type new_pos = 0;
-
-  new_pos = raw_template.find("{{{", old_pos);
-  while (new_pos != std::string::npos)
+  std::string process_template(const std::string& raw_template, unsigned int count)
   {
-    result<<raw_template.substr(old_pos, new_pos - old_pos);
+    std::ostringstream result;
+    std::string::size_type old_pos = 0;
+    std::string::size_type new_pos = 0;
 
-    if (raw_template.substr(new_pos + 3, 8) == "count}}}")
-    {
-      result<<count;
-      old_pos = new_pos + 11;
-    }
-    else
-    {
-      result<<"{{{";
-      old_pos = new_pos + 3;
-    }
     new_pos = raw_template.find("{{{", old_pos);
-  }
-  result<<raw_template.substr(old_pos);
+    while (new_pos != std::string::npos)
+    {
+      result<<raw_template.substr(old_pos, new_pos - old_pos);
 
-  return result.str();
+      if (raw_template.substr(new_pos + 3, 8) == "count}}}")
+      {
+        result<<count;
+        old_pos = new_pos + 11;
+      }
+      else
+      {
+        result<<"{{{";
+        old_pos = new_pos + 3;
+      }
+      new_pos = raw_template.find("{{{", old_pos);
+    }
+    result<<raw_template.substr(old_pos);
+
+    return result.str();
+  }
 }
 
 
@@ -106,7 +109,7 @@ std::string::size_type find_block_end(std::string data, std::string::size_type p
 }
 
 
-void Output_Custom::set_output_templates()
+void Output_Custom::Data_Printer::set_output_templates()
 {
   std::string data;
 
@@ -536,30 +539,32 @@ std::string process_template(const std::string& raw_template, unsigned long long
 
 void Output_Custom::write_footer()
 {
-  if (count == 0 && redirect)
+  if (data_printer.count == 0 && redirect)
   {
-    ::write_html_header(db_dir, timestamp, area_timestamp, 200, false, true);
+    ::write_html_header(data_printer.db_dir, timestamp, area_timestamp, 200, false, true);
     std::cout<<"<p>No results found.</p>\n";
     std::cout<<"\n</body>\n</html>\n";
   }
-  else if (count == 1 && redirect)
+  else if (data_printer.count == 1 && redirect)
   {
     std::cout<<"Status: 302 Moved\n";
     std::cout<<"Location: "
-        <<process_template(url, first_id, first_type, 100.0, 200.0, 0, 17, 0, 0, 0, 0, 0)<<"\n\n";
+        <<process_template(
+            url, data_printer.first_id, data_printer.first_type, 100.0, 200.0, 0, 17, 0, 0, 0, 0, 0)<<"\n\n";
   }
   else
   {
-    ::write_html_header(db_dir, timestamp, area_timestamp, 200, template_contains_js, true);
-    std::cout<<process_template(header, count);
+    ::write_html_header(
+        data_printer.db_dir, timestamp, area_timestamp, 200, data_printer.template_contains_js, true);
+    std::cout<<process_template(data_printer.header, data_printer.count);
     std::cout<<'\n';
-    std::cout<<output;
+    std::cout<<data_printer.output;
     std::cout<<"\n</body>\n</html>\n";
   }
 }
 
 
-void Output_Custom::print_item(const Node_Skeleton& skel,
+void Output_Custom::Data_Printer::print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
@@ -583,6 +588,7 @@ void Output_Custom::print_item(const Node_Skeleton& skel,
     lat = geometry.center_lat();
     lon = geometry.center_lon();
   }
+
   output += process_template(node_template, skel.id.val(), "node", lat, lon, 100.0, 0, 17, tags, 0, 0, 0);
 }
 
@@ -633,7 +639,7 @@ unsigned int detect_zoom(const Opaque_Geometry& geometry)
 }
 
 
-void Output_Custom::print_item(const Way_Skeleton& skel,
+void Output_Custom::Data_Printer::print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
@@ -667,7 +673,7 @@ void Output_Custom::print_item(const Way_Skeleton& skel,
 }
 
 
-void Output_Custom::print_item(const Relation_Skeleton& skel,
+void Output_Custom::Data_Printer::print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
@@ -702,7 +708,7 @@ void Output_Custom::print_item(const Relation_Skeleton& skel,
 }
 
 
-void Output_Custom::print_item(const Derived_Skeleton& skel,
+void Output_Custom::Data_Printer::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode,

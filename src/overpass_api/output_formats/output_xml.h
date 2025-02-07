@@ -38,46 +38,55 @@ public:
   void display_remark(const std::string& text) override;
   void display_error(const std::string& text) override;
 
+  Data_Printer* get_data_printer() override { return &data_printer; }
   bool supports_diff() const override { return true; }
   Diff_Printer* get_diff_printer() override { return &diff_printer; }
-
-  void print_global_bbox(const Bbox_Double& bbox) override;
-
-  void print_item(const Node_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  void print_item(const Way_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  void print_item(const Relation_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-      const std::map< uint32, std::string >* roles,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  void print_item(const Derived_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
       
 private:
+  struct Data_Printer : Output_Handler::Data_Printer
+  {
+    virtual void print_global_bbox(const Bbox_Double& bbox) override;
+
+    virtual void print_item(
+        const Node_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    virtual void print_item(
+        const Way_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    virtual void print_item(
+        const Relation_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+        const std::map< uint32, std::string >* roles,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    void print_item(
+        const Derived_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+  };
+
   struct Diff_Printer : Output_Handler::Diff_Printer
   {
-    void print_item(const Node_Skeleton& skel,
+    void print_item(
+        const Node_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
         const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
@@ -89,7 +98,8 @@ private:
         const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
         const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0) override;
 
-    void print_item(const Way_Skeleton& skel,
+    void print_item(
+        const Way_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
         const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
@@ -101,7 +111,8 @@ private:
         const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
         const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0) override;
 
-    void print_item(const Relation_Skeleton& skel,
+    void print_item(
+        const Relation_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
         const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
@@ -114,7 +125,8 @@ private:
         const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
         const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0) override;
   };
-  
+
+  Data_Printer data_printer;
   Diff_Printer diff_printer;
 };
 

@@ -39,7 +39,7 @@ struct Csv_Settings
 class Output_CSV : public Output_Handler
 {
 public:
-  Output_CSV(Csv_Settings csv_settings_) : csv_settings(csv_settings_) {}
+  Output_CSV(Csv_Settings csv_settings) : data_printer(csv_settings) {}
 
   virtual bool write_http_headers();
   virtual void write_payload_header(const std::string& db_dir,
@@ -48,43 +48,56 @@ public:
   virtual void display_remark(const std::string& text);
   virtual void display_error(const std::string& text);
 
-  virtual void print_global_bbox(const Bbox_Double& bbox) {}
-
   virtual std::string dump_config() const;
 
-  void print_item(const Node_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  void print_item(const Way_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  void print_item(const Relation_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-      const std::map< uint32, std::string >* roles,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  virtual void print_item(const Derived_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode,
-      const Feature_Action& action = keep);
+  Data_Printer* get_data_printer() override { return &data_printer; }
 
 private:
-  Csv_Settings csv_settings;
+  struct Data_Printer : Output_Handler::Data_Printer
+  {
+    Data_Printer(const Csv_Settings& csv_settings_) : csv_settings(csv_settings_) {}
+    
+    virtual void print_global_bbox(const Bbox_Double& bbox) override {}
+
+    virtual void print_item(
+        const Node_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    virtual void print_item(
+        const Way_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    virtual void print_item(
+        const Relation_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+        const std::map< uint32, std::string >* roles,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    void print_item(
+        const Derived_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    Csv_Settings csv_settings;
+  };
+  
+  Data_Printer data_printer;
 };
 
 

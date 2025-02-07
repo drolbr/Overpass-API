@@ -244,7 +244,11 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   {
     auto handler = dynamic_cast< Output_Handler* >(rman.get_global_settings().get_output_handler());
     if (handler)
-      handler->print_global_bbox(rman.get_global_settings().get_global_bbox_limitation());
+    {
+      auto data_printer = handler->get_data_printer();
+      if (data_printer)
+        data_printer->print_global_bbox(rman.get_global_settings().get_global_bbox_limitation());
+    }
   }
 
   if (comparison_timestamp > 0)

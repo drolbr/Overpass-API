@@ -326,7 +326,7 @@ void print_relations(
 
 void print_deriveds(
     const std::vector< Derived_Structure >& lhs_deriveds, const std::vector< Derived_Structure >& rhs_deriveds,
-    uint32 output_mode, Output_Handler* output)
+    uint32 output_mode, Output_Handler::Data_Printer* output)
 {
   Null_Geometry null_geom;
 
@@ -355,5 +355,7 @@ void print_diff_set(const Diff_Set& result,
   else
     output->display_error("This output format does not support diff output!");
 
-  print_deriveds(result.lhs_deriveds, result.rhs_deriveds, output_mode, output);
+  auto data_printer = output->get_data_printer();
+  if (data_printer)
+    print_deriveds(result.lhs_deriveds, result.rhs_deriveds, output_mode, data_printer);
 }

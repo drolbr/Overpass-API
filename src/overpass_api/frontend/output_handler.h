@@ -54,10 +54,51 @@ class Output_Handler : public Output_Handler_Params
 {
 public:  
   enum Feature_Action { keep, show_from, show_to, modify, push_away, pull_in, erase, create };
+  
+  struct Data_Printer
+  {
+    virtual void print_global_bbox(const Bbox_Double& bbox) = 0;
+
+    virtual void print_item(
+        const Node_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) = 0;
+
+    virtual void print_item(
+        const Way_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) = 0;
+
+    virtual void print_item(
+        const Relation_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+        const std::map< uint32, std::string >* roles,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) = 0;
+
+    virtual void print_item(
+        const Derived_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        Output_Mode mode,
+        const Feature_Action& action = keep) = 0;
+  };
 
   struct Diff_Printer
   {
-    virtual void print_item(const Node_Skeleton& skel,
+    virtual void print_item(
+        const Node_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
         const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
@@ -69,7 +110,8 @@ public:
         const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
         const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0) = 0;
 
-    virtual void print_item(const Way_Skeleton& skel,
+    virtual void print_item(
+        const Way_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
         const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
@@ -81,7 +123,8 @@ public:
         const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
         const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0) = 0;
 
-    virtual void print_item(const Relation_Skeleton& skel,
+    virtual void print_item(
+        const Relation_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
         const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
@@ -104,42 +147,9 @@ public:
   virtual void display_remark(const std::string& text) = 0;
   virtual void display_error(const std::string& text) = 0;
 
+  virtual Data_Printer* get_data_printer() = 0;
   virtual bool supports_diff() const { return false; }
-
-  virtual void print_global_bbox(const Bbox_Double& bbox) = 0;
-  
   virtual Diff_Printer* get_diff_printer() { return nullptr; }
-
-  virtual void print_item(const Node_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) = 0;
-
-  virtual void print_item(const Way_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) = 0;
-
-  virtual void print_item(const Relation_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-      const std::map< uint32, std::string >* roles,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) = 0;
-
-  virtual void print_item(const Derived_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode,
-      const Feature_Action& action = keep) = 0;
 
   virtual std::string dump_config() const { return ""; }
 

@@ -31,7 +31,7 @@
 class Output_JSON : public Output_Handler
 {
 public:
-  Output_JSON(const std::string& padding_) : padding(padding_), first_elem(true) {}
+  Output_JSON(const std::string& padding_) : padding(padding_) {}
 
   virtual bool write_http_headers();
   virtual void write_payload_header(const std::string& db_dir,
@@ -40,43 +40,55 @@ public:
   virtual void display_remark(const std::string& text);
   virtual void display_error(const std::string& text);
 
-  virtual void print_global_bbox(const Bbox_Double& bbox) {}
-
-  void print_item(const Node_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  void print_item(const Way_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  void print_item(const Relation_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-      const std::map< uint32, std::string >* roles,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action = keep) override;
-
-  virtual void print_item(const Derived_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode,
-      const Feature_Action& action = keep);
+  Data_Printer* get_data_printer() override { return &data_printer; }
 
 private:
+  struct Data_Printer : Output_Handler::Data_Printer
+  {
+    virtual void print_global_bbox(const Bbox_Double& bbox) override {}
+
+    virtual void print_item(
+        const Node_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    virtual void print_item(
+        const Way_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    virtual void print_item(
+        const Relation_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+        const std::map< uint32, std::string >* roles,
+        const std::map< uint32, std::string >* users,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+
+    void print_item(
+        const Derived_Skeleton& skel,
+        const Opaque_Geometry& geometry,
+        const std::vector< std::pair< std::string, std::string > >* tags,
+        Output_Mode mode,
+        const Feature_Action& action = keep) override;
+        
+  private:
+    mutable bool first_elem = true;
+  };
+
+  Data_Printer data_printer;
   std::string padding;
   std::string messages;
-  mutable bool first_elem;
 };
 
 

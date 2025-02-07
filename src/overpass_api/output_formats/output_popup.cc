@@ -238,14 +238,14 @@ void Output_Popup::display_error(const std::string& text)
 
 void Output_Popup::write_footer()
 {
-  for (std::vector< Category_Filter* >::iterator it = categories.begin(); it != categories.end(); ++it)
-    std::cout<<(*it)->result();
+  for (auto & i : data_printer.categories)
+    std::cout<<i->result();
 
   std::cout<<"\n</body>\n</html>\n";
 }
 
 
-void Output_Popup::print_item(const Node_Skeleton& skel,
+void Output_Popup::Data_Printer::print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
@@ -261,7 +261,7 @@ void Output_Popup::print_item(const Node_Skeleton& skel,
 }
 
 
-void Output_Popup::print_item(const Way_Skeleton& skel,
+void Output_Popup::Data_Printer::print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
@@ -277,7 +277,7 @@ void Output_Popup::print_item(const Way_Skeleton& skel,
 }
 
 
-void Output_Popup::print_item(const Relation_Skeleton& skel,
+void Output_Popup::Data_Printer::print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
@@ -294,7 +294,7 @@ void Output_Popup::print_item(const Relation_Skeleton& skel,
 }
 
 
-void Output_Popup::print_item(const Derived_Skeleton& skel,
+void Output_Popup::Data_Printer::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode,

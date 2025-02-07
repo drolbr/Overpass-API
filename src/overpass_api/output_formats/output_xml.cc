@@ -61,7 +61,7 @@ void Output_XML::display_error(const std::string& text)
 }
 
 
-void Output_XML::print_global_bbox(const Bbox_Double& bbox)
+void Output_XML::Data_Printer::print_global_bbox(const Bbox_Double& bbox)
 {
   std::cout<<"  <bounds"
       " minlat=\""<<std::fixed<<std::setprecision(7)<<bbox.south<<"\""
@@ -460,7 +460,7 @@ void print_deleted(const std::string& type_name, const Id_Type& id,
 }
 
 
-void Output_XML::print_item(const Node_Skeleton& skel,
+void Output_XML::Data_Printer::print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
@@ -506,7 +506,7 @@ void Output_XML::Diff_Printer::print_item(const Node_Skeleton& skel,
 }
 
 
-void Output_XML::print_item(const Way_Skeleton& skel,
+void Output_XML::Data_Printer::print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
@@ -552,7 +552,7 @@ void Output_XML::Diff_Printer::print_item(const Way_Skeleton& skel,
 }
 
 
-void Output_XML::print_item(const Relation_Skeleton& skel,
+void Output_XML::Data_Printer::print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
@@ -600,7 +600,7 @@ void Output_XML::Diff_Printer::print_item(const Relation_Skeleton& skel,
 }
 
 
-void Output_XML::print_item(const Derived_Skeleton& skel,
+void Output_XML::Data_Printer::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode,
