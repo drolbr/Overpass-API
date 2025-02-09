@@ -16,7 +16,7 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "output_handler.h"
+#include "osm_printer.h"
 
 
 const std::string& member_type_name(uint32 type)

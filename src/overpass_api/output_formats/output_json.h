@@ -22,6 +22,7 @@
 
 #include "../core/datatypes.h"
 #include "../core/geometry.h"
+#include "../frontend/osm_printer.h"
 #include "../frontend/output_handler.h"
 
 #include <string>
@@ -40,10 +41,10 @@ public:
   virtual void display_remark(const std::string& text);
   virtual void display_error(const std::string& text);
 
-  Data_Printer* get_data_printer() override { return &data_printer; }
+  OSM_Data_Printer* get_data_printer() override { return &data_printer; }
 
 private:
-  struct Data_Printer : Output_Handler::Data_Printer
+  struct Data_Printer : OSM_Data_Printer
   {
     virtual void print_global_bbox(const Bbox_Double& bbox) override {}
 

@@ -19,7 +19,7 @@
 #ifndef DE__OSM3S___OVERPASS_API__OUTPUT_FORMATS__OUTPUT_XML_H
 #define DE__OSM3S___OVERPASS_API__OUTPUT_FORMATS__OUTPUT_XML_H
 
-
+#include "../frontend/osm_printer.h"
 #include "../frontend/output_handler.h"
 
 #include <string>
@@ -38,12 +38,12 @@ public:
   void display_remark(const std::string& text) override;
   void display_error(const std::string& text) override;
 
-  Data_Printer* get_data_printer() override { return &data_printer; }
+  OSM_Data_Printer* get_data_printer() override { return &data_printer; }
   bool supports_diff() const override { return true; }
-  Diff_Printer* get_diff_printer() override { return &diff_printer; }
+  OSM_Diff_Printer* get_diff_printer() override { return &diff_printer; }
       
 private:
-  struct Data_Printer : Output_Handler::Data_Printer
+  struct Data_Printer : OSM_Data_Printer
   {
     virtual void print_global_bbox(const Bbox_Double& bbox) override;
 
@@ -83,7 +83,7 @@ private:
         const Feature_Action& action = keep) override;
   };
 
-  struct Diff_Printer : Output_Handler::Diff_Printer
+  struct Diff_Printer : OSM_Diff_Printer
   {
     void print_item(
         const Node_Skeleton& skel,

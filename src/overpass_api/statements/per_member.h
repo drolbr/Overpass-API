@@ -24,6 +24,7 @@
 #include "../../expat/escape_xml.h"
 #include "../data/tag_store.h"
 #include "../data/utils.h"
+#include "../frontend/osm_printer.h"
 #include "../frontend/output_handler.h"
 #include "evaluator.h"
 #include "statement.h"

@@ -180,12 +180,12 @@ bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_
 bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
 bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_from_dir.cc template_db/types.cc template_db/void_blocks.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
-bin_osm3s_query_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/hash_request.cc overpass_api/frontend/output_handler.cc overpass_api/frontend/console_output.cc overpass_api/frontend/web_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/void_blocks.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+bin_osm3s_query_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/hash_request.cc overpass_api/frontend/osm_printer.cc overpass_api/frontend/console_output.cc overpass_api/frontend/web_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/void_blocks.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_osm3s_query_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
 bin_dispatcher_SOURCES = template_db/dispatcher.cc template_db/file_tools.cc template_db/transaction_insulator.cc template_db/types.cc template_db/void_blocks.cc overpass_api/dispatch/dispatcher_server.cc
 bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
-cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/hash_request.cc overpass_api/frontend/output_handler.cc overpass_api/dispatch/web_query.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/void_blocks.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc overpass_api/frontend/web_output.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/hash_request.cc overpass_api/frontend/osm_printer.cc overpass_api/dispatch/web_query.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/void_blocks.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc overpass_api/frontend/web_output.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 cgi_bin_interpreter_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
 cgi_bin_status_SOURCES = overpass_api/dispatch/public_status.cc template_db/types.cc template_db/void_blocks.cc
 cgi_bin_status_LDADD = libdispatcherclient.la libfrontend.la libsettings.la
@@ -222,10 +222,12 @@ nobase_dist_HEADERS = \
   lib/overpass.h\
   overpass_api/core/basic_types.h\
   overpass_api/core/datatypes.h\
+  overpass_api/core/error_output.h\
   overpass_api/core/four_field_index.h\
   overpass_api/core/geometry.h\
   overpass_api/core/index_computations.h\
   overpass_api/core/nibble_varint_rw.h\
+  overpass_api/core/output_handler_params.h\
   overpass_api/core/parsed_query.h\
   overpass_api/core/settings.h\
   overpass_api/core/type_area.h\
@@ -241,20 +243,20 @@ nobase_dist_HEADERS = \
   overpass_api/data/constraints.h\
   overpass_api/data/diff_set.h\
   overpass_api/data/elements_from_db.h\
-  overpass_api/data/flat_meta_collector.h\
   overpass_api/data/filenames.h\
   overpass_api/data/filter_by_tags.h\
   overpass_api/data/filter_ids_by_tags.h\
+  overpass_api/data/flat_meta_collector.h\
   overpass_api/data/geometry_from_quad_coords.h\
   overpass_api/data/idx_from_id.h\
-  overpass_api/data/meta_collector.h\
   overpass_api/data/meta_by_ref.h\
+  overpass_api/data/meta_collector.h\
   overpass_api/data/regular_expression.h\
-  overpass_api/data/request_context.h\
   overpass_api/data/relation_geometry_store.h\
+  overpass_api/data/request_context.h\
   overpass_api/data/set_comparison.h\
-  overpass_api/data/tag_store.h\
   overpass_api/data/tags_global_reader.h\
+  overpass_api/data/tag_store.h\
   overpass_api/data/tilewise_geometry.h\
   overpass_api/data/timeless.h\
   overpass_api/data/user_based_filtering.h\
@@ -270,6 +272,7 @@ nobase_dist_HEADERS = \
   overpass_api/frontend/decode_text.h\
   overpass_api/frontend/hash_request.h\
   overpass_api/frontend/map_ql_parser.h\
+  overpass_api/frontend/osm_printer.h\
   overpass_api/frontend/output.h\
   overpass_api/frontend/output_handler.h\
   overpass_api/frontend/output_handler_parser.h\
@@ -306,13 +309,13 @@ nobase_dist_HEADERS = \
   overpass_api/statements/evaluator.h\
   overpass_api/statements/explicit_geometry.h\
   overpass_api/statements/filter.h\
-  overpass_api/statements/for.h\
   overpass_api/statements/foreach.h\
+  overpass_api/statements/for.h\
   overpass_api/statements/geometry_endomorphisms.h\
   overpass_api/statements/id_query.h\
   overpass_api/statements/if.h\
-  overpass_api/statements/item.h\
   overpass_api/statements/item_geometry.h\
+  overpass_api/statements/item.h\
   overpass_api/statements/localize.h\
   overpass_api/statements/make_area.h\
   overpass_api/statements/make.h\
@@ -353,8 +356,8 @@ nobase_dist_HEADERS = \
   template_db/lz4_wrapper.h\
   template_db/random_file.h\
   template_db/random_file_index.h\
-  template_db/ranges.h\
   template_db/ranges.def.h\
+  template_db/ranges.h\
   template_db/transaction.h\
   template_db/transaction_insulator.h\
   template_db/types.h\

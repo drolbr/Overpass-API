@@ -492,7 +492,7 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
 void Set_Comparison::store_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+                            const std::map< uint32, std::string >* users, const Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta)
 {
   nodes.push_back(Node_With_Context(ll_upper, skel, timestamp,
@@ -504,7 +504,7 @@ void Set_Comparison::store_item(uint32 ll_upper, const Node_Skeleton& skel,
 void Set_Comparison::compare_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+                            const std::map< uint32, std::string >* users, const Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta)
 {
   std::vector< Node_With_Context >::iterator nodes_it
@@ -615,7 +615,7 @@ void Set_Comparison::store_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< Quad_Coord >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+                            const std::map< uint32, std::string >* users, const Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
 {
   ways.push_back(Way_With_Context(ll_upper, skel,
@@ -630,7 +630,7 @@ void Set_Comparison::compare_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< Quad_Coord >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+                            const std::map< uint32, std::string >* users, const Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
 {
   std::vector< Way_With_Context >::iterator ways_it
@@ -747,7 +747,7 @@ void Set_Comparison::store_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< std::vector< Quad_Coord > >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+                            const std::map< uint32, std::string >* users, const Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta)
 {
   relations.push_back(Relation_With_Context(ll_upper, skel,
@@ -762,7 +762,7 @@ void Set_Comparison::compare_item(uint32 ll_upper, const Relation_Skeleton& skel
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< std::vector< Quad_Coord > >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+                            const std::map< uint32, std::string >* users, const Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta)
 {
   std::vector< Relation_With_Context >::iterator relations_it

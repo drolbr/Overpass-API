@@ -16,7 +16,7 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../frontend/output_handler.h"
+#include "../frontend/osm_printer.h"
 #include "geometry_from_quad_coords.h"
 
 

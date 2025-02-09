@@ -22,6 +22,7 @@
 
 #include "../core/datatypes.h"
 #include "../core/geometry.h"
+#include "../frontend/osm_printer.h"
 #include "../frontend/output_handler.h"
 
 #include <string>
@@ -50,10 +51,10 @@ public:
 
   virtual std::string dump_config() const;
 
-  Data_Printer* get_data_printer() override { return &data_printer; }
+  OSM_Data_Printer* get_data_printer() override { return &data_printer; }
 
 private:
-  struct Data_Printer : Output_Handler::Data_Printer
+  struct Data_Printer : OSM_Data_Printer
   {
     Data_Printer(const Csv_Settings& csv_settings_) : csv_settings(csv_settings_) {}
     

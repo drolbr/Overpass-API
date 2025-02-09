@@ -22,14 +22,9 @@
 
 #include "datatypes.h"
 #include "geometry.h"
+#include "output_handler_params.h"
 
 #include <map>
-
-
-struct Output_Handler_Params
-{
-  virtual ~Output_Handler_Params() {}
-};
 
 
 /* This class collects all the information gathered during parsing.

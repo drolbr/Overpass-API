@@ -22,8 +22,13 @@
 #include "../frontend/web_output.h"
 #include "../../template_db/dispatcher_client.h"
 
-
+#include <cstring> 
 #include <fstream>
+#include <iostream>
+#include <sstream>
+
+
+struct OSM_Data_Printer;
 
 
 class Output_Timestamp : public Output_Handler
@@ -38,7 +43,7 @@ public:
   virtual void display_remark(const std::string& text) {}
   virtual void display_error(const std::string& text) {}
 
-  Data_Printer* get_data_printer() override { return nullptr; }
+  OSM_Data_Printer* get_data_printer() override { return nullptr; }
 };
 
 

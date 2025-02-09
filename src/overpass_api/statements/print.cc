@@ -193,14 +193,14 @@ struct Extra_Data
 {
   Extra_Data(
       Resource_Manager& rman, const Statement& stmt, const Set& to_print,
-      unsigned int mode_, Output_Handler::Feature_Action action_,
+      unsigned int mode_, Feature_Action action_,
       double south, double north, double west, double east);
   ~Extra_Data();
 
   const std::map< uint32, std::string >* get_users() const;
 
   unsigned int mode;
-  Output_Handler::Feature_Action action;
+  Feature_Action action;
   Way_Bbox_Geometry_Store* way_geometry_store;
   Way_Bbox_Geometry_Store* attic_way_geometry_store;
   Relation_Geometry_Store* relation_geometry_store;
@@ -212,7 +212,7 @@ struct Extra_Data
 
 Extra_Data::Extra_Data(
     Resource_Manager& rman, const Statement& stmt, const Set& to_print,
-    unsigned int mode_, Output_Handler::Feature_Action action_,
+    unsigned int mode_, Feature_Action action_,
     double south, double north, double west, double east)
     : mode(mode_), action(action_), way_geometry_store(0), attic_way_geometry_store(0),
     relation_geometry_store(0), attic_relation_geometry_store(0), roles(0), users(0)
@@ -259,7 +259,7 @@ Extra_Data::~Extra_Data()
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Node_Skeleton& skel,
+void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Node_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0)
 {
@@ -268,7 +268,7 @@ void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, ui
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Way_Skeleton& skel,
+void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Way_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0)
 {
@@ -279,7 +279,7 @@ void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, ui
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0)
 {
@@ -290,7 +290,7 @@ void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, ui
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Relation_Skeleton& skel,
+void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Relation_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0)
 {
@@ -301,7 +301,7 @@ void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, ui
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0)
 {
@@ -312,7 +312,7 @@ void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, ui
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Area_Skeleton& skel,
+void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Area_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0)
 {
@@ -321,7 +321,7 @@ void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, ui
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, uint32 ll_upper, const Derived_Structure& skel,
+void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Derived_Structure& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0)
 {
@@ -334,7 +334,7 @@ void print_item(Extra_Data& extra_data, Output_Handler::Data_Printer& output, ui
 
 template< class TIndex, class TObject >
 void quadtile_
-    (const std::map< TIndex, std::vector< TObject > >& items, Output_Handler::Data_Printer& output,
+    (const std::map< TIndex, std::vector< TObject > >& items, OSM_Data_Printer& output,
      Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   typename std::map< TIndex, std::vector< TObject > >::const_iterator
@@ -357,7 +357,7 @@ void quadtile_
 template< class Index, class Object >
 void tags_quadtile_
     (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
-     Output_Handler::Data_Printer& output,
+     OSM_Data_Printer& output,
      Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   Tag_Store< Index, Object > tag_store(*rman.get_transaction());
@@ -391,7 +391,7 @@ void tags_quadtile_
 template< class Index, class Object >
 void tags_quadtile_attic_
     (Extra_Data& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
-     Output_Handler::Data_Printer& output,
+     OSM_Data_Printer& output,
      Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   Tag_Store< Index, Object > tag_store(transaction);
@@ -493,7 +493,7 @@ std::vector< Maybe_Attic_Ref< Index, Object > > collect_items_by_id(
 
 template< class Index, class Object >
 void by_id
-  (const std::map< Index, std::vector< Object > >& items, Output_Handler::Data_Printer& output,
+  (const std::map< Index, std::vector< Object > >& items, OSM_Data_Printer& output,
    Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
@@ -512,7 +512,7 @@ template< class Index, class Object >
 void by_id
   (const std::map< Index, std::vector< Object > >& items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-   Output_Handler::Data_Printer& output,
+   OSM_Data_Printer& output,
    Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(items, attic_items);
@@ -596,7 +596,7 @@ typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
 template< class Index, class Object >
 void tags_by_id
   (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
-   uint32 FLUSH_SIZE, Output_Handler::Data_Printer& output,
+   uint32 FLUSH_SIZE, OSM_Data_Printer& output,
    Resource_Manager& rman, Meta_Collector< Index, typename Object::Id_Type >* meta_printer,
    Tag_Store< Index, Object >& tag_store, uint32 limit, uint32& element_count)
 {
@@ -647,7 +647,7 @@ template< class Index, class Object >
 void tags_by_id_attic
   (const std::map< Index, std::vector< Object > >& current_items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-   Extra_Data& extra_data, uint32 FLUSH_SIZE, Output_Handler::Data_Printer& output,
+   Extra_Data& extra_data, uint32 FLUSH_SIZE, OSM_Data_Printer& output,
    Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(current_items, attic_items);
@@ -725,7 +725,7 @@ template< class Index, class Object >
 void tags_by_id
   (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-   unsigned int mode, uint32 FLUSH_SIZE, Output_Handler::Data_Printer& output, Resource_Manager& rman,
+   unsigned int mode, uint32 FLUSH_SIZE, OSM_Data_Printer& output, Resource_Manager& rman,
    uint32 limit, uint32& element_count)
 {
   if (mode & Output_Mode::META)
@@ -809,11 +809,11 @@ void Print_Statement::execute(Resource_Manager& rman)
     output_items = input_set;
   }
 
-  Output_Handler::Feature_Action feature_action = Output_Handler::keep;
+  Feature_Action feature_action = Feature_Action::keep;
   if (action == Diff_Action::show_old)
-    feature_action = Output_Handler::show_from;
+    feature_action = Feature_Action::show_from;
   else if (action == Diff_Action::show_new)
-    feature_action = Output_Handler::show_to;
+    feature_action = Feature_Action::show_to;
 
   Extra_Data extra_data(rman, *this, *output_items, mode, feature_action, south, north, west, east);
   Output_Handler& output_handler = *dynamic_cast< Output_Handler* >(rman.get_global_settings().get_output_handler());

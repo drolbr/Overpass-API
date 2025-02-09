@@ -17,6 +17,7 @@
  */
 
 #include "../core/settings.h"
+#include "../frontend/osm_printer.h"
 #include "../frontend/output_handler.h"
 #include "diff_set.h"
 #include "geometry_from_quad_coords.h"
@@ -128,7 +129,7 @@ const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_
 
 
 void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Context > >& different_nodes,
-    uint32 output_mode, Output_Handler::Diff_Printer* output,
+    uint32 output_mode, OSM_Diff_Printer* output,
     const std::map< uint32, std::string >& users, bool add_deletion_information)
 {
   if (output == nullptr)
@@ -148,7 +149,7 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             &users, output_mode,
-            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
+            it->second.idx.val() == 0xfdu ? Feature_Action::push_away : Feature_Action::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
       else
@@ -157,7 +158,7 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
                 ::lon(it->first.idx.val(), it->first.elem.ll_lower)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode, Output_Handler::erase);
+            &users, output_mode, Feature_Action::erase);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -173,7 +174,7 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
       output->print_item(it->first.elem, *old_opaque,
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &users, output_mode, Output_Handler::modify,
+          &users, output_mode, Feature_Action::modify,
           &it->second.elem, &new_geom,
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0);
@@ -185,13 +186,13 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
               ::lon(it->second.idx.val(), it->second.elem.ll_lower)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &users, output_mode, Output_Handler::create);
+          &users, output_mode, Feature_Action::create);
   }
 }
 
 
 void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context > >& different_ways,
-    uint32 output_mode, Output_Handler::Diff_Printer* output,
+    uint32 output_mode, OSM_Diff_Printer* output,
     const std::map< uint32, std::string >& users, bool add_deletion_information)
 {
   for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::const_iterator it = different_ways.begin();
@@ -210,7 +211,7 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             &users, output_mode,
-            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
+            it->second.idx.val() == 0xfdu ? Feature_Action::push_away : Feature_Action::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
       else
@@ -219,7 +220,7 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode, Output_Handler::erase);
+            &users, output_mode, Feature_Action::erase);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -233,7 +234,7 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &users, output_mode, Output_Handler::modify,
+          &users, output_mode, Feature_Action::modify,
           &it->second.elem,
           &new_broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
               bound_variant(double_coords_new, output_mode)),
@@ -250,7 +251,7 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &users, output_mode, Output_Handler::create);
+          &users, output_mode, Feature_Action::create);
     }
   }
 }
@@ -258,7 +259,7 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
 
 void print_relations(
     const std::vector< std::pair< Relation_With_Context, Relation_With_Context > >& different_relations,
-    uint32 output_mode, Output_Handler::Diff_Printer* output,
+    uint32 output_mode, OSM_Diff_Printer* output,
     const std::map< uint32, std::string >& users, const std::map< uint32, std::string >& roles,
     bool add_deletion_information)
 {
@@ -278,7 +279,7 @@ void print_relations(
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             &roles, &users, output_mode,
-            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
+            it->second.idx.val() == 0xfdu ? Feature_Action::push_away : Feature_Action::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
       else
@@ -287,7 +288,7 @@ void print_relations(
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &roles, &users, output_mode, Output_Handler::erase);
+            &roles, &users, output_mode, Feature_Action::erase);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -301,7 +302,7 @@ void print_relations(
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &roles, &users, output_mode, Output_Handler::modify,
+          &roles, &users, output_mode, Feature_Action::modify,
           &it->second.elem,
           &new_broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
               bound_variant(double_coords_new, output_mode)),
@@ -318,7 +319,7 @@ void print_relations(
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &roles, &users, output_mode, Output_Handler::create);
+          &roles, &users, output_mode, Feature_Action::create);
     }
   }
 }
@@ -326,17 +327,17 @@ void print_relations(
 
 void print_deriveds(
     const std::vector< Derived_Structure >& lhs_deriveds, const std::vector< Derived_Structure >& rhs_deriveds,
-    uint32 output_mode, Output_Handler::Data_Printer* output)
+    uint32 output_mode, OSM_Data_Printer* output)
 {
   Null_Geometry null_geom;
 
   for (std::vector< Derived_Structure >::const_iterator it = lhs_deriveds.begin(); it != lhs_deriveds.end(); ++it)
     output->print_item(*it, it->get_geometry() ? *it->get_geometry() : null_geom, &it->tags,
-        output_mode, Output_Handler::erase);
+        output_mode, Feature_Action::erase);
 
   for (std::vector< Derived_Structure >::const_iterator it = rhs_deriveds.begin(); it != rhs_deriveds.end(); ++it)
     output->print_item(*it, it->get_geometry() ? *it->get_geometry() : null_geom, &it->tags,
-        output_mode, Output_Handler::create);
+        output_mode, Feature_Action::create);
 }
 
 

@@ -24,6 +24,7 @@
 #include <vector>
 #include "../data/collect_members.h"
 #include "../data/utils.h"
+#include "../frontend/osm_printer.h"
 #include "../frontend/output_handler.h"
 #include "statement.h"
 

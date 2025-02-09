@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+  <!-- Test case overview: see init.osm -->
+
+<redact>
+  <relation id="1502" version="1"/>
+  <relation id="1503" version="3"/>
+  <relation id="1504" version="1"/>
+  <relation id="1505" version="3"/>
+  <relation id="1505" version="5"/>
+  <relation id="1612" version="1"/>
+  <relation id="1622" version="1"/>
+  <relation id="1811" version="1"/>
+  <relation id="1822" version="1"/>
+  <relation id="1822" version="2"/>
+</redact>
+
+</osm>

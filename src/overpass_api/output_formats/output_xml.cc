@@ -84,51 +84,51 @@ void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 }
 
 
-void prepend_action(const Output_Handler::Feature_Action& action, bool allow_delta = true)
+void prepend_action(const Feature_Action& action, bool allow_delta = true)
 {
-  if (action == Output_Handler::keep)
+  if (action == Feature_Action::keep)
     ;
-  else if (action == Output_Handler::show_from)
+  else if (action == Feature_Action::show_from)
     std::cout<<"<action type=\"show_initial\">\n";
-  else if (action == Output_Handler::show_to)
+  else if (action == Feature_Action::show_to)
     std::cout<<"<action type=\"show_final\">\n";
 
   if (allow_delta)
   {
-    if (action == Output_Handler::modify)
+    if (action == Feature_Action::modify)
       std::cout<<"<action type=\"modify\">\n<old>\n";
-    else if (action == Output_Handler::create)
+    else if (action == Feature_Action::create)
       std::cout<<"<action type=\"create\">\n";
-    else if (action == Output_Handler::erase || action == Output_Handler::push_away)
+    else if (action == Feature_Action::erase || action == Feature_Action::push_away)
       std::cout<<"<action type=\"delete\">\n<old>\n";
   }
 }
 
 
-void insert_action(const Output_Handler::Feature_Action& action)
+void insert_action(const Feature_Action& action)
 {
-  if (action == Output_Handler::keep)
+  if (action == Feature_Action::keep)
     ;
-  else if (action == Output_Handler::modify
-      || action == Output_Handler::erase || action == Output_Handler::push_away)
+  else if (action == Feature_Action::modify
+      || action == Feature_Action::erase || action == Feature_Action::push_away)
     std::cout<<"</old>\n<new>\n";
 }
 
 
-void append_action(const Output_Handler::Feature_Action& action, bool is_new = false, bool allow_delta = true)
+void append_action(const Feature_Action& action, bool is_new = false, bool allow_delta = true)
 {
-  if (action == Output_Handler::keep)
+  if (action == Feature_Action::keep)
     ;
-  else if (action == Output_Handler::show_from || action == Output_Handler::show_to)
+  else if (action == Feature_Action::show_from || action == Feature_Action::show_to)
     std::cout<<"</action>\n";
 
   if (allow_delta)
   {
-    if (action == Output_Handler::modify)
+    if (action == Feature_Action::modify)
       std::cout<<"</new>\n</action>\n";
-    else if (action == Output_Handler::create)
+    else if (action == Feature_Action::create)
       std::cout<<"</action>\n";
-    else if (action == Output_Handler::erase || action == Output_Handler::push_away)
+    else if (action == Feature_Action::erase || action == Feature_Action::push_away)
     {
       if (is_new)
         std::cout<<"</new>\n</action>\n";
@@ -442,7 +442,7 @@ void print_relation(const Relation_Skeleton& skel,
 
 template< typename Id_Type >
 void print_deleted(const std::string& type_name, const Id_Type& id,
-      const Output_Handler::Feature_Action& action,
+      const Feature_Action& action,
       const OSM_Element_Metadata_Skeleton< Id_Type >* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode)
@@ -450,7 +450,7 @@ void print_deleted(const std::string& type_name, const Id_Type& id,
   std::cout<<"  <"<<type_name;
   if (mode.mode & Output_Mode::ID)
     std::cout<<" id=\""<<id.val()<<'\"';
-  if (action == Output_Handler::erase)
+  if (action == Feature_Action::erase)
     std::cout<<" visible=\"false\"";
   else
     std::cout<<" visible=\"true\"";
@@ -496,7 +496,7 @@ void Output_XML::Diff_Printer::print_item(const Node_Skeleton& skel,
   {
     insert_action(action);
 
-    if (action == Output_Handler::erase || action == Output_Handler::push_away)
+    if (action == Feature_Action::erase || action == Feature_Action::push_away)
       print_deleted("node", new_skel->id, action, new_meta, users, mode);
     else
       print_node(*new_skel, *new_geometry, new_tags, new_meta, users, mode);
@@ -542,7 +542,7 @@ void Output_XML::Diff_Printer::print_item(const Way_Skeleton& skel,
   {
     insert_action(action);
 
-    if (action == Output_Handler::erase || action == Output_Handler::push_away)
+    if (action == Feature_Action::erase || action == Feature_Action::push_away)
       print_deleted("way", new_skel->id, action, new_meta, users, mode);
     else
       print_way(*new_skel, *new_geometry, new_tags, new_meta, users, mode);
@@ -590,7 +590,7 @@ void Output_XML::Diff_Printer::print_item(const Relation_Skeleton& skel,
   {
     insert_action(action);
 
-    if (action == Output_Handler::erase || action == Output_Handler::push_away)
+    if (action == Feature_Action::erase || action == Feature_Action::push_away)
       print_deleted("relation", new_skel->id, action, new_meta, users, mode);
     else
       print_relation(*new_skel, *new_geometry, new_tags, new_meta, roles, users, mode);

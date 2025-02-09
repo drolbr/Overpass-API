@@ -21,6 +21,7 @@
 
 
 #include "../dispatch/resource_manager.h"
+#include "../frontend/osm_printer.h"
 #include "../frontend/output_handler.h"
 #include "collect_members.h"
 #include "diff_set.h"
@@ -82,13 +83,13 @@ private:
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
-                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const Feature_Action& action = Feature_Action::keep,
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0);
   void compare_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
-                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const Feature_Action& action = Feature_Action::keep,
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0);
 
   void print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper, const Way_Skeleton& skel,
@@ -105,7 +106,7 @@ private:
                             const std::vector< Quad_Coord >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
-                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const Feature_Action& action = Feature_Action::keep,
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0);
   void compare_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
@@ -113,7 +114,7 @@ private:
                             const std::vector< Quad_Coord >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
-                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const Feature_Action& action = Feature_Action::keep,
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0);
 
   void print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper, const Relation_Skeleton& skel,
@@ -130,7 +131,7 @@ private:
                             const std::vector< std::vector< Quad_Coord > >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
-                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const Feature_Action& action = Feature_Action::keep,
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0);
   void compare_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
@@ -138,7 +139,7 @@ private:
                             const std::vector< std::vector< Quad_Coord > >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
-                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const Feature_Action& action = Feature_Action::keep,
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0);
 
   void set_target(bool target);
