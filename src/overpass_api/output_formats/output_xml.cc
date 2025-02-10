@@ -374,6 +374,8 @@ void print_node(const Node_Skeleton& skel,
   std::cout<<"  <node";
   if (mode.mode & Output_Mode::ID)
     std::cout<<" id=\""<<skel.id.val()<<'\"';
+  if (mode.mode & Output_Mode::REDACTED)
+    std::cout<<" visible=\"redacted\"";
   if ((mode.mode & (Output_Mode::COORDS | Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
       && geometry.has_center())
     std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lat()
@@ -400,6 +402,8 @@ void print_way(const Way_Skeleton& skel,
   std::cout<<"  <way";
   if (mode.mode & Output_Mode::ID)
     std::cout<<" id=\""<<skel.id.val()<<'\"';
+  if (mode.mode & Output_Mode::REDACTED)
+    std::cout<<" visible=\"redacted\"";
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
     print_meta_xml(*meta, *users);
 
@@ -425,6 +429,8 @@ void print_relation(const Relation_Skeleton& skel,
   std::cout<<"  <relation";
   if (mode.mode & Output_Mode::ID)
     std::cout<<" id=\""<<skel.id.val()<<'\"';
+  if (mode.mode & Output_Mode::REDACTED)
+    std::cout<<" visible=\"redacted\"";
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
     print_meta_xml(*meta, *users);
 
@@ -452,6 +458,8 @@ void print_deleted(const std::string& type_name, const Id_Type& id,
     std::cout<<" id=\""<<id.val()<<'\"';
   if (action == Feature_Action::erase)
     std::cout<<" visible=\"false\"";
+  else if (mode.mode & Output_Mode::REDACTED)
+    std::cout<<" visible=\"redacted\"";
   else
     std::cout<<" visible=\"true\"";
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
@@ -481,25 +489,26 @@ void Output_XML::Diff_Printer::print_item(const Node_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
       const std::map< uint32, std::string >* users,
-      Output_Mode mode,
+      Output_Mode old_mode,
       const Feature_Action& action,
       const Node_Skeleton* new_skel,
       const Opaque_Geometry* new_geometry,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta)
+      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta,
+      Output_Mode new_mode)
 {
   prepend_action(action);
 
-  print_node(skel, geometry, tags, meta, users, mode);
+  print_node(skel, geometry, tags, meta, users, old_mode);
 
   if (new_skel)
   {
     insert_action(action);
 
     if (action == Feature_Action::erase || action == Feature_Action::push_away)
-      print_deleted("node", new_skel->id, action, new_meta, users, mode);
+      print_deleted("node", new_skel->id, action, new_meta, users, new_mode);
     else
-      print_node(*new_skel, *new_geometry, new_tags, new_meta, users, mode);
+      print_node(*new_skel, *new_geometry, new_tags, new_meta, users, new_mode);
   }
 
   append_action(action, new_skel);
@@ -527,25 +536,26 @@ void Output_XML::Diff_Printer::print_item(const Way_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
       const std::map< uint32, std::string >* users,
-      Output_Mode mode,
+      Output_Mode old_mode,
       const Feature_Action& action,
       const Way_Skeleton* new_skel,
       const Opaque_Geometry* new_geometry,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
+      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta,
+      Output_Mode new_mode)
 {
   prepend_action(action);
 
-  print_way(skel, geometry, tags, meta, users, mode);
+  print_way(skel, geometry, tags, meta, users, old_mode);
 
   if (new_skel)
   {
     insert_action(action);
 
     if (action == Feature_Action::erase || action == Feature_Action::push_away)
-      print_deleted("way", new_skel->id, action, new_meta, users, mode);
+      print_deleted("way", new_skel->id, action, new_meta, users, new_mode);
     else
-      print_way(*new_skel, *new_geometry, new_tags, new_meta, users, mode);
+      print_way(*new_skel, *new_geometry, new_tags, new_meta, users, new_mode);
   }
 
   append_action(action, new_skel);
@@ -575,25 +585,26 @@ void Output_XML::Diff_Printer::print_item(const Relation_Skeleton& skel,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
       const std::map< uint32, std::string >* roles,
       const std::map< uint32, std::string >* users,
-      Output_Mode mode,
+      Output_Mode old_mode,
       const Feature_Action& action,
       const Relation_Skeleton* new_skel,
       const Opaque_Geometry* new_geometry,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta)
+      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta,
+      Output_Mode new_mode)
 {
   prepend_action(action);
 
-  print_relation(skel, geometry, tags, meta, roles, users, mode);
+  print_relation(skel, geometry, tags, meta, roles, users, old_mode);
 
   if (new_skel)
   {
     insert_action(action);
 
     if (action == Feature_Action::erase || action == Feature_Action::push_away)
-      print_deleted("relation", new_skel->id, action, new_meta, users, mode);
+      print_deleted("relation", new_skel->id, action, new_meta, users, new_mode);
     else
-      print_relation(*new_skel, *new_geometry, new_tags, new_meta, roles, users, mode);
+      print_relation(*new_skel, *new_geometry, new_tags, new_meta, roles, users, new_mode);
   }
 
   append_action(action, new_skel);

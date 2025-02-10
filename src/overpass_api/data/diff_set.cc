@@ -148,9 +148,9 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
                 ::lon(it->first.idx.val(), it->first.elem.ll_lower)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode,
+            &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
             it->second.idx.val() == 0xfdu ? Feature_Action::push_away : Feature_Action::erase,
-            &new_skel, 0, 0, &it->second.meta);
+            &new_skel, 0, 0, &it->second.meta, output_mode | (it->second.is_redacted ? Output_Mode::REDACTED : 0));
       }
       else
         output->print_item(it->first.elem,
@@ -158,7 +158,8 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
                 ::lon(it->first.idx.val(), it->first.elem.ll_lower)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode, Feature_Action::erase);
+            &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+            Feature_Action::erase, 0, 0, 0, 0, 0);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -174,10 +175,12 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
       output->print_item(it->first.elem, *old_opaque,
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &users, output_mode, Feature_Action::modify,
+          &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+          Feature_Action::modify,
           &it->second.elem, &new_geom,
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0);
+          (output_mode & Output_Mode::META) ? &it->second.meta : 0,
+          output_mode | (it->second.is_redacted ? Output_Mode::REDACTED : 0));
     }
     else
       // No old element exists
@@ -186,7 +189,8 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
               ::lon(it->second.idx.val(), it->second.elem.ll_lower)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &users, output_mode, Feature_Action::create);
+          &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+          Feature_Action::create, 0, 0, 0, 0, 0);
   }
 }
 
@@ -210,9 +214,9 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode,
+            &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
             it->second.idx.val() == 0xfdu ? Feature_Action::push_away : Feature_Action::erase,
-            &new_skel, 0, 0, &it->second.meta);
+            &new_skel, 0, 0, &it->second.meta, output_mode | (it->second.is_redacted ? Output_Mode::REDACTED : 0));
       }
       else
         output->print_item(it->first.elem,
@@ -220,7 +224,8 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode, Feature_Action::erase);
+            &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+            Feature_Action::erase, 0, 0, 0, 0, 0);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -234,12 +239,14 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &users, output_mode, Feature_Action::modify,
+          &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+          Feature_Action::modify,
           &it->second.elem,
           &new_broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
               bound_variant(double_coords_new, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0);
+          (output_mode & Output_Mode::META) ? &it->second.meta : 0,
+          output_mode | (it->second.is_redacted ? Output_Mode::REDACTED : 0));
     }
     else
     {
@@ -251,7 +258,8 @@ void print_ways(const std::vector< std::pair< Way_With_Context, Way_With_Context
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &users, output_mode, Feature_Action::create);
+          &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+          Feature_Action::create, 0, 0, 0, 0, 0);
     }
   }
 }
@@ -278,9 +286,9 @@ void print_relations(
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &roles, &users, output_mode,
+            &roles, &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
             it->second.idx.val() == 0xfdu ? Feature_Action::push_away : Feature_Action::erase,
-            &new_skel, 0, 0, &it->second.meta);
+            &new_skel, 0, 0, &it->second.meta, output_mode | (it->second.is_redacted ? Output_Mode::REDACTED : 0));
       }
       else
         output->print_item(it->first.elem,
@@ -288,7 +296,8 @@ void print_relations(
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &roles, &users, output_mode, Feature_Action::erase);
+            &roles, &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+            Feature_Action::erase, 0, 0, 0, 0, 0);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -302,12 +311,14 @@ void print_relations(
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &roles, &users, output_mode, Feature_Action::modify,
+          &roles, &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+          Feature_Action::modify,
           &it->second.elem,
           &new_broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
               bound_variant(double_coords_new, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0);
+          (output_mode & Output_Mode::META) ? &it->second.meta : 0,
+          output_mode | (it->second.is_redacted ? Output_Mode::REDACTED : 0));
     }
     else
     {
@@ -319,7 +330,8 @@ void print_relations(
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &roles, &users, output_mode, Feature_Action::create);
+          &roles, &users, output_mode | (it->first.is_redacted ? Output_Mode::REDACTED : 0),
+          Feature_Action::create, 0, 0, 0, 0, 0);
     }
   }
 }

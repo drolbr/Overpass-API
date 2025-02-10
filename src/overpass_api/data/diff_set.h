@@ -38,13 +38,15 @@ struct Node_With_Context
   Node_Skeleton elem;
   uint64 expiration_date;
   OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta;
+  bool is_redacted;
   Tag_Container tags;
 
   Node_With_Context(Uint31_Index idx_, Node_Skeleton elem_,
       uint64 expiration_date_, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta_
           = OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
       Tag_Container tags_ = Tag_Container())
-  : idx(idx_), elem(elem_), expiration_date(expiration_date_), meta(meta_), tags(tags_) {}
+  : idx(idx_), elem(elem_), expiration_date(expiration_date_),
+    meta(meta_), is_redacted(false), tags(tags_) {}
 
   bool operator<(const Node_With_Context& e) const
   {
@@ -63,6 +65,7 @@ struct Way_With_Context
   Way_Skeleton elem;
   uint64 expiration_date;
   OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
+  bool is_redacted;
   Tag_Container tags;
   std::vector< Quad_Coord > geometry;
 
@@ -70,7 +73,8 @@ struct Way_With_Context
       uint64 expiration_date_, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta_
           = OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
       Tag_Container tags_ = Tag_Container())
-  : idx(idx_), elem(elem_), expiration_date(expiration_date_), meta(meta_), tags(tags_), geometry(geometry_) {}
+  : idx(idx_), elem(elem_), expiration_date(expiration_date_),
+    meta(meta_), is_redacted(false), tags(tags_), geometry(geometry_) {}
 
   bool operator<(const Way_With_Context& e) const
   {
@@ -89,6 +93,7 @@ struct Relation_With_Context
   Relation_Skeleton elem;
   uint64 expiration_date;
   OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta;
+  bool is_redacted;
   Tag_Container tags;
   std::vector< std::vector< Quad_Coord > > geometry;
 
@@ -97,7 +102,8 @@ struct Relation_With_Context
       uint64 expiration_date_, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta_
           = OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
       Tag_Container tags_ = Tag_Container())
-  : idx(idx_), elem(elem_), expiration_date(expiration_date_), meta(meta_), tags(tags_), geometry(geometry_) {}
+  : idx(idx_), elem(elem_), expiration_date(expiration_date_),
+    meta(meta_), is_redacted(false), tags(tags_), geometry(geometry_) {}
 
   bool operator<(const Relation_With_Context& e) const
   {
