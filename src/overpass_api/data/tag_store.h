@@ -301,6 +301,10 @@ template< typename Index, typename Object >
 void Tag_Store< Index, Object >::prefetch_chunk(const std::map< Index, std::vector< Object > >& elems,
     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound)
 {
+  if (elems.empty())
+    return;
+  
+  use_index = false;
   tags_by_id.clear();
 
   //generate std::set of relevant coarse indices
@@ -353,6 +357,10 @@ template< typename Index, typename Object >
 void Tag_Store< Index, Object >::prefetch_chunk(const std::map< Index, std::vector< Attic< Object > > >& attic_items,
     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound)
 {
+  if (attic_items.empty())
+    return;
+  
+  use_index = false;
   //generate std::set of relevant coarse indices
   generate_ids_by_coarse(attic_ids_by_coarse, attic_items);
 
