@@ -92,6 +92,7 @@ noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libdispatcherclient.
 
 statements_cc = \
   overpass_api/data/bbox_filter.cc \
+  overpass_api/data/meta_collector.cc \
   overpass_api/statements/aggregators.cc \
   overpass_api/statements/area_query.cc \
   overpass_api/statements/around.cc \

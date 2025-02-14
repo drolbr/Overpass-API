@@ -130,46 +130,46 @@ void Requested_Context::bind(const std::string& set_name)
 
 void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stmt, Resource_Manager& rman)
 {
-  Request_Context context(&stmt, rman);
+  context = new Request_Context(&stmt, rman);
   Transaction& transaction = *rman.get_transaction();
   base = &set;
 
   if (usage & Set_Usage::TAGS)
   {
-    tag_store_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(transaction);
+    tag_store_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(*context);
     tag_store_nodes->prefetch_all(set.nodes);
 
     if (!set.attic_nodes.empty())
     {
-      tag_store_attic_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(transaction);
+      tag_store_attic_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(*context);
       tag_store_attic_nodes->prefetch_all(set.attic_nodes);
     }
 
-    tag_store_ways = new Tag_Store< Uint31_Index, Way_Skeleton >(transaction);
+    tag_store_ways = new Tag_Store< Uint31_Index, Way_Skeleton >(*context);
     tag_store_ways->prefetch_all(set.ways);
 
     if (!set.attic_ways.empty())
     {
-      tag_store_attic_ways = new Tag_Store< Uint31_Index, Way_Skeleton >(transaction);
+      tag_store_attic_ways = new Tag_Store< Uint31_Index, Way_Skeleton >(*context);
       tag_store_attic_ways->prefetch_all(set.attic_ways);
     }
 
-    tag_store_relations = new Tag_Store< Uint31_Index, Relation_Skeleton >(transaction);
+    tag_store_relations = new Tag_Store< Uint31_Index, Relation_Skeleton >(*context);
     tag_store_relations->prefetch_all(set.relations);
 
     if (!set.attic_relations.empty())
     {
-      tag_store_attic_relations = new Tag_Store< Uint31_Index, Relation_Skeleton >(transaction);
+      tag_store_attic_relations = new Tag_Store< Uint31_Index, Relation_Skeleton >(*context);
       tag_store_attic_relations->prefetch_all(set.attic_relations);
     }
 
     if (!base->areas.empty())
     {
-      tag_store_areas = new Tag_Store< Uint31_Index, Area_Skeleton >(transaction);
+      tag_store_areas = new Tag_Store< Uint31_Index, Area_Skeleton >(*context);
       tag_store_areas->prefetch_all(set.areas);
     }
 
-    tag_store_deriveds = new Tag_Store< Uint31_Index, Derived_Structure >(transaction);
+    tag_store_deriveds = new Tag_Store< Uint31_Index, Derived_Structure >(*context);
     tag_store_deriveds->prefetch_all(set.deriveds);
   }
 
@@ -177,13 +177,13 @@ void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stm
   {
     use_geometry = true;
 
-    way_geometry_store = new Way_Geometry_Store(set.ways, context);
+    way_geometry_store = new Way_Geometry_Store(set.ways, *context);
     if (!set.attic_ways.empty())
-      attic_way_geometry_store = new Way_Geometry_Store(set.attic_ways, context);
+      attic_way_geometry_store = new Way_Geometry_Store(set.attic_ways, *context);
 
-    relation_geometry_store = new Relation_Geometry_Store(set.relations, context);
+    relation_geometry_store = new Relation_Geometry_Store(set.relations, *context);
     if (!set.attic_relations.empty())
-      attic_relation_geometry_store = new Relation_Geometry_Store(set.attic_relations, context);
+      attic_relation_geometry_store = new Relation_Geometry_Store(set.attic_relations, *context);
   }
 
   if (usage & Set_Usage::META)

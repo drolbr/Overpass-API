@@ -235,7 +235,8 @@ template< class Index, class Object >
 void Set_Comparison::tags_quadtile
     (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Object > >& items, Resource_Manager& rman)
 {
-  Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+  Request_Context context(nullptr, rman);
+  Tag_Store< Index, Object > tag_store(context);
   tag_store.prefetch_all(items);
 
   // formulate meta query if meta data shall be printed
@@ -266,7 +267,8 @@ void Set_Comparison::tags_quadtile_attic
     (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
      Resource_Manager& rman)
 {
-  Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+  Request_Context context(nullptr, rman);
+  Tag_Store< Index, Object > tag_store(context);
   tag_store.prefetch_all(items);
   
   std::unique_ptr< Attic_Meta_Collector< Index, Object > > meta_printer(
@@ -294,7 +296,8 @@ void Set_Comparison::tags_quadtile
     (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Object > >& items,
     const std::vector< typename Object::Id_Type >& id_list, Resource_Manager& rman)
 {
-  Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+  Request_Context context(nullptr, rman);
+  Tag_Store< Index, Object > tag_store(context);
   tag_store.prefetch_all(items);
 
   // formulate meta query if meta data shall be printed
@@ -326,7 +329,8 @@ void Set_Comparison::tags_quadtile_attic
     (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
     const std::vector< typename Object::Id_Type >& id_list, Resource_Manager& rman)
 {
-  Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+  Request_Context context(nullptr, rman);
+  Tag_Store< Index, Object > tag_store(context);
   tag_store.prefetch_all(items);
   
   std::unique_ptr< Attic_Meta_Collector< Index, Object > > meta_printer(

@@ -21,9 +21,9 @@
 
 
 #include "filenames.h"
+#include "request_context.h"
 #include "../core/datatypes.h"
 #include "../../template_db/block_backend.h"
-#include "../../template_db/transaction.h"
 
 #include <map>
 #include <string>
@@ -34,7 +34,7 @@ template< typename Index, typename Object >
 class Tag_Store
 {
 public:
-  Tag_Store(Transaction& transaction);
+  Tag_Store(Request_Context& context);
   ~Tag_Store();
 
   void prefetch_all(const std::map< Index, std::vector< Object > >& elems);
@@ -48,7 +48,7 @@ public:
 
 private:
   std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > > tags_by_id;
-  Transaction* transaction;
+  Request_Context& context;
   bool use_index;
   Index stored_index;
   Ranges< Tag_Index_Local > ranges;
@@ -65,7 +65,7 @@ template< >
 class Tag_Store< Uint31_Index, Derived_Structure >
 {
 public:
-  Tag_Store(Transaction& transaction) {}
+  Tag_Store(Request_Context& context) {}
   Tag_Store() {}
 
   void prefetch_all(const std::map< Uint31_Index, std::vector< Derived_Structure > >& elems) {}
@@ -267,8 +267,8 @@ void collect_tags_framed
 
 
 template< typename Index, typename Object >
-Tag_Store< Index, Object >::Tag_Store(Transaction& transaction_)
-    : transaction(&transaction_), use_index(false), items_db(0), tag_it(0),
+Tag_Store< Index, Object >::Tag_Store(Request_Context& context_)
+    : context(context_), use_index(false), items_db(0), tag_it(0),
     attic_items_db(0), attic_tag_it(0) {}
 
 
@@ -281,7 +281,7 @@ void Tag_Store< Index, Object >::prefetch_all(const std::map< Index, std::vector
 
   delete items_db;
   items_db = new Block_Backend< Tag_Index_Local, typename Object::Id_Type >(
-      transaction->data_index(current_local_tags_file_properties< Object >()));
+      context.data_index(current_local_tags_file_properties< Object >()));
 
   delete tag_it;
   tag_it = new typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator(
@@ -311,7 +311,7 @@ void Tag_Store< Index, Object >::prefetch_chunk(const std::map< Index, std::vect
   generate_ids_by_coarse(ids_by_coarse, elems);
 
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
-      (transaction->data_index(current_local_tags_file_properties< Object >()));
+      (context.data_index(current_local_tags_file_properties< Object >()));
 
   Ranges< Tag_Index_Local > ranges = formulate_range_query(ids_by_coarse);
   auto tag_it = items_db.range_begin(ranges);
@@ -331,10 +331,10 @@ void Tag_Store< Index, Object >::prefetch_all(const std::map< Index, std::vector
 
   delete items_db;
   items_db = new Block_Backend< Tag_Index_Local, typename Object::Id_Type >(
-      transaction->data_index(current_local_tags_file_properties< Object >()));
+      context.data_index(current_local_tags_file_properties< Object >()));
   delete attic_items_db;
   attic_items_db = new Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > >(
-      transaction->data_index(attic_local_tags_file_properties< Object >()));
+      context.data_index(attic_local_tags_file_properties< Object >()));
 
   delete tag_it;
   tag_it = new typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator(
@@ -365,9 +365,9 @@ void Tag_Store< Index, Object >::prefetch_chunk(const std::map< Index, std::vect
   generate_ids_by_coarse(attic_ids_by_coarse, attic_items);
 
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
-      (transaction->data_index(current_local_tags_file_properties< Object >()));
+      (context.data_index(current_local_tags_file_properties< Object >()));
   Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > > attic_tags_db
-      (transaction->data_index(attic_local_tags_file_properties< Object >()));
+      (context.data_index(attic_local_tags_file_properties< Object >()));
 
   Ranges< Tag_Index_Local > ranges = formulate_range_query(attic_ids_by_coarse);
   auto current_tag_it = current_tags_db.range_begin(ranges);

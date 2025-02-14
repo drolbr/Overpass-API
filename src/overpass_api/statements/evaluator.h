@@ -103,7 +103,7 @@ private:
   Set_With_Context& operator=(const Set_With_Context&);
 
 public:
-  Set_With_Context() : base(0), set_key_values(0), parent(0),
+  Set_With_Context() : base(0), set_key_values(0), parent(0), context(0),
       tag_store_nodes(0), tag_store_attic_nodes(0),
       tag_store_ways(0), tag_store_attic_ways(0),
       tag_store_relations(0), tag_store_attic_relations(0),
@@ -138,6 +138,8 @@ public:
     delete meta_collector_attic_ways;
     delete meta_collector_relations;
     delete meta_collector_attic_relations;
+    
+    delete context;
   }
 
   Element_With_Context< Node_Skeleton > get_context(const Uint32_Index& index, const Node_Skeleton& elem);
@@ -158,6 +160,8 @@ public:
   const Set* base;
   const std::map< std::string, std::string >* set_key_values;
   const Prepare_Task_Context* parent;
+  
+  Request_Context* context;
 
   Tag_Store< Uint32_Index, Node_Skeleton >* tag_store_nodes;
   Tag_Store< Uint32_Index, Node_Skeleton >* tag_store_attic_nodes;
