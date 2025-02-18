@@ -315,18 +315,18 @@ void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_uppe
 }
 
 
-void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Area_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0)
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, const Area_Skeleton& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags = 0)
 {
   Derived_Skeleton derived("area", Uint64(skel.id.val()));
   output.print_item(derived, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
-void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Derived_Structure& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0)
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, const Derived_Structure& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags = 0)
 {
   if (skel.get_geometry())
     output.print_item(skel, *skel.get_geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
@@ -335,57 +335,28 @@ void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_uppe
 }
 
 
-template< class TIndex, class TObject >
-void quadtile_
-    (const std::map< TIndex, std::vector< TObject > >& items, OSM_Data_Printer& output,
-     Transaction& transaction, Extra_Data& extra_data)
-{
-  typename std::map< TIndex, std::vector< TObject > >::const_iterator
-      item_it(items.begin());
-  // print the result
-  while (item_it != items.end())
-  {
-    for (typename std::vector< TObject >::const_iterator it2(item_it->second.begin());
-        it2 != item_it->second.end(); ++it2)
-    {
-      if (++extra_data.element_count > extra_data.limit)
-	return;
-      print_item(extra_data, output, item_it->first.val(), *it2);
-    }
-    ++item_it;
-  }
-}
-
-
 template< class Index, class Object >
-void tags_quadtile_
-    (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
-     OSM_Data_Printer& output,
-     Resource_Manager& rman, Transaction& transaction)
+void tags_quadtile(
+    Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& current_items,
+    OSM_Data_Printer& output, Request_Context& context)
 {
-  Request_Context context(nullptr, rman);
-  Tag_Store< Index, Object > tag_store(context);
-  tag_store.prefetch_all(items);
-
-  // formulate meta query if meta data shall be printed
-  std::unique_ptr< Meta_Collector< Index, typename Object::Id_Type > > meta_printer(
-      extra_data.mode & Output_Mode::META
-      ? new Meta_Collector< Index, typename Object::Id_Type >(
-          items, transaction, *current_meta_file_properties< Object >())
-      : nullptr);
+  Tag_Store< Index, Object > current_tag_store(context);
+  if (extra_data.mode & Output_Mode::TAGS)
+    current_tag_store.prefetch_all(current_items);
 
   typename std::map< Index, std::vector< Object > >::const_iterator
-      item_it(items.begin());
+      item_it(current_items.begin());
   // print the result
-  while (item_it != items.end())
+  while (item_it != current_items.end())
   {
     for (typename std::vector< Object >::const_iterator it2(item_it->second.begin());
         it2 != item_it->second.end(); ++it2)
     {
       if (++extra_data.element_count > extra_data.limit)
         return;
-      print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-          meta_printer ? meta_printer->get(item_it->first, it2->id) : nullptr);
+      print_item(
+          extra_data, output, *it2,
+          (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(item_it->first, *it2) : nullptr);
     }
     ++item_it;
   }
@@ -393,34 +364,94 @@ void tags_quadtile_
 
 
 template< class Index, class Object >
-void tags_quadtile_attic_
-    (Extra_Data& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
+void tags_quadtile_attic
+    (Extra_Data& extra_data,
+     const std::map< Index, std::vector< Object > >& current_items,
+     const std::map< Index, std::vector< Attic< Object > > >& attic_items,
      OSM_Data_Printer& output,
      Resource_Manager& rman, Transaction& transaction)
 {
   Request_Context context(nullptr, rman);
-  Tag_Store< Index, Object > tag_store(context);
-  tag_store.prefetch_all(items);
-  
-  std::unique_ptr< Attic_Meta_Collector< Index, Object > > meta_printer(
+  Tag_Store< Index, Object > current_tag_store(context);
+  Tag_Store< Index, Object > attic_tag_store(context);
+  if (extra_data.mode & Output_Mode::TAGS)
+  {
+    current_tag_store.prefetch_all(current_items);
+    if (!attic_items.empty())
+      attic_tag_store.prefetch_all(attic_items);
+  }
+
+  // formulate meta query if meta data shall be printed
+  std::unique_ptr< Meta_Collector< Index, typename Object::Id_Type > > current_meta_printer(
       extra_data.mode & Output_Mode::META
-      ? new Attic_Meta_Collector< Index, Object >(items, *rman.get_transaction())
+      ? new Meta_Collector< Index, typename Object::Id_Type >(
+          current_items, transaction, *current_meta_file_properties< Object >())
+      : nullptr);
+  std::unique_ptr< Attic_Meta_Collector< Index, Object > > attic_meta_printer(
+      (extra_data.mode & Output_Mode::META) && !attic_items.empty()
+      ? new Attic_Meta_Collector< Index, Object >(attic_items, *rman.get_transaction())
       : nullptr);
 
-  typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
-      item_it(items.begin());
-  while (item_it != items.end())
+  auto current_it = current_items.begin();
+  auto attic_it = attic_items.begin();
+//   while (current_it != current_items.end() || attic_it != attic_items.end())
+//   {
+//     while (current_it != current_items.end() &&
+//         (attic_it == attic_items.end() || !(attic_it->first < current_it->first)))
+//     {
+//       for (auto it2 = current_it->second.begin(); it2 != current_it->second.end(); ++it2)
+//       {
+//         if (++extra_data.element_count > extra_data.limit)
+//           return;
+//         print_item(extra_data, output, current_it->first.val(), *it2,
+//             (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(current_it->first, *it2) : nullptr,
+//             current_meta_printer ? current_meta_printer->get(current_it->first, it2->id) : nullptr);
+//       }
+//       ++current_it;
+//     }
+// 
+//     while (attic_it != attic_items.end() &&
+//         (current_it == current_items.end() || attic_it->first < current_it->first))
+//     {
+//       for (auto it2 = attic_it->second.begin(); it2 != attic_it->second.end(); ++it2)
+//       {
+//         if (++extra_data.element_count > extra_data.limit)
+//           return;
+//         print_item(
+//             extra_data, output, attic_it->first.val(), *it2,
+//             (extra_data.mode & Output_Mode::TAGS) ? attic_tag_store.get(attic_it->first, *it2) : nullptr,
+//             attic_meta_printer ? attic_meta_printer->get(attic_it->first, it2->id, it2->timestamp) : nullptr);
+//       }
+//       ++attic_it;
+//     }
+//   }
+
+  // print the result
+  while (current_it != current_items.end())
   {
-    for (typename std::vector< Attic< Object > >::const_iterator it2(item_it->second.begin());
-        it2 != item_it->second.end(); ++it2)
+    for (auto it2 = current_it->second.begin(); it2 != current_it->second.end(); ++it2)
+    {
+      if (++extra_data.element_count > extra_data.limit)
+        return;
+      print_item(extra_data, output, current_it->first.val(), *it2,
+          (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(current_it->first, *it2) : nullptr,
+          current_meta_printer ? current_meta_printer->get(current_it->first, it2->id) : nullptr);
+    }
+    ++current_it;
+  }
+
+  while (attic_it != attic_items.end())
+  {
+    for (auto it2 = attic_it->second.begin(); it2 != attic_it->second.end(); ++it2)
     {
       if (++extra_data.element_count > extra_data.limit)
         return;
       print_item(
-          extra_data, output, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-          meta_printer ? meta_printer->get(item_it->first, it2->id, it2->timestamp) : nullptr);
+          extra_data, output, attic_it->first.val(), *it2,
+          (extra_data.mode & Output_Mode::TAGS) ? attic_tag_store.get(attic_it->first, *it2) : nullptr,
+          attic_meta_printer ? attic_meta_printer->get(attic_it->first, it2->id, it2->timestamp) : nullptr);
     }
-    ++item_it;
+    ++attic_it;
   }
 }
 
@@ -529,10 +560,9 @@ void tags_by_id(
       if (++extra_data.element_count > extra_data.limit)
         return;
       print_item(
-          extra_data, output, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+          extra_data, output, *(items_by_id[i.val()].first),
           (extra_data.mode & Output_Mode::TAGS)
-              ? tag_store.get(Index(items_by_id[i.val()].second), *items_by_id[i.val()].first) : nullptr,
-          nullptr);
+              ? tag_store.get(Index(items_by_id[i.val()].second), *items_by_id[i.val()].first) : nullptr);
     }
   }
 }
@@ -678,9 +708,9 @@ void Print_Statement::execute(Resource_Manager& rman)
   Output_Handler& output_handler = *dynamic_cast< Output_Handler* >(rman.get_global_settings().get_output_handler());
   auto& data_printer = *output_handler.get_data_printer();
 
+  Request_Context context(this, rman);
   if (order == order_by_id)
   {
-    Request_Context context(this, rman);
     tags_by_id_attic(
         output_items->nodes, output_items->attic_nodes, extra_data, NODE_FLUSH_SIZE, data_printer, context);
     tags_by_id_attic(
@@ -700,52 +730,20 @@ void Print_Statement::execute(Resource_Manager& rman)
   }
   else
   {
-    if (mode & Output_Mode::TAGS)
-    {
-      tags_quadtile_(extra_data, output_items->nodes,
-		    data_printer, rman, *rman.get_transaction());
+    tags_quadtile_attic(
+        extra_data, output_items->nodes, output_items->attic_nodes,
+        data_printer, rman, *rman.get_transaction());
+    tags_quadtile_attic(
+        extra_data, output_items->ways, output_items->attic_ways,
+        data_printer, rman, *rman.get_transaction());
+    tags_quadtile_attic(
+        extra_data, output_items->relations, output_items->attic_relations,
+        data_printer, rman, *rman.get_transaction());
 
-      if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic_(extra_data, output_items->attic_nodes,
-                      data_printer, rman, *rman.get_transaction());
+    if (rman.get_area_transaction())
+      tags_quadtile(extra_data, output_items->areas, data_printer, context);
 
-      tags_quadtile_(extra_data, output_items->ways,
-		    data_printer, rman, *rman.get_transaction());
-
-      if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic_(extra_data, output_items->attic_ways,
-                      data_printer, rman, *rman.get_transaction());
-
-      tags_quadtile_(extra_data, output_items->relations,
-		    data_printer, rman, *rman.get_transaction());
-
-      if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic_(extra_data, output_items->attic_relations,
-                      data_printer, rman, *rman.get_transaction());
-
-      if (rman.get_area_transaction())
-        tags_quadtile_(extra_data, output_items->areas,
-		      data_printer, rman, *rman.get_area_transaction());
-
-      tags_quadtile_(extra_data, output_items->deriveds,
-                    data_printer, rman, *rman.get_transaction());
-    }
-    else
-    {
-      quadtile_(output_items->nodes, data_printer, *rman.get_transaction(), extra_data);
-      quadtile_(output_items->attic_nodes, data_printer, *rman.get_transaction(), extra_data);
-
-      quadtile_(output_items->ways, data_printer, *rman.get_transaction(), extra_data);
-      quadtile_(output_items->attic_ways, data_printer, *rman.get_transaction(), extra_data);
-
-      quadtile_(output_items->relations, data_printer, *rman.get_transaction(), extra_data);
-      quadtile_(output_items->attic_relations, data_printer, *rman.get_transaction(), extra_data);
-
-      if (rman.get_area_transaction())
-        quadtile_(output_items->areas, data_printer, *rman.get_area_transaction(), extra_data);
-
-      quadtile_(output_items->deriveds, data_printer, *rman.get_transaction(), extra_data);
-    }
+    tags_quadtile(extra_data, output_items->deriveds, data_printer, context);
   }
 
   rman.health_check(*this);
