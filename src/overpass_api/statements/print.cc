@@ -394,64 +394,36 @@ void tags_quadtile_attic
 
   auto current_it = current_items.begin();
   auto attic_it = attic_items.begin();
-//   while (current_it != current_items.end() || attic_it != attic_items.end())
-//   {
-//     while (current_it != current_items.end() &&
-//         (attic_it == attic_items.end() || !(attic_it->first < current_it->first)))
-//     {
-//       for (auto it2 = current_it->second.begin(); it2 != current_it->second.end(); ++it2)
-//       {
-//         if (++extra_data.element_count > extra_data.limit)
-//           return;
-//         print_item(extra_data, output, current_it->first.val(), *it2,
-//             (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(current_it->first, *it2) : nullptr,
-//             current_meta_printer ? current_meta_printer->get(current_it->first, it2->id) : nullptr);
-//       }
-//       ++current_it;
-//     }
-// 
-//     while (attic_it != attic_items.end() &&
-//         (current_it == current_items.end() || attic_it->first < current_it->first))
-//     {
-//       for (auto it2 = attic_it->second.begin(); it2 != attic_it->second.end(); ++it2)
-//       {
-//         if (++extra_data.element_count > extra_data.limit)
-//           return;
-//         print_item(
-//             extra_data, output, attic_it->first.val(), *it2,
-//             (extra_data.mode & Output_Mode::TAGS) ? attic_tag_store.get(attic_it->first, *it2) : nullptr,
-//             attic_meta_printer ? attic_meta_printer->get(attic_it->first, it2->id, it2->timestamp) : nullptr);
-//       }
-//       ++attic_it;
-//     }
-//   }
-
-  // print the result
-  while (current_it != current_items.end())
+  while (current_it != current_items.end() || attic_it != attic_items.end())
   {
-    for (auto it2 = current_it->second.begin(); it2 != current_it->second.end(); ++it2)
+    while (current_it != current_items.end() &&
+        (attic_it == attic_items.end() || !(attic_it->first < current_it->first)))
     {
-      if (++extra_data.element_count > extra_data.limit)
-        return;
-      print_item(extra_data, output, current_it->first.val(), *it2,
-          (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(current_it->first, *it2) : nullptr,
-          current_meta_printer ? current_meta_printer->get(current_it->first, it2->id) : nullptr);
+      for (auto it2 = current_it->second.begin(); it2 != current_it->second.end(); ++it2)
+      {
+        if (++extra_data.element_count > extra_data.limit)
+          return;
+        print_item(extra_data, output, current_it->first.val(), *it2,
+            (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(current_it->first, *it2) : nullptr,
+            current_meta_printer ? current_meta_printer->get(current_it->first, it2->id) : nullptr);
+      }
+      ++current_it;
     }
-    ++current_it;
-  }
 
-  while (attic_it != attic_items.end())
-  {
-    for (auto it2 = attic_it->second.begin(); it2 != attic_it->second.end(); ++it2)
+    while (attic_it != attic_items.end() &&
+        (current_it == current_items.end() || attic_it->first < current_it->first))
     {
-      if (++extra_data.element_count > extra_data.limit)
-        return;
-      print_item(
-          extra_data, output, attic_it->first.val(), *it2,
-          (extra_data.mode & Output_Mode::TAGS) ? attic_tag_store.get(attic_it->first, *it2) : nullptr,
-          attic_meta_printer ? attic_meta_printer->get(attic_it->first, it2->id, it2->timestamp) : nullptr);
+      for (auto it2 = attic_it->second.begin(); it2 != attic_it->second.end(); ++it2)
+      {
+        if (++extra_data.element_count > extra_data.limit)
+          return;
+        print_item(
+            extra_data, output, attic_it->first.val(), *it2,
+            (extra_data.mode & Output_Mode::TAGS) ? attic_tag_store.get(attic_it->first, *it2) : nullptr,
+            attic_meta_printer ? attic_meta_printer->get(attic_it->first, it2->id, it2->timestamp) : nullptr);
+      }
+      ++attic_it;
     }
-    ++attic_it;
   }
 }
 
