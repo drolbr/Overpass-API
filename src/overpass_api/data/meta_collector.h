@@ -262,6 +262,36 @@ struct Full_Monotype_Meta
 };
 
 
+template< typename Index, typename Skeleton >
+class Idx_Cached_Meta_Collector
+{
+public:
+  Idx_Cached_Meta_Collector(
+      const std::map< Index, std::vector< Skeleton > >& current_items,
+      const std::map< Index, std::vector< Attic< Skeleton > > >& attic_items,
+      uint64_t timestamp, Request_Context& context);
+  
+  const Full_Monotype_Meta* get(Index idx, uint64_t ref);
+  
+private:
+  std::vector< Index > current_req;
+  std::vector< Index > attic_req;
+
+  std::unique_ptr< Block_Backend< Index, Meta_Per_Changeset_Skeleton > > current_db;
+  std::unique_ptr< typename Block_Backend< Index, Meta_Per_Changeset_Skeleton >::Discrete_Iterator > current_db_it;
+  std::unique_ptr< Block_Backend< Index, Meta_Per_Changeset_Skeleton > > attic_db;
+  std::unique_ptr< typename Block_Backend< Index, Meta_Per_Changeset_Skeleton >::Discrete_Iterator > attic_db_it;
+
+  bool idx_valid;
+  Index ref_idx;
+  std::vector< Full_Monotype_Meta > cache;
+  
+  uint64_t timestamp;
+  const std::map< Index, std::vector< Skeleton > >& current_items;
+  const std::map< Index, std::vector< Attic< Skeleton > > >& attic_items;  
+};
+
+
 template< typename Index >
 class Chunked_Meta_Collector
 {

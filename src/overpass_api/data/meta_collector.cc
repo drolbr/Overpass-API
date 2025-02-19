@@ -18,6 +18,15 @@
 
 #include "meta_collector.h"
 
+
+template
+class Idx_Cached_Meta_Collector< Uint32_Index, Node_Skeleton >;
+template
+class Idx_Cached_Meta_Collector< Uint31_Index, Way_Skeleton >;
+template
+class Idx_Cached_Meta_Collector< Uint31_Index, Relation_Skeleton >;
+
+
 template
 class Chunked_Meta_Collector< Uint32_Index >;
 template
@@ -45,6 +54,21 @@ void Chunked_Meta_Collector< Uint31_Index >::prefetch_chunk< Relation_Skeleton >
 
 namespace
 {
+  template< typename Index, typename Unused >
+  std::vector< Index > extract_idxs(
+      const std::map< Index, Unused >& to_add)
+  {
+    std::vector< Index > result;
+
+    for (const auto& i : to_add)
+      result.push_back(i.first);
+
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+    return result;
+  }
+  
+  
   template< typename Index, typename Unused1, typename Unused2 >
   std::vector< Index > extract_idxs(
       const std::map< Index, Unused1 >& to_add_1,
@@ -60,6 +84,31 @@ namespace
     std::sort(result.begin(), result.end());
     result.erase(std::unique(result.begin(), result.end()), result.end());
     return result;
+  }
+  
+  
+  template< typename Index, typename Discrete_Iterator >
+  void eval_idx_for_chunk(
+      Index idx, uint64_t timestamp,
+      std::vector< Full_Monotype_Meta >& to, Discrete_Iterator& db_it, const Discrete_Iterator& db_end)
+  {
+    while (!(db_it == db_end) && db_it.index() < idx)
+      ++db_it;
+    while (!(db_it == db_end) && db_it.index() == idx)
+    {
+      auto& changeset = db_it.object();
+      for (const auto& entry : changeset.get_refs())
+      {
+        if (entry.timestamp <= timestamp)
+        {
+          auto to_it = std::lower_bound(to.begin(), to.end(), Full_Monotype_Meta{ entry.ref });
+          if (to_it != to.end() && to_it->ref == entry.ref && to_it->version < entry.version)
+            *to_it = { entry.ref, entry.version, entry.timestamp,
+                changeset.get_is_redacted(), changeset.get_changeset(), changeset.get_user_id() };
+        }
+      }
+      ++db_it;
+    }
   }
   
   
@@ -110,6 +159,71 @@ namespace
 }
 
 
+template< typename Index, typename Skeleton >
+Idx_Cached_Meta_Collector< Index, Skeleton >::Idx_Cached_Meta_Collector(
+    const std::map< Index, std::vector< Skeleton > >& current_items_,
+    const std::map< Index, std::vector< Attic< Skeleton > > >& attic_items_,
+    uint64_t timestamp_, Request_Context& context)
+    : current_req(extract_idxs(current_items_, attic_items_)), attic_req(extract_idxs(attic_items_)),
+      current_db(current_req.empty() ? nullptr
+          : new Block_Backend< Index, Meta_Per_Changeset_Skeleton >(
+                context.data_index(current_meta_file_properties< Skeleton >()))),
+      attic_db(attic_req.empty() ? nullptr
+          : new Block_Backend< Index, Meta_Per_Changeset_Skeleton >(
+                context.data_index(attic_meta_file_properties< Skeleton >()))),
+      idx_valid(false), ref_idx((uint32_t)0),
+      timestamp(timestamp_), current_items(current_items_), attic_items(attic_items_)
+{
+  if (current_db)
+    current_db_it.reset(new auto(current_db->discrete_begin(current_req.begin(), current_req.end())));
+  if (attic_db)
+    attic_db_it.reset(new auto(attic_db->discrete_begin(attic_req.begin(), attic_req.end())));
+}
+
+
+template< typename Index, typename Skeleton >
+const Full_Monotype_Meta* Idx_Cached_Meta_Collector< Index, Skeleton >::get(Index idx, uint64_t ref)
+{
+  if (idx_valid && idx < ref_idx)
+  {
+    if (current_db)
+      *current_db_it = current_db->discrete_begin(current_req.begin(), current_req.end());
+    if (attic_db)
+      *attic_db_it = attic_db->discrete_begin(attic_req.begin(), attic_req.end());
+  }
+  if (!idx_valid || !(ref_idx == idx))
+  {
+    cache.clear();
+
+    auto current_it = current_items.find(idx);
+    if (current_it != current_items.end())
+    {
+      for (const auto& item : current_it->second)
+        cache.push_back(Full_Monotype_Meta{ item.id.val() });
+    }
+    auto attic_it = attic_items.find(idx);
+    if (attic_it != attic_items.end())
+    {
+      for (const auto& item : attic_it->second)
+        cache.push_back(Full_Monotype_Meta{ item.id.val() });
+    }
+    std::sort(cache.begin(), cache.end());
+
+    if (current_db_it)
+      eval_idx_for_chunk(idx, timestamp, cache, *current_db_it, current_db->discrete_end());
+    if (attic_db_it)
+      eval_idx_for_chunk(idx, timestamp, cache, *attic_db_it, attic_db->discrete_end());
+  }
+  idx_valid = true;
+  ref_idx = idx;
+  
+  auto ref_it = std::lower_bound(cache.begin(), cache.end(), Full_Monotype_Meta{ ref });
+  if (ref_it == cache.end() || ref_it->ref != ref)
+    return nullptr;
+  return &*ref_it;
+}
+
+
 template< typename Index >
 template< typename Skeleton >
 void Chunked_Meta_Collector< Index >::prefetch_chunk(
@@ -150,7 +264,7 @@ void Chunked_Meta_Collector< Index >::prefetch_chunk(
 
   if (!attic_items.empty())
   {
-    std::vector< Index > req = extract_idxs(std::map< Index, int >{}, attic_items);
+    std::vector< Index > req = extract_idxs(attic_items);
     Block_Backend< Index, Meta_Per_Changeset_Skeleton, typename std::vector< Index >::const_iterator > db(
         context.data_index(attic_meta_file_properties< Skeleton >()));
     eval_db_for_chunk(req, db, chunk, lower_id_bound, upper_id_bound, timestamp);

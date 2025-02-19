@@ -381,16 +381,8 @@ void tags_quadtile_attic
       attic_tag_store.prefetch_all(attic_items);
   }
 
-  // formulate meta query if meta data shall be printed
-  std::unique_ptr< Meta_Collector< Index, typename Object::Id_Type > > current_meta_printer(
-      extra_data.mode & Output_Mode::META
-      ? new Meta_Collector< Index, typename Object::Id_Type >(
-          current_items, transaction, *current_meta_file_properties< Object >())
-      : nullptr);
-  std::unique_ptr< Attic_Meta_Collector< Index, Object > > attic_meta_printer(
-      (extra_data.mode & Output_Mode::META) && !attic_items.empty()
-      ? new Attic_Meta_Collector< Index, Object >(attic_items, *rman.get_transaction())
-      : nullptr);
+  Idx_Cached_Meta_Collector< Index, Object > meta_collector(
+      current_items, attic_items, context.get_desired_timestamp(), context);
 
   auto current_it = current_items.begin();
   auto attic_it = attic_items.begin();
@@ -403,9 +395,22 @@ void tags_quadtile_attic
       {
         if (++extra_data.element_count > extra_data.limit)
           return;
-        print_item(extra_data, output, current_it->first.val(), *it2,
+
+        const Full_Monotype_Meta* meta = nullptr;
+        if (extra_data.mode & Output_Mode::META)
+          meta = meta_collector.get(current_it->first, it2->id.val());
+        OSM_Element_Metadata_Skeleton< typename Object::Id_Type > temp_meta(it2->id, meta ? meta->timestamp : 0);
+        if (meta)
+        {
+          temp_meta.version = meta->version;
+          temp_meta.changeset = meta->changeset;
+          temp_meta.user_id = meta->uid;
+        }
+
+        print_item(
+            extra_data, output, current_it->first.val(), *it2,
             (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(current_it->first, *it2) : nullptr,
-            current_meta_printer ? current_meta_printer->get(current_it->first, it2->id) : nullptr);
+            ((extra_data.mode & Output_Mode::META) && meta) ? &temp_meta : nullptr);
       }
       ++current_it;
     }
@@ -417,10 +422,21 @@ void tags_quadtile_attic
       {
         if (++extra_data.element_count > extra_data.limit)
           return;
+
+        const Full_Monotype_Meta* meta = nullptr;
+        meta = meta_collector.get(attic_it->first, it2->id.val());
+        OSM_Element_Metadata_Skeleton< typename Object::Id_Type > temp_meta(it2->id, meta ? meta->timestamp : 0);
+        if (meta)
+        {
+          temp_meta.version = meta->version;
+          temp_meta.changeset = meta->changeset;
+          temp_meta.user_id = meta->uid;
+        }
+
         print_item(
             extra_data, output, attic_it->first.val(), *it2,
             (extra_data.mode & Output_Mode::TAGS) ? attic_tag_store.get(attic_it->first, *it2) : nullptr,
-            attic_meta_printer ? attic_meta_printer->get(attic_it->first, it2->id, it2->timestamp) : nullptr);
+            ((extra_data.mode & Output_Mode::META) && meta) ? &temp_meta : nullptr);
       }
       ++attic_it;
     }
