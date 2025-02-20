@@ -121,9 +121,8 @@ std::string Output_CSV::dump_config() const
 
 namespace
 {
-  template< typename OSM_Element_Metadata_Skeleton >
   void print_meta(const std::string& keyfield,
-      const OSM_Element_Metadata_Skeleton& meta, const std::map< uint32, std::string >* users)
+      const Full_Monotype_Meta& meta, const std::map< uint32, std::string >* users)
   {
     if (keyfield == "version")
       std::cout<<meta.version;
@@ -132,18 +131,17 @@ namespace
     else if (keyfield == "changeset")
       std::cout<<meta.changeset;
     else if (keyfield == "uid")
-      std::cout<<meta.user_id;
+      std::cout<<meta.uid;
     else if (users && keyfield == "user")
     {
-      std::map< uint32, std::string >::const_iterator uit = users->find(meta.user_id);
+      std::map< uint32, std::string >::const_iterator uit = users->find(meta.uid);
       if (uit != users->end())
         std::cout<<uit->second;
     }
   }
 
 
-  template< >
-  void print_meta< int >(const std::string& keyfield,
+  void print_meta(const std::string& keyfield,
       const int& meta, const std::map< uint32, std::string >* users) {}
 
   std::string get_count_tag(const std::vector< std::pair< std::string, std::string> >* tags, std::string tag)
@@ -236,7 +234,7 @@ namespace
 void Output_CSV::Data_Printer::print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action)
@@ -248,7 +246,7 @@ void Output_CSV::Data_Printer::print_item(const Node_Skeleton& skel,
 void Output_CSV::Data_Printer::print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action)
@@ -260,7 +258,7 @@ void Output_CSV::Data_Printer::print_item(const Way_Skeleton& skel,
 void Output_CSV::Data_Printer::print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* roles,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,

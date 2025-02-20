@@ -55,7 +55,7 @@ private:
         const Node_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
-        const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+        const Full_Monotype_Meta* meta,
         const std::map< uint32, std::string >* users,
         Output_Mode mode,
         const Feature_Action& action = keep) override;
@@ -64,7 +64,7 @@ private:
         const Way_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
-        const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+        const Full_Monotype_Meta* meta,
         const std::map< uint32, std::string >* users,
         Output_Mode mode,
         const Feature_Action& action = keep) override;
@@ -73,7 +73,7 @@ private:
         const Relation_Skeleton& skel,
         const Opaque_Geometry& geometry,
         const std::vector< std::pair< std::string, std::string > >* tags,
-        const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+        const Full_Monotype_Meta* meta,
         const std::map< uint32, std::string >* roles,
         const std::map< uint32, std::string >* users,
         Output_Mode mode,
@@ -85,6 +85,8 @@ private:
         const std::vector< std::pair< std::string, std::string > >* tags,
         Output_Mode mode,
         const Feature_Action& action = keep) override;
+        
+    void print_redacted(Output_Mode mode, uint32_t skel_type, const Full_Monotype_Meta* meta) override {}
 
     void set_output_templates();
 

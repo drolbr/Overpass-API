@@ -87,6 +87,27 @@ struct OSM_Element_Metadata
 };
 
 
+struct Full_Monotype_Meta
+{
+  Full_Monotype_Meta(uint64_t ref_) : ref(ref_) {}
+  Full_Monotype_Meta(
+      uint64_t ref_, uint64_t version_, uint64_t timestamp_,
+      bool is_redacted_, uint64_t changeset_, uint64_t uid_)
+    : ref(ref_), version(version_), timestamp(timestamp_),
+      is_redacted(is_redacted_), changeset(changeset_), uid(uid_) {}
+  
+  uint64_t ref = 0;
+  uint64_t version = 0;
+  uint64_t timestamp = 0;
+  bool is_redacted = false;
+  uint64_t changeset = 0;
+  uint64_t uid = 0;
+  
+  bool operator<(const Full_Monotype_Meta& rhs) const
+  { return ref == rhs.ref ? version < rhs.version : ref < rhs.ref; }
+};
+
+
 class Meta_Per_Changeset_Skeleton
 {
 public:

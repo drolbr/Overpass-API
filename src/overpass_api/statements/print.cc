@@ -262,18 +262,18 @@ Extra_Data::~Extra_Data()
 }
 
 
-void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Node_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0)
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Node_Skeleton& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   output.print_item(skel, Point_Geometry(::lat(ll_upper, skel.ll_lower), ::lon(ll_upper, skel.ll_lower)),
       tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
-void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Way_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0)
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Way_Skeleton& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   Geometry_From_Quad_Coords broker;
   output.print_item(skel,
@@ -282,20 +282,21 @@ void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_uppe
 }
 
 
-void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0)
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_way_geom(skel, extra_data.mode, extra_data.attic_way_geometry_store),
-      tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode), extra_data.action);
+      tags, meta, extra_data.get_users(),
+      Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
-void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Relation_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0)
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Relation_Skeleton& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   Geometry_From_Quad_Coords broker;
   output.print_item(skel,
@@ -304,63 +305,26 @@ void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_uppe
 }
 
 
-void print_item(Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0)
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_relation_geom(skel, extra_data.mode, extra_data.attic_relation_geometry_store),
-      tags, meta, extra_data.roles, extra_data.get_users(), Output_Mode(extra_data.mode), extra_data.action);
+      tags, meta, extra_data.roles, extra_data.get_users(),
+      Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
-void print_item(
-    Extra_Data& extra_data, OSM_Data_Printer& output, const Area_Skeleton& skel,
-    const std::vector< std::pair< std::string, std::string > >* tags = 0)
-{
-  Derived_Skeleton derived("area", Uint64(skel.id.val()));
-  output.print_item(derived, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
-}
-
-
-void print_item(
-    Extra_Data& extra_data, OSM_Data_Printer& output, const Derived_Structure& skel,
-    const std::vector< std::pair< std::string, std::string > >* tags = 0)
-{
-  if (skel.get_geometry())
-    output.print_item(skel, *skel.get_geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
-  else
-    output.print_item(skel, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
-}
-
-
-template< class Index, class Object >
-void tags_quadtile(
-    Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& current_items,
-    OSM_Data_Printer& output, Request_Context& context)
-{
-  Tag_Store< Index, Object > current_tag_store(context);
-  if (extra_data.mode & Output_Mode::TAGS)
-    current_tag_store.prefetch_all(current_items);
-
-  typename std::map< Index, std::vector< Object > >::const_iterator
-      item_it(current_items.begin());
-  // print the result
-  while (item_it != current_items.end())
-  {
-    for (typename std::vector< Object >::const_iterator it2(item_it->second.begin());
-        it2 != item_it->second.end(); ++it2)
-    {
-      if (++extra_data.element_count > extra_data.limit)
-        return;
-      print_item(
-          extra_data, output, *it2,
-          (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(item_it->first, *it2) : nullptr);
-    }
-    ++item_it;
-  }
-}
+template< typename Skeleton >
+uint32_t relation_member_type();
+template<>
+uint32_t relation_member_type< Node_Skeleton >() { return Relation_Entry::NODE; }
+template<>
+uint32_t relation_member_type< Way_Skeleton >() { return Relation_Entry::WAY; }
+template<>
+uint32_t relation_member_type< Relation_Skeleton >() { return Relation_Entry::RELATION; }
 
 
 template< class Index, class Object >
@@ -368,10 +332,8 @@ void tags_quadtile_attic
     (Extra_Data& extra_data,
      const std::map< Index, std::vector< Object > >& current_items,
      const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-     OSM_Data_Printer& output,
-     Resource_Manager& rman, Transaction& transaction)
+     OSM_Data_Printer& output, Request_Context& context)
 {
-  Request_Context context(nullptr, rman);
   Tag_Store< Index, Object > current_tag_store(context);
   Tag_Store< Index, Object > attic_tag_store(context);
   if (extra_data.mode & Output_Mode::TAGS)
@@ -382,7 +344,8 @@ void tags_quadtile_attic
   }
 
   Idx_Cached_Meta_Collector< Index, Object > meta_collector(
-      current_items, attic_items, context.get_desired_timestamp(), context);
+      (extra_data.mode & Output_Mode::META) ? current_items : std::map< Index, std::vector< Object > >{},
+      attic_items, context.get_desired_timestamp(), context);
 
   auto current_it = current_items.begin();
   auto attic_it = attic_items.begin();
@@ -396,21 +359,10 @@ void tags_quadtile_attic
         if (++extra_data.element_count > extra_data.limit)
           return;
 
-        const Full_Monotype_Meta* meta = nullptr;
-        if (extra_data.mode & Output_Mode::META)
-          meta = meta_collector.get(current_it->first, it2->id.val());
-        OSM_Element_Metadata_Skeleton< typename Object::Id_Type > temp_meta(it2->id, meta ? meta->timestamp : 0);
-        if (meta)
-        {
-          temp_meta.version = meta->version;
-          temp_meta.changeset = meta->changeset;
-          temp_meta.user_id = meta->uid;
-        }
-
         print_item(
             extra_data, output, current_it->first.val(), *it2,
             (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(current_it->first, *it2) : nullptr,
-            ((extra_data.mode & Output_Mode::META) && meta) ? &temp_meta : nullptr);
+            (extra_data.mode & Output_Mode::META) ? meta_collector.get(current_it->first, it2->id.val()) : nullptr);
       }
       ++current_it;
     }
@@ -423,20 +375,14 @@ void tags_quadtile_attic
         if (++extra_data.element_count > extra_data.limit)
           return;
 
-        const Full_Monotype_Meta* meta = nullptr;
-        meta = meta_collector.get(attic_it->first, it2->id.val());
-        OSM_Element_Metadata_Skeleton< typename Object::Id_Type > temp_meta(it2->id, meta ? meta->timestamp : 0);
-        if (meta)
-        {
-          temp_meta.version = meta->version;
-          temp_meta.changeset = meta->changeset;
-          temp_meta.user_id = meta->uid;
-        }
-
-        print_item(
-            extra_data, output, attic_it->first.val(), *it2,
-            (extra_data.mode & Output_Mode::TAGS) ? attic_tag_store.get(attic_it->first, *it2) : nullptr,
-            ((extra_data.mode & Output_Mode::META) && meta) ? &temp_meta : nullptr);
+        const Full_Monotype_Meta* meta = meta_collector.get(current_it->first, it2->id.val());
+        if (meta && meta->is_redacted)
+          output.print_redacted(extra_data.mode | Output_Mode::REDACTED, relation_member_type< Object >(), meta);
+        else
+          print_item(
+              extra_data, output, attic_it->first.val(), *it2,
+              (extra_data.mode & Output_Mode::TAGS) ? attic_tag_store.get(attic_it->first, *it2) : nullptr,
+              (extra_data.mode & Output_Mode::META) ? meta : nullptr);
       }
       ++attic_it;
     }
@@ -515,48 +461,6 @@ std::vector< Maybe_Attic_Ref< Index, Object > > collect_items_by_id(
 
 
 template< class Index, class Object >
-void tags_by_id(
-    const std::map< Index, std::vector< Object > >& items,
-    Extra_Data& extra_data, uint32 FLUSH_SIZE, OSM_Data_Printer& output,
-    Tag_Store< Index, Object >&& tag_store)
-{
-  std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
-
-  // iterate over the result
-  for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
-  {
-    // Disable health_check: This ensures that a result will be always printed completely
-    //rman.health_check(*this);
-
-    typename Object::Id_Type lower_id_bound(items_by_id[id_pos.val()].first->id);
-    typename Object::Id_Type upper_id_bound;
-    if (id_pos + FLUSH_SIZE < items_by_id.size())
-      upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].first->id;
-    else
-    {
-      upper_id_bound = items_by_id[items_by_id.size()-1].first->id;
-      ++upper_id_bound;
-    }
-
-    if (extra_data.mode & Output_Mode::TAGS)
-      tag_store.prefetch_chunk(items, lower_id_bound, upper_id_bound);
-
-    // print the result
-    for (typename Object::Id_Type i(id_pos);
-         (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
-    {
-      if (++extra_data.element_count > extra_data.limit)
-        return;
-      print_item(
-          extra_data, output, *(items_by_id[i.val()].first),
-          (extra_data.mode & Output_Mode::TAGS)
-              ? tag_store.get(Index(items_by_id[i.val()].second), *items_by_id[i.val()].first) : nullptr);
-    }
-  }
-}
-
-
-template< class Index, class Object >
 void tags_by_id_attic
   (const std::map< Index, std::vector< Object > >& current_items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
@@ -603,31 +507,116 @@ void tags_by_id_attic
       if (++extra_data.element_count > extra_data.limit)
         return;
 
-      const Full_Monotype_Meta* meta = nullptr;
-      if ((extra_data.mode & Output_Mode::META) || items_by_id[i.val()].timestamp != NOW)
-        meta = meta_collector.get(items_by_id[i.val()].idx, items_by_id[i.val()].obj->id.val());
-      OSM_Element_Metadata_Skeleton< typename Object::Id_Type > temp_meta(
-          items_by_id[i.val()].obj->id, meta ? meta->timestamp : 0);
-      if (meta)
-      {
-        temp_meta.version = meta->version;
-        temp_meta.changeset = meta->changeset;
-        temp_meta.user_id = meta->uid;
-      }
-
       if (items_by_id[i.val()].timestamp == NOW)
         print_item(
             extra_data, output, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
             (extra_data.mode & Output_Mode::TAGS)
                 ? current_tag_store.get(items_by_id[i.val()].idx, *items_by_id[i.val()].obj) : nullptr,
-            ((extra_data.mode & Output_Mode::META) && meta) ? &temp_meta : nullptr);
+            (extra_data.mode & Output_Mode::META) ? meta_collector.get(items_by_id[i.val()].idx, items_by_id[i.val()].obj->id.val()) : nullptr);
       else
-        print_item(
-            extra_data, output, items_by_id[i.val()].idx.val(),
-            Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
-            (extra_data.mode & Output_Mode::TAGS)
-                ? attic_tag_store.get(items_by_id[i.val()].idx, *items_by_id[i.val()].obj) : nullptr,
-            ((extra_data.mode & Output_Mode::META) && meta) ? &temp_meta : nullptr);
+      {
+        const Full_Monotype_Meta* meta = meta_collector.get(
+            items_by_id[i.val()].idx, items_by_id[i.val()].obj->id.val());
+        if (meta && meta->is_redacted)
+          output.print_redacted(extra_data.mode | Output_Mode::REDACTED, relation_member_type< Object >(), meta);
+        else
+          print_item(
+              extra_data, output, items_by_id[i.val()].idx.val(),
+              Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
+              (extra_data.mode & Output_Mode::TAGS)
+                  ? attic_tag_store.get(items_by_id[i.val()].idx, *items_by_id[i.val()].obj) : nullptr,
+              (extra_data.mode & Output_Mode::META) ? meta : nullptr);
+      }
+    }
+  }
+}
+
+
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, const Area_Skeleton& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags = 0)
+{
+  Derived_Skeleton derived("area", Uint64(skel.id.val()));
+  output.print_item(derived, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
+}
+
+
+void print_item(
+    Extra_Data& extra_data, OSM_Data_Printer& output, const Derived_Structure& skel,
+    const std::vector< std::pair< std::string, std::string > >* tags = 0)
+{
+  if (skel.get_geometry())
+    output.print_item(skel, *skel.get_geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
+  else
+    output.print_item(skel, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
+}
+
+
+template< class Index, class Object >
+void tags_quadtile(
+    Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& current_items,
+    OSM_Data_Printer& output, Request_Context& context)
+{
+  Tag_Store< Index, Object > current_tag_store(context);
+  if (extra_data.mode & Output_Mode::TAGS)
+    current_tag_store.prefetch_all(current_items);
+
+  typename std::map< Index, std::vector< Object > >::const_iterator
+      item_it(current_items.begin());
+  // print the result
+  while (item_it != current_items.end())
+  {
+    for (typename std::vector< Object >::const_iterator it2(item_it->second.begin());
+        it2 != item_it->second.end(); ++it2)
+    {
+      if (++extra_data.element_count > extra_data.limit)
+        return;
+      print_item(
+          extra_data, output, *it2,
+          (extra_data.mode & Output_Mode::TAGS) ? current_tag_store.get(item_it->first, *it2) : nullptr);
+    }
+    ++item_it;
+  }
+}
+
+
+template< class Index, class Object >
+void tags_by_id(
+    const std::map< Index, std::vector< Object > >& items,
+    Extra_Data& extra_data, uint32 FLUSH_SIZE, OSM_Data_Printer& output,
+    Tag_Store< Index, Object >&& tag_store)
+{
+  std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
+
+  // iterate over the result
+  for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
+  {
+    // Disable health_check: This ensures that a result will be always printed completely
+    //rman.health_check(*this);
+
+    typename Object::Id_Type lower_id_bound(items_by_id[id_pos.val()].first->id);
+    typename Object::Id_Type upper_id_bound;
+    if (id_pos + FLUSH_SIZE < items_by_id.size())
+      upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].first->id;
+    else
+    {
+      upper_id_bound = items_by_id[items_by_id.size()-1].first->id;
+      ++upper_id_bound;
+    }
+
+    if (extra_data.mode & Output_Mode::TAGS)
+      tag_store.prefetch_chunk(items, lower_id_bound, upper_id_bound);
+
+    // print the result
+    for (typename Object::Id_Type i(id_pos);
+         (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
+    {
+      if (++extra_data.element_count > extra_data.limit)
+        return;
+      print_item(
+          extra_data, output, *(items_by_id[i.val()].first),
+          (extra_data.mode & Output_Mode::TAGS)
+              ? tag_store.get(Index(items_by_id[i.val()].second), *items_by_id[i.val()].first) : nullptr);
     }
   }
 }
@@ -719,14 +708,11 @@ void Print_Statement::execute(Resource_Manager& rman)
   else
   {
     tags_quadtile_attic(
-        extra_data, output_items->nodes, output_items->attic_nodes,
-        data_printer, rman, *rman.get_transaction());
+        extra_data, output_items->nodes, output_items->attic_nodes, data_printer, context);
     tags_quadtile_attic(
-        extra_data, output_items->ways, output_items->attic_ways,
-        data_printer, rman, *rman.get_transaction());
+        extra_data, output_items->ways, output_items->attic_ways, data_printer, context);
     tags_quadtile_attic(
-        extra_data, output_items->relations, output_items->attic_relations,
-        data_printer, rman, *rman.get_transaction());
+        extra_data, output_items->relations, output_items->attic_relations, data_printer, context);
 
     if (rman.get_area_transaction())
       tags_quadtile(extra_data, output_items->areas, data_printer, context);

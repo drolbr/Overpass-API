@@ -76,17 +76,15 @@ void handle_first_elem(bool& first_elem)
 }
 
 
-template< typename Id_Type >
-void print_meta_json(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
-		    const std::map< uint32, std::string >& users)
+void print_meta_json(const Full_Monotype_Meta& meta, const std::map< uint32, std::string >& users)
 {
   std::cout<<",\n  \"timestamp\": \""<<iso_string(meta.timestamp)<<"\""
         ",\n  \"version\": "<<meta.version<<
 	",\n  \"changeset\": "<<meta.changeset;
-  std::map< uint32, std::string >::const_iterator it = users.find(meta.user_id);
+  std::map< uint32, std::string >::const_iterator it = users.find(meta.uid);
   if (it != users.end())
     std::cout<<",\n  \"user\": \""<<escape_cstr(it->second)<<"\"";
-  std::cout<<",\n  \"uid\": "<<meta.user_id;
+  std::cout<<",\n  \"uid\": "<<meta.uid;
 }
 
 
@@ -107,7 +105,7 @@ void print_tags(const std::vector< std::pair< std::string, std::string > >* tags
 void Output_JSON::Data_Printer::print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action)
@@ -149,7 +147,7 @@ void print_bounds(const Opaque_Geometry& geometry, Output_Mode mode)
 void Output_JSON::Data_Printer::print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action)
@@ -202,7 +200,7 @@ void Output_JSON::Data_Printer::print_item(const Way_Skeleton& skel,
 void Output_JSON::Data_Printer::print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* roles,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,

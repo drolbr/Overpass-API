@@ -74,13 +74,27 @@ void Output_XML::Data_Printer::print_global_bbox(const Bbox_Double& bbox)
 
 template< typename Id_Type >
 void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
-		    const std::map< uint32, std::string >& users)
+		    const std::map< uint32, std::string >* users)
 {
   std::cout<<" version=\""<<meta.version<<"\" timestamp=\""<<iso_string(meta.timestamp)
       <<"\" changeset=\""<<meta.changeset<<"\" uid=\""<<meta.user_id<<"\"";
-  std::map< uint32, std::string >::const_iterator it = users.find(meta.user_id);
-  if (it != users.end())
-    std::cout<<" user=\""<<escape_xml(it->second)<<"\"";
+  if (users)
+  {
+    std::map< uint32, std::string >::const_iterator it = users->find(meta.user_id);
+    if (it != users->end())
+      std::cout<<" user=\""<<escape_xml(it->second)<<"\"";
+  }
+}
+void print_meta_xml(const Full_Monotype_Meta& meta, const std::map< uint32, std::string >* users)
+{
+  std::cout<<" version=\""<<meta.version<<"\" timestamp=\""<<iso_string(meta.timestamp)
+      <<"\" changeset=\""<<meta.changeset<<"\" uid=\""<<meta.uid<<"\"";
+  if (users)
+  {
+    std::map< uint32, std::string >::const_iterator it = users->find(meta.uid);
+    if (it != users->end())
+      std::cout<<" user=\""<<escape_xml(it->second)<<"\"";
+  }
 }
 
 
@@ -381,7 +395,7 @@ void print_node(const Node_Skeleton& skel,
     std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lat()
         <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<'\"';
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);
+    print_meta_xml(*meta, users);
 
   bool inner_tags_printed = false;
   print_tags(tags, mode, inner_tags_printed);
@@ -405,7 +419,7 @@ void print_way(const Way_Skeleton& skel,
   if (mode.mode & Output_Mode::REDACTED)
     std::cout<<" visible=\"redacted\"";
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);
+    print_meta_xml(*meta, users);
 
   bool inner_tags_printed = false;
   print_bounds(geometry, mode, inner_tags_printed);
@@ -432,7 +446,7 @@ void print_relation(const Relation_Skeleton& skel,
   if (mode.mode & Output_Mode::REDACTED)
     std::cout<<" visible=\"redacted\"";
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);
+    print_meta_xml(*meta, users);
 
   bool inner_tags_printed = false;
   print_bounds(geometry, mode, inner_tags_printed);
@@ -463,7 +477,7 @@ void print_deleted(const std::string& type_name, const Id_Type& id,
   else
     std::cout<<" visible=\"true\"";
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);
+    print_meta_xml(*meta, users);
   std::cout<<"/>\n";
 }
 
@@ -471,14 +485,22 @@ void print_deleted(const std::string& type_name, const Id_Type& id,
 void Output_XML::Data_Printer::print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action)
 {
   prepend_action(action);
 
-  print_node(skel, geometry, tags, meta, users, mode);
+  OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > temp_meta(skel.id, meta ? meta->timestamp : 0);
+  if (meta)
+  {
+    temp_meta.version = meta->version;
+    temp_meta.changeset = meta->changeset;
+    temp_meta.user_id = meta->uid;
+  }
+
+  print_node(skel, geometry, tags, meta ? &temp_meta : nullptr, users, mode);
 
   append_action(action, false);
 }
@@ -518,14 +540,22 @@ void Output_XML::Diff_Printer::print_item(const Node_Skeleton& skel,
 void Output_XML::Data_Printer::print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action)
 {
   prepend_action(action);
 
-  print_way(skel, geometry, tags, meta, users, mode);
+  OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > temp_meta(skel.id, meta ? meta->timestamp : 0);
+  if (meta)
+  {
+    temp_meta.version = meta->version;
+    temp_meta.changeset = meta->changeset;
+    temp_meta.user_id = meta->uid;
+  }
+
+  print_way(skel, geometry, tags, meta ? &temp_meta : nullptr, users, mode);
 
   append_action(action, false);
 }
@@ -565,7 +595,7 @@ void Output_XML::Diff_Printer::print_item(const Way_Skeleton& skel,
 void Output_XML::Data_Printer::print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+      const Full_Monotype_Meta* meta,
       const std::map< uint32, std::string >* roles,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
@@ -573,7 +603,15 @@ void Output_XML::Data_Printer::print_item(const Relation_Skeleton& skel,
 {
   prepend_action(action);
 
-  print_relation(skel, geometry, tags, meta, roles, users, mode);
+  OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > temp_meta(skel.id, meta ? meta->timestamp : 0);
+  if (meta)
+  {
+    temp_meta.version = meta->version;
+    temp_meta.changeset = meta->changeset;
+    temp_meta.user_id = meta->uid;
+  }
+
+  print_relation(skel, geometry, tags, meta ? &temp_meta : nullptr, roles, users, mode);
 
   append_action(action, false);
 }
@@ -633,3 +671,19 @@ void Output_XML::Data_Printer::print_item(const Derived_Skeleton& skel,
 
   append_action(action, false, true);
 }
+
+        
+void Output_XML::Data_Printer::print_redacted(Output_Mode mode, uint32_t skel_type, const Full_Monotype_Meta* meta)
+{
+  if (meta)
+  {
+    std::cout<<"  <"<<member_type_name(skel_type);
+    if (mode.mode & Output_Mode::ID)
+      std::cout<<" id=\""<<meta->ref<<'\"';
+    std::cout<<" visible=\"redacted\"";
+    if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta)
+      print_meta_xml(*meta, nullptr);
+    std::cout<<"/>\n";
+  }
+}
+
