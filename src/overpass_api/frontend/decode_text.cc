@@ -79,6 +79,8 @@ std::string decode_json(const std::string& input, Error_Output* error_output, ui
         result[j++] = '\n';
       else if (input[i] == 't')
         result[j++] = '\t';
+      else if (input[i] == 'r')
+        result[j++] = ' ';
       else if (input[i] == 'u')
       {
         decode_to_utf8(input, result, ++i, j, error_output);
