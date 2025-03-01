@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__META_COLLECTOR_H
 
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 

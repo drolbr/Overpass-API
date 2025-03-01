@@ -13,7 +13,7 @@ AM_PROG_AR
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
+LT_INIT
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
@@ -23,10 +23,8 @@ AC_SEARCH_LIBS([shm_open], [rt])
 # Checks for header files.
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
-AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_HEADER_DIRENT
-AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h locale.h stdint.h stdlib.h string.h sys/time.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -34,7 +32,6 @@ AC_C_CONST
 AC_C_INLINE
 AC_C_VOLATILE
 AC_HEADER_STDBOOL
-AC_HEADER_TIME
 AC_STRUCT_TM
 
 # Checks for library functions.
@@ -61,12 +58,12 @@ if test "$want_lz4" != "no"; then
       COMPRESS_LIBS="$COMPRESS_LIBS -llz4"
     ], [
       if test "$want_lz4" = "yes"; then
-	    AC_ERROR([Can't build with lz4 support: liblz4 not found])
+	    AC_MSG_ERROR([Can't build with lz4 support: liblz4 not found])
       fi
     ])
   ], [
     if test "$want_lz4" = "yes"; then
-      AC_ERROR([Can't build with lz4 support: lz4.h not found])
+      AC_MSG_ERROR([Can't build with lz4 support: lz4.h not found])
     fi
   ])
 fi
