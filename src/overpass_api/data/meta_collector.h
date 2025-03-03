@@ -247,8 +247,8 @@ class Idx_Cached_Meta_Collector
 {
 public:
   Idx_Cached_Meta_Collector(
-      const std::map< Index, std::vector< Skeleton > >& current_items,
-      const std::map< Index, std::vector< Attic< Skeleton > > >& attic_items,
+      const std::map< Index, std::vector< Skeleton > >* current_items,
+      const std::map< Index, std::vector< Attic< Skeleton > > >* attic_items,
       uint64_t timestamp, Request_Context& context);
   
   const Full_Monotype_Meta* get(Index idx, uint64_t ref);
@@ -267,8 +267,8 @@ private:
   std::vector< Full_Monotype_Meta > cache;
   
   uint64_t timestamp;
-  const std::map< Index, std::vector< Skeleton > >& current_items;
-  const std::map< Index, std::vector< Attic< Skeleton > > >& attic_items;  
+  const std::map< Index, std::vector< Skeleton > >* current_items;
+  const std::map< Index, std::vector< Attic< Skeleton > > >* attic_items;  
 };
 
 

@@ -344,8 +344,8 @@ void tags_quadtile_attic
   }
 
   Idx_Cached_Meta_Collector< Index, Object > meta_collector(
-      (extra_data.mode & Output_Mode::META) ? current_items : std::map< Index, std::vector< Object > >{},
-      attic_items, context.get_desired_timestamp(), context);
+      (extra_data.mode & Output_Mode::META) ? &current_items : nullptr,
+      &attic_items, context.get_desired_timestamp(), context);
 
   auto current_it = current_items.begin();
   auto attic_it = attic_items.begin();
@@ -375,7 +375,7 @@ void tags_quadtile_attic
         if (++extra_data.element_count > extra_data.limit)
           return;
 
-        const Full_Monotype_Meta* meta = meta_collector.get(current_it->first, it2->id.val());
+        const Full_Monotype_Meta* meta = meta_collector.get(attic_it->first, it2->id.val());
         if (meta && meta->is_redacted)
           output.print_redacted(extra_data.mode | Output_Mode::REDACTED, relation_member_type< Object >(), meta);
         else

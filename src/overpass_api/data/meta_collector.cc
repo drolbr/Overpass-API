@@ -161,14 +161,17 @@ namespace
 
 template< typename Index, typename Skeleton >
 Idx_Cached_Meta_Collector< Index, Skeleton >::Idx_Cached_Meta_Collector(
-    const std::map< Index, std::vector< Skeleton > >& current_items_,
-    const std::map< Index, std::vector< Attic< Skeleton > > >& attic_items_,
+    const std::map< Index, std::vector< Skeleton > >* current_items_,
+    const std::map< Index, std::vector< Attic< Skeleton > > >* attic_items_,
     uint64_t timestamp_, Request_Context& context)
-    : current_req(extract_idxs(current_items_, attic_items_)), attic_req(extract_idxs(attic_items_)),
+    : current_req(extract_idxs(
+          current_items_ ? *current_items_ : decltype(*current_items_){},
+          attic_items_ ? *attic_items_ : decltype(*attic_items_){})),
+      attic_req(extract_idxs(attic_items_ ? *attic_items_ : decltype(*attic_items_){})),
       current_db(current_req.empty() ? nullptr
           : new Block_Backend< Index, Meta_Per_Changeset_Skeleton >(
                 context.data_index(current_meta_file_properties< Skeleton >()))),
-      attic_db(attic_req.empty() ? nullptr
+      attic_db((current_req.empty() && attic_req.empty()) ? nullptr
           : new Block_Backend< Index, Meta_Per_Changeset_Skeleton >(
                 context.data_index(attic_meta_file_properties< Skeleton >()))),
       idx_valid(false), ref_idx((uint32_t)0),
@@ -195,17 +198,23 @@ const Full_Monotype_Meta* Idx_Cached_Meta_Collector< Index, Skeleton >::get(Inde
   {
     cache.clear();
 
-    auto current_it = current_items.find(idx);
-    if (current_it != current_items.end())
+    if (current_items)
     {
-      for (const auto& item : current_it->second)
-        cache.push_back(Full_Monotype_Meta{ item.id.val() });
+      auto current_it = current_items->find(idx);
+      if (current_it != current_items->end())
+      {
+        for (const auto& item : current_it->second)
+          cache.push_back(Full_Monotype_Meta{ item.id.val() });
+      }
     }
-    auto attic_it = attic_items.find(idx);
-    if (attic_it != attic_items.end())
+    if (attic_items)
     {
-      for (const auto& item : attic_it->second)
-        cache.push_back(Full_Monotype_Meta{ item.id.val() });
+      auto attic_it = attic_items->find(idx);
+      if (attic_it != attic_items->end())
+      {
+        for (const auto& item : attic_it->second)
+          cache.push_back(Full_Monotype_Meta{ item.id.val() });
+      }
     }
     std::sort(cache.begin(), cache.end());
 
