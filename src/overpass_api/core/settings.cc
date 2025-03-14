@@ -106,10 +106,11 @@ Basic_Settings::Basic_Settings()
   source_hash("084b4234b4ceb54bc346f10354a12a1365d8f7c2"),
 #ifdef HAVE_LZ4
   compression_method(File_Blocks_Index_Base::LZ4_COMPRESSION),
+  map_compression_method(File_Blocks_Index_Base::LZ4_COMPRESSION)
 #else
   compression_method(File_Blocks_Index_Base::ZLIB_COMPRESSION),
+  map_compression_method(File_Blocks_Index_Base::ZLIB_COMPRESSION)
 #endif
-  map_compression_method(File_Blocks_Index_Base::NO_COMPRESSION)
 {}
 
 Basic_Settings& basic_settings()

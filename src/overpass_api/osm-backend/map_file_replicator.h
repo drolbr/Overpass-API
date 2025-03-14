@@ -30,6 +30,8 @@ template< typename Index, typename Skeleton >
 uint64_t replicate_current_map_file(
     Osm_Backend_Callback* callback, Transaction& transaction, uint64_t flush_count)
 {
+  callback->migration_started(current_skeleton_file_properties< Skeleton >()->get_file_name_trunk());
+
   Block_Backend< Index, Skeleton >
       from_db(transaction.data_index(current_skeleton_file_properties< Skeleton >()));
 
@@ -37,7 +39,7 @@ uint64_t replicate_current_map_file(
 
   uint64_t id_lower_limit = 0;
   uint64_t id_max_seen = 1;
-  while (id_lower_limit < id_max_seen)
+  while (id_lower_limit <= id_max_seen)
   {
     std::vector< Index > idx_buf(flush_count, Index{ 0u });
 
@@ -48,6 +50,7 @@ uint64_t replicate_current_map_file(
       if (id_lower_limit <= it.object().id.val() && it.object().id.val() < id_lower_limit + flush_count)
         idx_buf[it.object().id.val() - id_lower_limit] = it.index();
     }
+    callback->migration_flush();
     {
       Random_File< typename Skeleton::Id_Type, Index >
           into_random(into_transaction.random_index(current_skeleton_file_properties< Skeleton >()));
@@ -63,6 +66,8 @@ uint64_t replicate_current_map_file(
     id_lower_limit += flush_count;
   }
 
+  callback->migration_completed();
+
   return id_max_seen;
 }
 
@@ -71,6 +76,8 @@ template< typename Index, typename Skeleton, typename Delta >
 uint64_t replicate_attic_map_file(
     Osm_Backend_Callback* callback, Transaction& transaction, uint64_t flush_count)
 {
+  callback->migration_started(attic_skeleton_file_properties< Skeleton >()->get_file_name_trunk());
+
   Block_Backend< Index, Attic< Delta > >
       from_db(transaction.data_index(attic_skeleton_file_properties< Skeleton >()));
 
@@ -78,7 +85,7 @@ uint64_t replicate_attic_map_file(
 
   uint64_t id_lower_limit = 0;
   uint64_t id_max_seen = 1;
-  while (id_lower_limit < id_max_seen)
+  while (id_lower_limit <= id_max_seen)
   {
     std::map< typename Skeleton::Id_Type, std::set< Index > > idx_lists;
     std::vector< Index > idx_buf(flush_count, Index{ 0u });
@@ -87,7 +94,7 @@ uint64_t replicate_attic_map_file(
     {
       id_max_seen = std::max(id_max_seen, (uint64_t)it.object().id.val());
 
-      if (id_lower_limit <= it.object().id.val() && it.object().id < id_lower_limit + flush_count)
+      if (id_lower_limit <= it.object().id.val() && it.object().id.val() < id_lower_limit + flush_count)
       {
         Index existing = idx_buf[it.object().id.val() - id_lower_limit];
         if (existing.val() == 0)
@@ -105,6 +112,7 @@ uint64_t replicate_attic_map_file(
         }
       }
     }
+    callback->migration_flush();
     {
       Random_File< typename Skeleton::Id_Type, Index >
           into_random(into_transaction.random_index(attic_skeleton_file_properties< Skeleton >()));
@@ -124,6 +132,8 @@ uint64_t replicate_attic_map_file(
 
     id_lower_limit += flush_count;
   }
+
+  callback->migration_completed();
 
   return id_max_seen;
 }
