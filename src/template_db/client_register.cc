@@ -51,7 +51,7 @@ void Client_Register::set_finished(Client_Token t, int fd, time_t cooldown_end)
   erase_from_unordered(state.reading, fd);
   state.cooldown.push_back(cooldown_end);
 }
-  
+
 
 uint32_t Client_Register::num_active(Client_Token t, time_t now)
 {
@@ -59,7 +59,7 @@ uint32_t Client_Register::num_active(Client_Token t, time_t now)
   state.purge_cooldown(now);
   return state.reading.size() + state.cooldown.size();
 }
-  
+
 
 const Client_State& Client_Register::get_client_state(Client_Token t, time_t now)
 {
@@ -71,6 +71,10 @@ const Client_State& Client_Register::get_client_state(Client_Token t, time_t now
 
 void Client_Register::purge(time_t now)
 {
+  if (now <= last_purged)
+    return;
+  last_purged = now;
+
   auto it = data.begin();
   while (it != data.end())
   {
@@ -118,7 +122,7 @@ int main(int argc, char* args[])
     std::cout<<"num_active(1010): "<<client_register.num_active(16777216, 1010)<<'\n';
     std::cout<<"num_active(1011): "<<client_register.num_active(16777216, 1011)<<'\n';
   }
-  
+
   {
     std::cout<<"\nFirst load test: 2^20 clients pose one request each ... ";
 
@@ -129,7 +133,7 @@ int main(int argc, char* args[])
       client_register.set_reading(16777216 + i, 65536 + i);
       client_register.set_finished(16777216 + i, 65536 + i, 1025 + i/1024);
     }
-    
+
     std::cout<<"done.\n";
   }
 

@@ -70,9 +70,9 @@ public:
     buf.resize(0);
     size_ = 0;
   }
-  
+
   std::string file_name;
-  
+
   template< typename Index >
   static void inc(const uint8*& ptr)
   {
@@ -164,10 +164,10 @@ public:
   bool operator==(File_Blocks_Index_Iterator rhs) const
   { return ptr == rhs.ptr; }
   bool operator!=(File_Blocks_Index_Iterator rhs) const { return ptr != rhs.ptr; }
-  
+
   bool is_end() const { return ptr == end; }
   void set_end() { ptr = end; }
-  
+
   void seek(const Index& idx);
   // asserts: is_end() || idx == index() || (this+1).is_end() || idx < (this+1).index()
   // NB: index() <= idx is not guaranteed, because idx < index() indicates that idx does not exist in the file
@@ -255,16 +255,16 @@ public:
     if (!idx_file_buf_valid)
     {
       idx_file.rebuild_index_buf(params, block_list);
-      idx_file_buf_valid = true;      
+      idx_file_buf_valid = true;
     }
     return File_Blocks_Index_Iterator< Index >(idx_file.begin(), idx_file.end());
   }
   File_Blocks_Index_Iterator< Index > end()
-  { 
+  {
     if (!idx_file_buf_valid)
     {
       idx_file.rebuild_index_buf(params, block_list);
-      idx_file_buf_valid = true;      
+      idx_file_buf_valid = true;
     }
     return File_Blocks_Index_Iterator< Index >(idx_file.end(), idx_file.end());
   }
@@ -434,7 +434,7 @@ inline File_Blocks_Index_Mmap::File_Blocks_Index_Mmap(
   try
   {
     Raw_File source_file(file_name, O_RDONLY, S_666, "File_Blocks_Index_Mmap::File_Blocks_Index_Mmap::1");
-    
+
     // read index file
     size_ = source_file.size("File_Blocks_Index_Mmap::File_Blocks_Index_Mmap::2");
     if (size_)
@@ -495,7 +495,7 @@ Readonly_File_Blocks_Index< Index >::Readonly_File_Blocks_Index(
     : idx_file(file_prop, db_dir, use_shadow, file_name_extension),
       data_file_name(db_dir + file_prop.get_file_name_trunk()
           + file_name_extension + file_prop.get_data_suffix()),
-      params(file_prop, file_name_extension, USE_DEFAULT, idx_file, file_size_of(data_file_name)), 
+      params(file_prop, file_name_extension, USE_DEFAULT, idx_file, file_size_of(data_file_name)),
       file_name_extension_(file_name_extension) {}
 
 
@@ -510,7 +510,7 @@ Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
          + file_prop.get_shadow_suffix()),
      data_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()),
-     params(file_prop, file_name_extension, compression_method_, idx_file, file_size_of(data_file_name)), 
+     params(file_prop, file_name_extension, compression_method_, idx_file, file_size_of(data_file_name)),
      file_name_extension_(file_name_extension), void_blocks_initialized(false)
 {
   init_blocks();
@@ -524,7 +524,7 @@ void Writeable_File_Blocks_Index< Index >::init_blocks()
   if (idx_file.header())
   {
 //     clock_t start = clock();
-    
+
     const uint8* ptr = idx_file.begin();
     while (ptr < idx_file.end())
     {
@@ -539,7 +539,7 @@ void Writeable_File_Blocks_Index< Index >::init_blocks()
 
       block_list.push_back(entry);
     }
-    
+
 //     clock_t end = clock();
 //     std::cout<<std::dec<<params.block_size_<<'\t'<<(end - start)<<'\t'<<data_file_name<<'\n';
   }
@@ -576,7 +576,7 @@ std::vector< std::pair< uint32, uint32 > > compute_void_blocks(Iterator begin, I
     for (uint32 i = 0; i < it.size(); ++i)
       is_referred[it.pos() + i] = true;
   }
-  
+
   return compute_void_blocks(is_referred);
 }
 
@@ -590,7 +590,7 @@ std::vector< std::pair< uint32, uint32 > > compute_void_blocks(const List& block
     for (uint32 i = 0; i < it->size; ++i)
       is_referred[it->pos + i] = true;
   }
-  
+
   return compute_void_blocks(is_referred);
 }
 

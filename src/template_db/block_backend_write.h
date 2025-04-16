@@ -82,7 +82,7 @@ struct File_Handler
       : file_blocks(file_blocks_),
         file_it(file_blocks.write_begin(relevant_idxs.begin(), relevant_idxs.end(), true)),
         block_size(block_size_), data_filename(data_filename_) {}
-        
+
   void insert_block(uint64* ptr)
   { file_it = file_blocks.insert_block(file_it, ptr); }
   void replace_block(uint64* ptr)
@@ -92,7 +92,7 @@ struct File_Handler
   }
   void erase_block()
   { file_it = file_blocks.erase_block(file_it); }
-  
+
   File_Blocks& file_blocks;
   typename File_Blocks::Write_Iterator file_it;
   uint32 block_size;
@@ -126,7 +126,7 @@ struct Idx_Block_To_Write
       : existing(existing_), to_insert(&to_insert_), size(4 + existing_size + total_size_of(to_insert_.second)) {}
   Idx_Block_To_Write(const Cont_Entry& to_insert_)
       : to_insert(&to_insert_), size(4 + to_insert_.first.size_of() + total_size_of(to_insert_.second)) {}
-  
+
   std::vector< Offset_Size > existing;
   Cont_Entry* to_insert;
   uint32 size;
@@ -146,7 +146,7 @@ void build_dest_block(
 
   if (total_size > handler.block_size)
     throw File_Error(0, handler.data_filename, "build_dest_block: total_size bigger than block_size");
-  
+
   total_size = 4;
   for (uint32 i = from; i < until; ++i)
   {
@@ -165,9 +165,9 @@ void build_dest_block(
     else if (to_write[i].to_insert)
     {
       to_write[i].to_insert->first.to_data(dest);
-      dest += to_write[i].to_insert->first.size_of(); 
+      dest += to_write[i].to_insert->first.size_of();
     }
-    
+
     if (to_write[i].to_insert)
     {
       for (const auto& j : to_write[i].to_insert->second)
@@ -200,7 +200,7 @@ void force_flush_group(
         partial_size += to_write[split++].size;
       if (partial_size > handler.block_size - 4)
         partial_size -= to_write[--split].size;
-      
+
       build_dest_block(to_write, from, split, source, dest, handler);
       handler.insert_block((uint64*)dest);
       from = split;
@@ -211,7 +211,7 @@ void force_flush_group(
     uint32 partial_size = 0;
     while (split < until && partial_size*2 <= total_size)
       partial_size += to_write[split++].size;
-    
+
     bool two_blocks = false;
     if (2*partial_size < total_size + to_write[split-1].size)
     {
@@ -227,7 +227,7 @@ void force_flush_group(
         two_blocks = true;
       }
     }
-    
+
     if (two_blocks)
     {
       build_dest_block(to_write, from, split, source, dest, handler);
@@ -245,7 +245,7 @@ void force_flush_group(
       uint32 split_r = split;
       while (split_r+1 < until && partial_size_r - to_write[split_r].size > total_size*2/3)
         partial_size_r -= to_write[split_r++].size;
-      
+
       build_dest_block(to_write, from, split_l, source, dest, handler);
       handler.insert_block((uint64*)dest);
       build_dest_block(to_write, split_l, split_r, source, dest, handler);
@@ -263,7 +263,7 @@ void flush_segment(
     const Idx_Block_To_Write< Cont_Entry >& to_write, const uint8* source, uint8* dest, File_Handler& handler)
 {
   uint8* dest_pos = dest + 8;
-  
+
   if (source && !to_write.existing.empty())
   {
     for (const auto& j : to_write.existing)
@@ -275,9 +275,9 @@ void flush_segment(
   else if (to_write.to_insert)
   {
     to_write.to_insert->first.to_data(dest_pos);
-    dest_pos += to_write.to_insert->first.size_of(); 
+    dest_pos += to_write.to_insert->first.size_of();
   }
-  
+
   bool fit_found = false;
   bool oversized_found = false;
   if (to_write.to_insert)
@@ -295,7 +295,7 @@ void flush_segment(
           *(uint32*)dest = (uint32)(dest_pos - dest);
           *(uint32*)(dest + 4) = (uint32)(dest_pos - dest);
           handler.insert_block((uint64*)dest);
-          
+
           dest_pos = dest + idx_size + 8;
         }
 
@@ -306,9 +306,9 @@ void flush_segment(
       else
         oversized_found = true;
       ++it;
-    }    
+    }
   }
-  
+
   if (!to_write.existing.empty() || fit_found)
   {
     *(uint32*)dest = (uint32)(dest_pos - dest);
@@ -334,7 +334,7 @@ void flush_segment(
         *(((uint32*)large_buf.ptr)+1) = idx_size + obj_size + 8;
         memcpy(large_buf.ptr+1, dest+8, idx_size);
         it->to_data(((uint8*)large_buf.ptr) + 8 + idx_size);
-        
+
         for (uint i = 0; i+1 < buf_scale; ++i)
           handler.file_it = handler.file_blocks.insert_block(
               handler.file_it,
@@ -345,7 +345,7 @@ void flush_segment(
             large_buf.ptr + (buf_scale-1)*handler.block_size/8, idx_size + obj_size + 8 - handler.block_size*(buf_scale-1),
             to_write.to_insert->first);
       }
-    }   
+    }
   }
 }
 
@@ -355,12 +355,12 @@ class Object_Set_Predicate
 {
 public:
   Object_Set_Predicate(const std::set< Object >& data_) : data(&data_) {}
-  
+
   bool match(const Object& obj) const
   { return data->find(obj) != data->end(); }
-  
+
   typedef Object Base_Object;
-  
+
 private:
   const std::set< Object >* data;
 };
@@ -376,7 +376,7 @@ void create_from_scratch(
   Void_Pointer< uint8 > dest(file_handler.block_size);
 
   std::vector< Idx_Block_To_Write< typename std::remove_reference< decltype(*to_insert.begin()) >::type > > to_write;
-  
+
   auto to_insert_begin = to_insert.lower_bound(*(file_handler.file_it.lower_bound()));
   auto to_insert_end = to_insert.end();
   if (file_handler.file_it.upper_bound() != relevant_idxs.end())
@@ -400,7 +400,7 @@ void create_from_scratch(
         }
 
         flush_segment(to_write.back(), nullptr, dest.ptr, file_handler);
-        
+
         to_write.clear();
         cur_from = 0;
         total_size = 0;
@@ -428,7 +428,7 @@ void create_from_scratch(
         partial_size += to_write[j++].size;
       if (partial_size > file_handler.block_size - 4)
         partial_size -= to_write[--j].size;
-      
+
       build_dest_block(to_write, cur_from, j, nullptr, dest.ptr, file_handler);
       file_handler.insert_block((uint64*)dest.ptr);
       cur_from = j;
@@ -466,7 +466,7 @@ struct Existing_Idx_Info
       existing.push_back({ (uint32)(pos - src_start), idx_size });
       pos += idx_size;
       size += idx_size;
-      
+
       while (pos < src_end)
       {
         uint32 obj_size = Object_Predicate::Base_Object::size_of((void*)pos);
@@ -484,7 +484,7 @@ struct Existing_Idx_Info
       }
     }
   }
-  
+
   std::vector< Offset_Size > existing;
   uint32 size;
   Delta_Count count;
@@ -495,11 +495,11 @@ template< typename Index, typename Object_Predicate >
 class To_Delete_Matcher
 {
   typedef typename std::map< Index, Object_Predicate >::const_iterator Iterator;
-  
+
 public:
   To_Delete_Matcher(const std::map< Index, Object_Predicate >& to_delete)
       : it(to_delete.begin()), end(to_delete.end()), last_seen_equal(false) {}
-  
+
   const Object_Predicate* seek(uint8* data)
   {
     while (it != end && it->first.less(data))
@@ -507,10 +507,10 @@ public:
     last_seen_equal = (it != end && it->first.equal(data));
     return last_seen_equal ? &it->second : nullptr;
   }
-  
+
   bool was_equal() const { return last_seen_equal; }
   Index idx() { return it->first; }
-  
+
 private:
   Iterator it;
   Iterator end;
@@ -531,7 +531,7 @@ void update_group(
   file_handler.file_blocks.read_block(file_handler.file_it, (uint64*)source.ptr);
 
   std::vector< Idx_Block_To_Write< typename std::remove_reference< decltype(*to_insert.begin()) >::type > > to_write;
-  
+
   auto to_insert_begin = to_insert.lower_bound(*(file_handler.file_it.lower_bound()));
   auto to_insert_end = to_insert.end();
   if (file_handler.file_it.upper_bound() != relevant_idxs.end())
@@ -539,7 +539,7 @@ void update_group(
 
   uint8* src_pos(source.ptr + 4);
   uint8* source_end(source.ptr + *(uint32*)source.ptr);
-  
+
   To_Delete_Matcher< Index, Object_Predicate > del_match(to_delete);
 
   uint32 total_size = 0;
@@ -578,7 +578,7 @@ void update_group(
       to_write.push_back({ *it });
       entry_created = true;
     }
-    
+
     if (entry_created)
     {
       if (to_write.back().size >= file_handler.block_size - 4)
@@ -591,7 +591,7 @@ void update_group(
         }
 
         flush_segment(to_write.back(), source.ptr, dest.ptr, file_handler);
-        
+
         to_write.clear();
         cur_from = 0;
         total_size = 0;
@@ -619,7 +619,7 @@ void update_group(
         partial_size += to_write[j++].size;
       if (partial_size > file_handler.block_size - 4)
         partial_size -= to_write[--j].size;
-      
+
       build_dest_block(to_write, cur_from, j, source.ptr, dest.ptr, file_handler);
       file_handler.insert_block((uint64*)dest.ptr);
       cur_from = j;
@@ -707,7 +707,7 @@ Delta_Count skip_deleted_objects(
     const Object_Predicate& objs_to_delete, uint32 idx_size)
 {
   Delta_Count count;
-  
+
   uint32 src_obj_offset = 8 + idx_size;
   uint32 dest_obj_offset = src_obj_offset;
   uint32 src_size = *(uint32*)source_start_ptr;
@@ -717,7 +717,7 @@ Delta_Count skip_deleted_objects(
   {
     typename Object_Predicate::Base_Object obj(((uint8*)source_start_ptr) + src_obj_offset);
     uint32 obj_size = obj.size_of();
-    
+
     if (!objs_to_delete.match(obj))
     {
       memcpy(
@@ -754,7 +754,7 @@ uint64 append_insertables(
 
   *(uint32*)dest_start_ptr = obj_append_offset;
   *(((uint32*)dest_start_ptr)+1) = obj_append_offset;
-  
+
   return counter;
 }
 
@@ -868,7 +868,7 @@ void Block_Backend< Index, Object, Iterator >::update(
     relevant_idxs.push_back((iit++)->first);
 
   File_Handler< Index, File_Blocks_ > handler(file_blocks, relevant_idxs, block_size, data_filename);
-      
+
   std::map< Index, Object_Set_Predicate< Object > > to_delete_;
   for (const auto& i : to_delete)
     to_delete_.insert(std::make_pair(i.first, Object_Set_Predicate< Object >(i.second)));

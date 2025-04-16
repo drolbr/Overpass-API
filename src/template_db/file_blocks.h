@@ -280,7 +280,7 @@ public:
 
 private:
   Readonly_File_Blocks_Index< TIndex >* rd_idx;
-  Writeable_File_Blocks_Index< TIndex >* wr_idx;  
+  Writeable_File_Blocks_Index< TIndex >* wr_idx;
   uint32 block_size;
   uint32 compression_factor;
   int compression_method;
@@ -797,13 +797,13 @@ public:
     posix_madvise(addr, length, POSIX_MADV_WILLNEED);
   }
   ~Mmap()
-  { 
+  {
     if (addr)
       munmap(addr, length);
   }
-  
+
   uint64* ptr() { return (uint64*)addr; }
-  
+
 private:
   void* addr;
   size_t length;
@@ -817,7 +817,7 @@ uint64* File_Blocks< TIndex, TIterator >::read_block_
 {
   if (sigterm_status())
     throw File_Error(0, "-", "SIGTERM received");
-  
+
   if (compression_method == File_Blocks_Index_Base::NO_COMPRESSION)
   {
     data_file.seek((int64)(block.pos()) * block_size, "File_Blocks::read_block::1");
@@ -901,7 +901,7 @@ struct Write_Iterator_Adapter
   Index index() const { return it.block().index; }
   uint32 pos() const { return it.block().pos; }
   uint32 size() const { return it.block().size; }
-  
+
 private:
   Iterator it;
 };
@@ -1008,7 +1008,7 @@ void File_Blocks< TIndex, TIterator >::write_block(uint64* buf, uint32 payload_s
   }
 
   pos = allocate_block(block_count);
-  
+
   data_file.seek(((int64)pos)*block_size, "File_Blocks::write_block::1");
   data_file.write((uint8*)payload, block_size * block_count, "File_Blocks::write_block::2");
 }

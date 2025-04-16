@@ -23,7 +23,7 @@ bool Request_Queue::accept(int fd, const Request_State& req, uint32_t rate_limit
 std::vector< int > Request_Queue::grant_idx_and_read(Resource_State& res, time_t now)
 {
   std::vector< int > result;
-  
+
   for (decltype(queue.size()) i = 0; i < queue.size(); ++i)
   {
     for (decltype(queue[i].size()) j = 0; j < queue[i].size(); ++j)
@@ -50,14 +50,18 @@ std::vector< int > Request_Queue::grant_idx_and_read(Resource_State& res, time_t
         break;
     }
   }
-  
+
   return result;
 }
-  
+
 
 std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const Resource_State& res, time_t now)
 {
   std::pair< std::vector< int >, std::vector< int > > result;
+
+  if (now <= last_purged)
+    return result;
+  last_purged = now;
 
   for (decltype(queue.size()) i = 0; i < queue.size() && i < res.rate_limit; ++i)
   {
@@ -89,7 +93,7 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
         queue[i][j].erase(queue[i][j].begin(), it);
     }
   }
-  
+
   client_register.purge(now);
 
   return result;
@@ -106,7 +110,7 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
     Client_Register client_register;
     Request_Queue request_queue(client_register);
     Resource_State global_state = { 15, 2, 86400, 4ull*1024*1024*1024 };
-    
+
     std::cout<<"Request_Queue::acept(): "
       <<request_queue.accept({ 1677216, 3, 180, 512*1024 }, global_state.rate_limit, 1000000)<<'\n';
     std::cout<<"Request_Queue::grant_idx_and_read():";
@@ -114,7 +118,7 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
     for (auto i : granted)
       std::cout<<' '<<i;
     std::cout<<'\n';
-    
+
     request_queue.purge(global_state, 1000000);
   }
 
@@ -124,7 +128,7 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
     Client_Register client_register;
     Request_Queue request_queue(client_register);
     Resource_State global_state = { 15, 2, 86400, 4ull*1024*1024*1024 };
-    
+
     for (time_t i = 1000000; i < 2000000; ++i)
     {
       bool accepted = request_queue.accept(
@@ -143,7 +147,7 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
       }
 
       request_queue.purge(global_state, 1000000);
-      
+
       if (i % 4 == 3)
       {
         for (int j = i-3; j <= i; ++j)
@@ -155,9 +159,9 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
         global_state.maxsize_used = 0;
         global_state.maxtime_used = 0;
       }
-    }    
-  }  
-  
+    }
+  }
+
   return 0;
 }
 */

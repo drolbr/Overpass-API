@@ -24,26 +24,33 @@ struct Socket_To_Client
   {
     if (commands_to_send.empty())
       return 0;
+    if (commands_to_send.back() == READ_FINISHED && read_runtime > 0)
+    {
+      --read_runtime;
+      return 0;
+    }
+    uint32_t result = commands_to_send.back();
     commands_to_send.pop_back();
-    return commands_to_send.back();
+    return result;
   }
   std::vector< uint32_t > get_arguments(uint32_t num) { return arguments; }
   void send(uint32_t arg)
   {
     if (arg == REQUEST_READ_AND_IDX)
-      commands_to_send = { READ_IDX_FINISHED, 0, 0 };
+      commands_to_send = { READ_IDX_FINISHED, 0 };
     else if (arg == READ_IDX_FINISHED)
-      commands_to_send = { READ_FINISHED, 0, 0, 0, 0 };
+      commands_to_send = { READ_FINISHED };
     last_answer = arg;
   }
   void send_and_close(uint32_t arg)
-  { 
+  {
     last_answer = arg;
     is_open = false;
   }
 
   std::vector< uint32_t > arguments = { 16777216, 0, 180, 512*1024*1024, 0 };
-  std::vector< uint32_t > commands_to_send = { REQUEST_READ_AND_IDX, 0 };
+  std::vector< uint32_t > commands_to_send = { REQUEST_READ_AND_IDX };
+  uint32_t read_runtime = 3;
   uint32_t last_answer = 0;
   bool is_open = true;
 };
@@ -53,7 +60,7 @@ struct Global_Reading_State
 {
   Global_Reading_State(Resource_State global_state_)
     : global_state(global_state_), request_queue(client_register) {}
-  
+
   void poll_reading_requests(std::unordered_map< int, Socket_To_Client >& clients, time_t now)
   {
     auto it = reading.begin();
@@ -108,7 +115,7 @@ struct Global_Reading_State
       reading[fd].start_time = now;
       clients[fd].send(REQUEST_READ_AND_IDX);
     }
-    
+
     std::pair< std::vector< int >, std::vector< int > > purged = request_queue.purge(global_state, now);
     for (int fd : purged.first)
     {
@@ -178,17 +185,21 @@ int main(int argc, char* args[])
 
   for (time_t tsec = 1000000; tsec < 1086400; ++tsec)
   {
-    global_reading_state.poll_reading_requests(clients, tsec);
-    
+    for (uint32_t j = 0; j < 16; ++j)
     {
-      int fd = dispense_fd(next_fd, available_fd);
-      Socket_To_Client& socket = clients[fd];
-      socket.arguments[0] = ++client_token;
-      global_reading_state.request_read_and_idx(fd, tsec, clients[fd]);
+      global_reading_state.poll_reading_requests(clients, tsec);
+
+      {
+        int fd = dispense_fd(next_fd, available_fd);
+        Socket_To_Client& socket = clients[fd];
+        socket.arguments[0] = ++client_token;
+        socket.read_runtime = (client_token % 3) + std::max(5*client_token % 23, (uint32_t)15) - 12;
+        global_reading_state.request_read_and_idx(fd, tsec, clients[fd]);
+      }
+
+      global_reading_state.grant_and_purge(clients, tsec);
     }
 
-    global_reading_state.grant_and_purge(clients, tsec);
-    
     auto it = clients.begin();
     while (it != clients.end())
     {
