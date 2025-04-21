@@ -30,9 +30,14 @@ uint32_t Client_Register::try_enqueue(Client_Token t, uint32_t rate_limit, time_
 {
   Client_State& state = data[t];
   state.purge_cooldown(now);
-  if (state.reading.size() + state.cooldown.size() + state.enqueued >= 2*rate_limit)
-    return 0;
-  ++state.enqueued;
+  if (rate_limit > 0)
+  {
+    if (state.reading.size() + state.cooldown.size() + state.enqueued >= 2*rate_limit)
+      return 0;
+    ++state.enqueued;
+  }
+  else
+    state.enqueued = 1;
   return state.reading.size() + state.cooldown.size() + state.enqueued;
 }
 
@@ -40,7 +45,8 @@ uint32_t Client_Register::try_enqueue(Client_Token t, uint32_t rate_limit, time_
 void Client_Register::set_reading(Client_Token t, int fd)
 {
   Client_State& state = data[t];
-  --state.enqueued;
+  if (state.enqueued > 0)
+    --state.enqueued;
   state.reading.push_back(fd);
 }
 

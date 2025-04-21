@@ -37,7 +37,7 @@ std::vector< int > Request_Queue::grant_idx_and_read(Resource_State& res, time_t
       {
         if (2*it->maxsize <= res.maxsize_limit - res.maxsize_used
             && 2*it->maxtime <= res.maxtime_limit - res.maxtime_used
-            && client_register.num_active(it->t, now) <= res.rate_limit)
+            && (res.rate_limit == 0 || client_register.num_active(it->t, now) <= res.rate_limit))
         {
           res.maxsize_used += it->maxsize;
           res.maxtime_used += it->maxtime;
@@ -66,7 +66,8 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
     return result;
   last_purged = now;
 
-  for (decltype(queue.size()) i = 0; i < queue.size() && i < res.rate_limit; ++i)
+  uint32_t rate_limit = (res.rate_limit > 0 ? res.rate_limit : queue.size());
+  for (decltype(queue.size()) i = 0; i < queue.size() && i < rate_limit; ++i)
   {
     for (decltype(queue[i].size()) j = 0; j < queue[i].size(); ++j)
     {
@@ -81,7 +82,7 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
         queue[i][j].erase(queue[i][j].begin(), it);
     }
   }
-  for (decltype(queue.size()) i = res.rate_limit; i < queue.size(); ++i)
+  for (decltype(queue.size()) i = rate_limit; i < queue.size(); ++i)
   {
     for (decltype(queue[i].size()) j = 0; j < queue[i].size(); ++j)
     {

@@ -56,13 +56,17 @@ struct Socket_To_Client
 };
 
 
+// started_connections: accept, then wait for pid, one per round
+
 struct Global_Reading_State
 {
   Global_Reading_State(Resource_State global_state_)
     : global_state(global_state_), request_queue(client_register), shedded_per_second(60, 0) {}
 
-  void poll_reading_requests(std::unordered_map< int, Socket_To_Client >& clients, time_t now)
+  bool poll_reading_requests(std::unordered_map< int, Socket_To_Client >& clients, time_t now)
   {
+    bool some_state_changed = false;
+    
     auto it = reading.begin();
     while (it != reading.end())
     {
@@ -73,6 +77,7 @@ struct Global_Reading_State
       {
         socket.send(command);
         reading_idx.erase(it->first);
+        some_state_changed = true;
       }
       else if (command == READ_FINISHED)
       {
@@ -80,6 +85,7 @@ struct Global_Reading_State
         socket.send_and_close(command);
         reading_idx.erase(it->first);
         it = reading.erase(it);
+        some_state_changed = true;
         continue;
       }
       else if (command == HANGUP)
@@ -87,10 +93,13 @@ struct Global_Reading_State
         finish_request(*it, now);
         reading_idx.erase(it->first);
         it = reading.erase(it);
+        some_state_changed = true;
         continue;
       }
       ++it;
     }
+    
+    return some_state_changed;
   }
 
   void request_read_and_idx(int fd, time_t now, Socket_To_Client& socket)
@@ -209,10 +218,11 @@ int main(int argc, char* args[])
   std::vector< int > available_fd;
   int next_fd = 3;
   uint32_t client_token = 64u*16777216u;
+  uint32_t client_token_large = 48u*16777216u;
   std::vector< uint32_t > http_429(16, 0);
   std::vector< uint32_t > http_504(16, 0);
   std::vector< uint32_t > http_200(16, 0);
-  Global_Reading_State global_reading_state({ 10, 6, 3*86400, (uint64_t)16*1024*1024*1024 });
+  Global_Reading_State global_reading_state({ 10, 0, 3*86400, (uint64_t)16*1024*1024*1024 });
 
   for (time_t tsec = 1080000; tsec < 1166400; ++tsec)
   {
@@ -228,6 +238,16 @@ int main(int argc, char* args[])
         int fd = dispense_fd(next_fd, available_fd);
         Socket_To_Client& socket = clients[fd];
         socket.arguments[0] = ++client_token;
+        socket.read_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
+        global_reading_state.request_read_and_idx(fd, tsec, socket);
+      }
+      
+      if (j % 10 == 3) // One-time only clients with large requests
+      {
+        int fd = dispense_fd(next_fd, available_fd);
+        Socket_To_Client& socket = clients[fd];
+        socket.arguments[0] = ++client_token_large;
+        socket.arguments[3] = 1024*1024*1024;
         socket.read_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
         global_reading_state.request_read_and_idx(fd, tsec, socket);
       }
