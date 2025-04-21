@@ -23,16 +23,19 @@ bool Request_Queue::accept(int fd, const Request_State& req, uint32_t rate_limit
 std::vector< int > Request_Queue::grant_idx_and_read(Resource_State& res, time_t now)
 {
   std::vector< int > result;
+  if (res.maxsize_used >= res.maxsize_limit || res.maxtime_used >= res.maxtime_limit)
+    return result;
 
   for (decltype(queue.size()) i = 0; i < queue.size(); ++i)
   {
     for (decltype(queue[i].size()) j = 0; j < queue[i].size(); ++j)
     {
+      if (j*(2*256*1024*1024) > (res.maxsize_limit - res.maxsize_used))
+        break;
+
       for (auto it = queue[i][j].begin(); it != queue[i][j].end(); )
       {
-        if (res.maxsize_used < res.maxsize_limit
-            && 2*it->maxsize <= res.maxsize_limit - res.maxsize_used
-            && res.maxtime_used < res.maxtime_limit
+        if (2*it->maxsize <= res.maxsize_limit - res.maxsize_used
             && 2*it->maxtime <= res.maxtime_limit - res.maxtime_used
             && client_register.num_active(it->t, now) <= res.rate_limit)
         {
@@ -44,10 +47,10 @@ std::vector< int > Request_Queue::grant_idx_and_read(Resource_State& res, time_t
         }
         else
           ++it;
-      }
 
-      if (j*(2*256*1024*1024) > (res.maxsize_limit - res.maxsize_used))
-        break;
+        if (j*(2*256*1024*1024) > (res.maxsize_limit - res.maxsize_used))
+          break;
+      }
     }
   }
 

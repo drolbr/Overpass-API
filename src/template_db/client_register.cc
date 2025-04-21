@@ -61,11 +61,13 @@ uint32_t Client_Register::num_active(Client_Token t, time_t now)
 }
 
 
-const Client_State& Client_Register::get_client_state(Client_Token t, time_t now)
+const Client_State* Client_Register::get_client_state(Client_Token t, time_t now)
 {
-  Client_State& state = data[t];
-  state.purge_cooldown(now);
-  return state;
+  auto it = data.find(t);
+  if (it == data.end())
+    return nullptr;
+  it->second.purge_cooldown(now);
+  return &it->second;
 }
 
 

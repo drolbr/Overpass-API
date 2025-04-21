@@ -41,7 +41,7 @@ struct Client_Register
   uint32_t num_active(Client_Token t, time_t now);
 
   // Assert: for all state in data: state.reading.size() + state.enqueued is const
-  const Client_State& get_client_state(Client_Token t, time_t now);
+  const Client_State* get_client_state(Client_Token t, time_t now);
 
   // Remove all clients that have zero activity
   void purge(time_t now);
