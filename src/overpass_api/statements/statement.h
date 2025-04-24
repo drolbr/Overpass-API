@@ -48,15 +48,18 @@ class Query_Constraint
 
     virtual Query_Filter_Strategy delivers_data(Resource_Manager& rman) = 0;
 
-    virtual bool collect_nodes(Resource_Manager& rman, Set& into,
-			 const std::vector< Uint64 >& ids, bool invert_ids) { return false; }
-    virtual bool collect(Resource_Manager& rman, Set& into,
-			 int type, const std::vector< Uint32_Index >& ids, bool invert_ids) { return false; }
-    virtual bool collect(Resource_Manager& rman, Set& into) { return false; }
-
-    virtual bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
+    virtual bool collect_nodes(
+        Resource_Manager& /*rman*/, Set& /*into*/, const std::vector< Uint64 >& /*ids*/, bool /*invert_ids*/)
     { return false; }
-    virtual bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
+    virtual bool collect(
+        Resource_Manager& /*rman*/, Set& /*into*/, int /*type*/,
+        const std::vector< Uint32_Index >& /*ids*/, bool /*invert_ids*/)
+    { return false; }
+    virtual bool collect(Resource_Manager& /*rman*/, Set& /*into*/) { return false; }
+
+    virtual bool get_ranges(Resource_Manager& /*rman*/, Ranges< Uint31_Index >& /*ranges*/)
+    { return false; }
+    virtual bool get_ranges(Resource_Manager& /*rman*/, Ranges< Uint32_Index >& /*ranges*/)
     { return false; }
 
     virtual Ranges< Uint32_Index > get_node_ranges(Resource_Manager& rman)
@@ -81,37 +84,31 @@ class Query_Constraint
       return Ranges< Uint31_Index >::global();
     }
 
-    virtual bool get_node_ids
-        (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
-      { return false; }
-    virtual bool get_way_ids
-        (Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids)
-      { return false; }
-    virtual bool get_relation_ids
-        (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
-      { return false; }
-    virtual bool get_area_ids
-        (Resource_Manager& rman, std::vector< Area_Skeleton::Id_Type >& ids)
-      { return false; }
+    virtual bool get_node_ids(Resource_Manager& /*rman*/, std::vector< Node_Skeleton::Id_Type >& /*ids*/)
+    { return false; }
+    virtual bool get_way_ids(Resource_Manager& /*rman*/, std::vector< Way_Skeleton::Id_Type >& /*ids*/)
+    { return false; }
+    virtual bool get_relation_ids(Resource_Manager& /*rman*/, std::vector< Relation_Skeleton::Id_Type >& /*ids*/)
+    { return false; }
+    virtual bool get_area_ids(Resource_Manager& /*rman*/, std::vector< Area_Skeleton::Id_Type >& /*ids*/)
+    { return false; }
 
-    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const Ranges< Uint32_Index >& ranges,
-			  const std::vector< Node::Id_Type >& ids,
-                          bool invert_ids)
-      { return false; }
-    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const Ranges< Uint31_Index >& ranges,
-			  int type,
-                          const std::vector< Uint32_Index >& ids,
-                          bool invert_ids)
-      { return false; }
+    virtual bool get_data(
+        const Statement& /*query*/, Resource_Manager& /*rman*/, Set& /*into*/,
+        const Ranges< Uint32_Index >& /*ranges*/, const std::vector< Node::Id_Type >& /*ids*/, bool /*invert_ids*/)
+    { return false; }
+    virtual bool get_data(
+      const Statement& /*query*/, Resource_Manager& /*rman*/, Set& /*into*/,
+      const Ranges< Uint31_Index >& /*ranges*/, int /*type*/,
+      const std::vector< Uint32_Index >& /*ids*/, bool /*invert_ids*/)
+    { return false; }
 
     // Cheap filter. No health_check in between needed and should be called first.
-    virtual void filter(Resource_Manager& rman, Set& into) {}
+    virtual void filter(Resource_Manager& /*rman*/, Set& /*into*/) {}
 
     // Expensive filter. Health_check may be needed in between. These are called last
     // to minimize the number of elements that need to be processed.
-    virtual void filter(const Statement& query, Resource_Manager& rman, Set& into) {}
+    virtual void filter(const Statement& /*query*/, Resource_Manager& /*rman*/, Set& /*into*/) {}
 
     virtual ~Query_Constraint() {}
 };
@@ -268,7 +265,7 @@ class Generic_Statement_Maker_2 : public Statement::Statement_Maker
 {
   public:
     virtual Statement* create_statement
-        (int line_number, const std::map< std::string, std::string >& attributes, Parsed_Query& global_settings)
+        (int line_number, const std::map< std::string, std::string >& attributes, Parsed_Query&)
     {
       return new TStatement(line_number, attributes);
     }

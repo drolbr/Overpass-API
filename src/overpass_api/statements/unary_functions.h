@@ -31,7 +31,7 @@ class Evaluator_Unary_Function : public Evaluator
 public:
   Evaluator_Unary_Function(int line_number_);
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual std::string get_result_name() const { return ""; }
 
   virtual Requested_Context request_context() const;
@@ -77,13 +77,13 @@ class Evaluator_Geometry_Unary_Function : public Evaluator
 public:
   Evaluator_Geometry_Unary_Function(int line_number_);
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual std::string get_result_name() const { return ""; }
 
   virtual Requested_Context request_context() const;
   virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; };
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context);
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) { return 0; }
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*) { return nullptr; }
 
   virtual Opaque_Geometry* process(Opaque_Geometry* geom) const = 0;
 
@@ -120,7 +120,7 @@ class Evaluator_Binary_Function : public Evaluator
 public:
   Evaluator_Binary_Function(int line_number_);
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual std::string get_result_name() const { return ""; }
 
   virtual Requested_Context request_context() const;

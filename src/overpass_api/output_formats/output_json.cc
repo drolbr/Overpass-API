@@ -102,13 +102,11 @@ void print_tags(const std::vector< std::pair< std::string, std::string > >* tags
 }
 
 
-void Output_JSON::Data_Printer::print_item(const Node_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_JSON::Data_Printer::print_item(
+    const Node_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta* meta, const std::map< uint32, std::string >* users,
+    Output_Mode mode, const Feature_Action&)
 {
   handle_first_elem(first_elem);
   std::cout<<"{\n"
@@ -144,13 +142,11 @@ void print_bounds(const Opaque_Geometry& geometry, Output_Mode mode)
 }
 
 
-void Output_JSON::Data_Printer::print_item(const Way_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_JSON::Data_Printer::print_item(
+    const Way_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta* meta, const std::map< uint32, std::string >* users,
+    Output_Mode mode, const Feature_Action&)
 {
   handle_first_elem(first_elem);
   std::cout<<"{\n"
@@ -197,14 +193,12 @@ void Output_JSON::Data_Printer::print_item(const Way_Skeleton& skel,
 }
 
 
-void Output_JSON::Data_Printer::print_item(const Relation_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* roles,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_JSON::Data_Printer::print_item(
+    const Relation_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta* meta, const std::map< uint32, std::string >* roles,
+    const std::map< uint32, std::string >* users,
+    Output_Mode mode, const Feature_Action&)
 {
   handle_first_elem(first_elem);
   std::cout<<"{\n"
@@ -371,11 +365,9 @@ void print_geometry(const Opaque_Geometry& geometry, Output_Mode mode)
 }
 
 
-void Output_JSON::Data_Printer::print_item(const Derived_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_JSON::Data_Printer::print_item(
+    const Derived_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags, Output_Mode mode, const Feature_Action&)
 {
   handle_first_elem(first_elem);
   std::cout<<"{\n"

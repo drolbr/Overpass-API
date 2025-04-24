@@ -51,7 +51,7 @@ struct Uint32_Index
   uint32 size_of() const { return 4; }
   static constexpr uint32 const_size() { return 4; }
   static uint32 max_size_of() { return 4; }
-  static uint32 size_of(void* data) { return 4; }
+  static uint32 size_of(void*) { return 4; }
 
   void to_data(void* data) const
   {
@@ -179,7 +179,7 @@ struct Uint64
   uint32 size_of() const { return 8; }
   static constexpr uint32 const_size() { return 8; }
   static uint32 max_size_of() { return 8; }
-  static uint32 size_of(void* data) { return 8; }
+  static uint32 size_of(void*) { return 8; }
 
   void to_data(void* data) const
   {

@@ -49,13 +49,13 @@ const uint MAXCOUNT = 1048576;
 uint counter(MAXCOUNT);
 
 static void XMLCALL
-expat_wrapper_start(void *data, const char *el, const char **attr)
+expat_wrapper_start(void*, const char *el, const char **attr)
 {
   working_start(el, attr);
 }
 
 static void XMLCALL
-expat_wrapper_end(void *data, const char *el)
+expat_wrapper_end(void*, const char *el)
 {
   working_end(el);
 }

@@ -37,8 +37,8 @@ public:
 Output_CSV_Generator Output_CSV_Generator::singleton;
 
 
-Output_Handler* Output_CSV_Generator::new_output_handler(const std::map< std::string, std::string >& input_params,
-							 Tokenizer_Wrapper* token, Error_Output* error_output)
+Output_Handler* Output_CSV_Generator::new_output_handler(
+    const std::map< std::string, std::string >&, Tokenizer_Wrapper* token, Error_Output* error_output)
 {
   if (token)
   {

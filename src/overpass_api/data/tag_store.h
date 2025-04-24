@@ -65,15 +65,15 @@ template< >
 class Tag_Store< Uint31_Index, Derived_Structure >
 {
 public:
-  Tag_Store(Request_Context& context) {}
+  Tag_Store(Request_Context&) {}
   Tag_Store() {}
 
-  void prefetch_all(const std::map< Uint31_Index, std::vector< Derived_Structure > >& elems) {}
-  void prefetch_chunk(const std::map< Uint31_Index, std::vector< Derived_Structure > >& elems,
-      Derived_Structure::Id_Type lower_id_bound, Derived_Structure::Id_Type upper_id_bound) {}
+  void prefetch_all(const std::map< Uint31_Index, std::vector< Derived_Structure > >&) {}
+  void prefetch_chunk(const std::map< Uint31_Index, std::vector< Derived_Structure > >&,
+      Derived_Structure::Id_Type, Derived_Structure::Id_Type) {}
 
   const std::vector< std::pair< std::string, std::string > >* get(
-      const Uint31_Index& index, const Derived_Structure& elem) const { return &elem.tags; }
+      const Uint31_Index&, const Derived_Structure& elem) const { return &elem.tags; }
 };
 
 

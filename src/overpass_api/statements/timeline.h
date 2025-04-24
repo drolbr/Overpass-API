@@ -86,7 +86,7 @@ public:
     return result + dump_xml_result_name() + "/>\n";
   }
 
-  virtual std::string dump_compact_ql(const std::string& indent) const
+  virtual std::string dump_compact_ql(const std::string&) const
   {
     std::string result = "timeline(" + to_string(type) + "," + ::to_string(ref);
     if (version)

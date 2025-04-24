@@ -63,7 +63,7 @@ struct Evaluator_Aggregator : public Evaluator
   Evaluator_Aggregator(const std::string& func_name,
       int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
 
   virtual Requested_Context request_context() const;
 
@@ -403,7 +403,7 @@ public:
   Evaluator_Set_Count(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-set-count"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Set_Count() {}
 
   virtual Requested_Context request_context() const;

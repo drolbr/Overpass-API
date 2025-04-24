@@ -175,7 +175,7 @@ class Print_Statement : public Statement
     virtual std::string dump_compact_ql(const std::string& indent) const { return dump_subquery_map_ql(indent, false); }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_subquery_map_ql(indent, true); }
 
-    std::string dump_subquery_map_ql(const std::string& indent, bool pretty) const
+    std::string dump_subquery_map_ql(const std::string& indent, bool) const
     {
       return indent + (input != "_" ? "." + input + " " : "") + "out"
           + mode_string_ql(mode)

@@ -110,13 +110,13 @@ public:
   virtual std::string get_name() const { return "eval-point"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Point() {}
 
   virtual Requested_Context request_context() const;
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; }
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Const_Eval_Task("<Point_Geometry>"); }
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)
   { return new Eval_Point_Geometry_Task(lat->get_string_task(context, 0), lon->get_string_task(context, 0)); }
@@ -214,13 +214,13 @@ public:
   virtual std::string get_name() const { return "eval-linestring"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Linestring() {}
 
   virtual Requested_Context request_context() const;
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; }
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Const_Eval_Task("<Linestring_Geometry>"); }
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)
   {
@@ -327,13 +327,13 @@ public:
   virtual std::string get_name() const { return "eval-polygon"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Polygon() {}
 
   virtual Requested_Context request_context() const;
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; }
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Const_Eval_Task("<Polygon_Geometry>"); }
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)
   {

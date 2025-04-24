@@ -145,10 +145,10 @@ private:
 class Else_Statement : public Statement
 {
 public:
-  Else_Statement(int line_number_, const std::map< std::string, std::string >& attributes) : Statement(line_number_) {}
+  Else_Statement(int line_number_, const std::map< std::string, std::string >&) : Statement(line_number_) {}
   virtual std::string get_name() const { return "else"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
 
   struct Statement_Maker : public Generic_Statement_Maker_2< Else_Statement >
   {
@@ -157,7 +157,7 @@ public:
   static Statement_Maker statement_maker;
 
   virtual std::string dump_xml(const std::string& indent) const { return indent + "<else/>\n"; }
-  virtual std::string dump_compact_ql(const std::string& indent) const { return "else\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return "else\n"; }
   virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + "else\n"; }
 };
 

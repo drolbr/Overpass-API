@@ -37,8 +37,8 @@ public:
 Output_Popup_Generator Output_Popup_Generator::singleton;
 
 
-Output_Handler* Output_Popup_Generator::new_output_handler(const std::map< std::string, std::string >& input_params,
-							   Tokenizer_Wrapper* token, Error_Output* error_output)
+Output_Handler* Output_Popup_Generator::new_output_handler(
+    const std::map< std::string, std::string >&, Tokenizer_Wrapper* token, Error_Output* error_output)
 {
   if (token)
   {

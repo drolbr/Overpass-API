@@ -63,7 +63,7 @@ class Recurse_Statement : public Output_Statement
 
     struct Criterion_Maker_2 : public Statement::Criterion_Maker
     {
-      virtual bool can_standalone(const std::string& type) { return false; }
+      virtual bool can_standalone(const std::string&) { return false; }
       virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
           const std::string& type, const std::string& into,
           Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);

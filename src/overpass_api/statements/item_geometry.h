@@ -50,23 +50,23 @@ The syntax is
 
 struct Is_Closed_Eval_Task : public Eval_Task
 {
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
-  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >&, const std::string*) const
       { return "NaW"; }
-  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >&, const std::string*) const
       { return "NaW"; }
-  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string*) const
       { return !data.object->nds.empty() && data.object->nds.front() == data.object->nds.back() ? "1" : "0"; }
-  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string*) const
       { return !data.object->nds.empty() && data.object->nds.front() == data.object->nds.back() ? "1" : "0"; }
-  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >&, const std::string*) const
       { return "NaW"; }
-  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >&, const std::string*) const
       { return "NaW"; }
-  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >&, const std::string*) const
       { return "NaW"; }
-  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >&, const std::string*) const
       { return "NaW"; }
 };
 
@@ -88,13 +88,13 @@ public:
   Evaluator_Is_Closed(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-is-closed"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Is_Closed() {}
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Is_Closed_Eval_Task(); }
 };
 
@@ -153,15 +153,15 @@ public:
   Evaluator_Geometry(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-geometry"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Geometry() {}
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Const_Eval_Task("<Opaque_Geometry>"); }
-  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)
+  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context&)
   { return new Geometry_Geometry_Task(); }
   virtual bool returns_geometry() const { return true; }
 };
@@ -183,23 +183,23 @@ struct Length_Eval_Task : public Eval_Task
 {
   Length_Eval_Task() {}
 
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
-  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >&, const std::string*) const
       { return "0"; }
-  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >&, const std::string*) const
       { return "0"; }
-  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string*) const
       { return data.geometry ? fixed_to_string(length(*data.geometry), 3) : "0"; }
-  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string*) const
       { return data.geometry ? fixed_to_string(length(*data.geometry), 3) : "0"; }
-  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string*) const
       { return data.geometry ? fixed_to_string(length(*data.geometry), 3) : "0"; }
-  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string*) const
       { return data.geometry ? fixed_to_string(length(*data.geometry), 3) : "0"; }
-  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >&, const std::string*) const
       { return "0"; }
-  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >&, const std::string*) const
       { return "0"; }
 };
 
@@ -223,13 +223,13 @@ public:
   Evaluator_Length(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-length"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Length() {}
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Length_Eval_Task(); }
 };
 
@@ -253,30 +253,30 @@ struct Latitude_Eval_Task : public Eval_Task
 {
   Latitude_Eval_Task() {}
 
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
-  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
 };
@@ -301,13 +301,13 @@ public:
   Evaluator_Latitude(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-lat"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Latitude() {}
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Latitude_Eval_Task(); }
 };
 
@@ -316,30 +316,30 @@ struct Longitude_Eval_Task : public Eval_Task
 {
   Longitude_Eval_Task() {}
 
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
-  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
-  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string*) const
       { return data.geometry &&
           data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
 };
@@ -364,13 +364,13 @@ public:
   Evaluator_Longitude(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-lon"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Longitude() {}
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Longitude_Eval_Task(); }
 };
 

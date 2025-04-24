@@ -59,8 +59,7 @@ namespace
 }
 
 
-void Output_CSV::write_payload_header
-    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
+void Output_CSV::write_payload_header(const std::string&, const std::string&, const std::string&)
 {
   if (data_printer.csv_settings.with_headerline)
   {
@@ -82,13 +81,13 @@ void Output_CSV::write_footer()
 }
 
 
-void Output_CSV::display_remark(const std::string& text)
+void Output_CSV::display_remark(const std::string&)
 {
   // Intentionally empty
 }
 
 
-void Output_CSV::display_error(const std::string& text)
+void Output_CSV::display_error(const std::string&)
 {
   // Intentionally empty
 }
@@ -141,8 +140,7 @@ namespace
   }
 
 
-  void print_meta(const std::string& keyfield,
-      const int& meta, const std::map< uint32, std::string >* users) {}
+  void print_meta(const std::string&, const int&, const std::map< uint32, std::string >*) {}
 
   std::string get_count_tag(const std::vector< std::pair< std::string, std::string> >* tags, std::string tag)
   {
@@ -231,38 +229,35 @@ namespace
 }
 
 
-void Output_CSV::Data_Printer::print_item(const Node_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_CSV::Data_Printer::print_item(
+    const Node_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta* meta,
+    const std::map< uint32, std::string >* users,
+    Output_Mode mode, const Feature_Action&)
 {
   process_csv_line(1, "node", skel.id, geometry, meta, tags, users, csv_settings, mode);
 }
 
 
-void Output_CSV::Data_Printer::print_item(const Way_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_CSV::Data_Printer::print_item(
+    const Way_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta* meta,
+    const std::map< uint32, std::string >* users,
+    Output_Mode mode, const Feature_Action&)
 {
   process_csv_line(2, "way", skel.id, geometry, meta, tags, users, csv_settings, mode);
 }
 
 
-void Output_CSV::Data_Printer::print_item(const Relation_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* roles,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_CSV::Data_Printer::print_item(
+    const Relation_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta* meta,
+    const std::map< uint32, std::string >*,
+    const std::map< uint32, std::string >* users,
+    Output_Mode mode, const Feature_Action&)
 {
   process_csv_line(3, "relation", skel.id, geometry, meta, tags, users, csv_settings, mode);
 }
@@ -272,7 +267,7 @@ void Output_CSV::Data_Printer::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode,
-      const Feature_Action& action)
+      const Feature_Action&)
 {
   process_csv_line< Derived_Skeleton::Id_Type, int >(
       4, skel.type_name, skel.id, geometry, 0, tags, 0, csv_settings, mode);

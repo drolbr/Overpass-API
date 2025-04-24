@@ -881,7 +881,7 @@ inline Tilewise_Area_Iterator::Relative_Position rel_position(
 
 
 inline Tilewise_Area_Iterator::Relative_Position Tilewise_Area_Iterator::rel_position(
-    const std::vector< Segment >& segments, bool accept_border)
+    const std::vector< Segment >& segments, bool)
 {
   for (std::vector< Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
   {
@@ -907,7 +907,7 @@ inline Tilewise_Area_Iterator::Relative_Position Tilewise_Area_Iterator::rel_pos
 
 
 inline Tilewise_Area_Iterator::Relative_Position Tilewise_Const_Area_Iterator::rel_position(
-    const std::vector< Segment >& segments, bool accept_border)
+    const std::vector< Segment >& segments, bool)
 {
   for (std::vector< Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
   {

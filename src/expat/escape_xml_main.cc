@@ -21,7 +21,7 @@
 #include "escape_xml.h"
 
 
-int main(int argc, char *argv[])
+int main(int, char**)
 {
   char c;
   std::string buf;

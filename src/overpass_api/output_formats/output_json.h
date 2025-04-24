@@ -46,7 +46,7 @@ public:
 private:
   struct Data_Printer : OSM_Data_Printer
   {
-    virtual void print_global_bbox(const Bbox_Double& bbox) override {}
+    virtual void print_global_bbox(const Bbox_Double&) override {}
 
     virtual void print_item(
         const Node_Skeleton& skel,
@@ -83,7 +83,7 @@ private:
         Output_Mode mode,
         const Feature_Action& action = keep) override;
         
-    void print_redacted(Output_Mode mode, uint32_t skel_type, const Full_Monotype_Meta* meta) override {}
+    void print_redacted(Output_Mode, uint32_t, const Full_Monotype_Meta*) override {}
         
   private:
     mutable bool first_elem = true;

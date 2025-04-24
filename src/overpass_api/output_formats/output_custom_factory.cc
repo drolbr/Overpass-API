@@ -35,8 +35,8 @@ public:
 Output_Custom_Generator Output_Custom_Generator::singleton;
 
 
-Output_Handler* Output_Custom_Generator::new_output_handler(const std::map< std::string, std::string >& input_params,
-							    Tokenizer_Wrapper* token, Error_Output* error_output)
+Output_Handler* Output_Custom_Generator::new_output_handler(
+    const std::map< std::string, std::string >& input_params, Tokenizer_Wrapper*, Error_Output* error_output)
 {
   std::map< std::string, std::string >::const_iterator redirect_it = input_params.find("redirect");
 

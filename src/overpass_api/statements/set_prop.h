@@ -183,7 +183,7 @@ public:
   virtual std::string get_name() const { return "set-prop"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Set_Prop_Statement() { delete key; }
 
   virtual Requested_Context request_context() const;

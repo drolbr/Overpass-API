@@ -39,7 +39,7 @@ class User_Constraint : public Query_Constraint
   public:
     User_Constraint(User_Statement& user_) : user(&user_) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override
+    Query_Filter_Strategy delivers_data(Resource_Manager&) override
     { return user->get_criterion() == User_Statement::last ? ids_required : prefer_ranges; }
 
     bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges) override;
@@ -83,10 +83,9 @@ void user_filter_map
 
 
 template< typename TIndex, typename TObject >
-void user_filter_map_attic
-    (std::map< TIndex, std::vector< Attic< TObject > > >& modify,
-     Resource_Manager& rman, const std::set< Uint32_Index >& user_ids,
-     File_Properties& current_file_properties, File_Properties& attic_file_properties)
+void user_filter_map_attic(
+    std::map< TIndex, std::vector< Attic< TObject > > >& modify,
+    Resource_Manager& rman, const std::set< Uint32_Index >& user_ids)
 {
   if (modify.empty())
     return;
@@ -182,16 +181,13 @@ void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     user_filter_map(into.relations, rman, user_ids, *meta_settings().RELATIONS_META);
 
     if (!into.attic_nodes.empty())
-      user_filter_map_attic(
-          into.attic_nodes, rman, user_ids, *meta_settings().NODES_META, *attic_settings().NODES_META);
+      user_filter_map_attic(into.attic_nodes, rman, user_ids);
 
     if (!into.attic_ways.empty())
-      user_filter_map_attic(
-          into.attic_ways, rman, user_ids, *meta_settings().WAYS_META, *attic_settings().WAYS_META);
+      user_filter_map_attic(into.attic_ways, rman, user_ids);
 
     if (!into.attic_relations.empty())
-      user_filter_map_attic(
-          into.attic_relations, rman, user_ids, *meta_settings().RELATIONS_META, *attic_settings().RELATIONS_META);
+      user_filter_map_attic(into.attic_relations, rman, user_ids);
   }
   else
   {
@@ -225,7 +221,7 @@ User_Statement::Criterion_Maker User_Statement::criterion_maker;
 
 Statement* User_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& result_type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory&, Parsed_Query& global_settings, Error_Output* error_output)
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;

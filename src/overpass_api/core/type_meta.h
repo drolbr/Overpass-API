@@ -179,9 +179,9 @@ public:
   }
 
   const std::vector< Entry >& get_refs() const { return refs; }
-  const uint64_t get_changeset() const { return changeset; }
-  const bool get_is_redacted() const { return is_redacted; }
-  const uint64_t get_user_id() const { return user_id; }
+  uint64_t get_changeset() const { return changeset; }
+  bool get_is_redacted() const { return is_redacted; }
+  uint64_t get_user_id() const { return user_id; }
   
   void add_ref(const Entry& entry)
   {
@@ -337,7 +337,7 @@ struct OSM_Element_Metadata_Skeleton
     return 17 + sizeof(Id_Type);
   }
 
-  static uint32_t size_of(void* data)
+  static uint32_t size_of(void*)
   {
     return 17 + sizeof(Id_Type);
   }

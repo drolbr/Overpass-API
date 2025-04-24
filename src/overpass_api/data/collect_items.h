@@ -32,9 +32,9 @@ inline uint64 timestamp_of(const Attic< Node_Skeleton >& skel) { return skel.tim
 inline uint64 timestamp_of(const Attic< Way_Skeleton >& skel) { return skel.timestamp; }
 inline uint64 timestamp_of(const Attic< Relation_Skeleton >& skel) { return skel.timestamp; }
 
-inline uint64 timestamp_of(const Node_Skeleton& skel) { return NOW; }
-inline uint64 timestamp_of(const Way_Skeleton& skel) { return NOW; }
-inline uint64 timestamp_of(const Relation_Skeleton& skel) { return NOW; }
+inline uint64 timestamp_of(const Node_Skeleton&) { return NOW; }
+inline uint64 timestamp_of(const Way_Skeleton&) { return NOW; }
+inline uint64 timestamp_of(const Relation_Skeleton&) { return NOW; }
 
 
 template < typename Index, typename Object, typename Iterator, typename Predicate >

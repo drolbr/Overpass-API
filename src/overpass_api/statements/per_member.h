@@ -125,7 +125,7 @@ struct Per_Member_Eval_Task : public Eval_Task
 {
   Per_Member_Eval_Task(Eval_Task* rhs) : rhs_task(rhs) {}
 
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
   virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const;
   virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const;
@@ -152,7 +152,7 @@ public:
 
   Evaluator_Per_Member(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Per_Member() {}
 
   virtual Requested_Context request_context() const
@@ -180,7 +180,7 @@ struct Per_Vertex_Eval_Task : public Eval_Task
 {
   Per_Vertex_Eval_Task(Eval_Task* rhs) : rhs_task(rhs) {}
 
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
   virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const;
   virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const;
@@ -205,7 +205,7 @@ public:
 
   Evaluator_Per_Vertex(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Per_Vertex() {}
 
   virtual Requested_Context request_context() const
@@ -232,15 +232,15 @@ The syntax is
 
 struct Pos_Eval_Task : public Eval_Task
 {
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
-  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >&, const std::string*) const
       { return to_string(pos+1); }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >&, const std::string*) const
       { return to_string(pos+1); }
-  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >&, const std::string*) const
       { return to_string(pos+1); }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >&, const std::string*) const
       { return to_string(pos+1); }
 };
 
@@ -263,13 +263,13 @@ public:
   Evaluator_Pos(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-pos"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Pos() {}
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) { return new Pos_Eval_Task(); }
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*) { return new Pos_Eval_Task(); }
 };
 
 
@@ -288,15 +288,15 @@ resp.
 
 struct Membertype_Eval_Task : public Eval_Task
 {
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
-  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint, const Element_With_Context< Way_Skeleton >&, const std::string*) const
       { return "node"; }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint, const Element_With_Context< Attic< Way_Skeleton > >&, const std::string*) const
       { return "node"; }
-  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string*) const
       { return member_type_name(data.object->members[pos].type); }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string*) const
       { return member_type_name(data.object->members[pos].type); }
 };
 
@@ -319,27 +319,27 @@ public:
   Evaluator_Membertype(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-membertype"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Membertype() {}
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) { return new Membertype_Eval_Task(); }
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*) { return new Membertype_Eval_Task(); }
 };
 
 
 struct Ref_Eval_Task : public Eval_Task
 {
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
-  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string*) const
       { return to_string(data.object->nds[pos].val()); }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string*) const
       { return to_string(data.object->nds[pos].val()); }
-  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string*) const
       { return to_string(data.object->members[pos].ref.val()); }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string*) const
       { return to_string(data.object->members[pos].ref.val()); }
 };
 
@@ -362,13 +362,13 @@ public:
   Evaluator_Ref(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-ref"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Ref() {}
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) { return new Ref_Eval_Task(); }
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*) { return new Ref_Eval_Task(); }
 };
 
 
@@ -385,15 +385,15 @@ struct Role_Eval_Task : public Eval_Task
 {
   Role_Eval_Task(const std::map< uint32, std::string >* roles_) : roles(roles_) {}
 
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
-  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint, const Element_With_Context< Way_Skeleton >&, const std::string*) const
       { return ""; }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint, const Element_With_Context< Attic< Way_Skeleton > >&, const std::string*) const
       { return ""; }
-  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string*) const
       { return roles ? roles->find(data.object->members[pos].role)->second : std::string(); }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string*) const
       { return roles ? roles->find(data.object->members[pos].role)->second : std::string(); }
 
 private:
@@ -419,14 +419,14 @@ public:
   Evaluator_Role(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-role"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Role() {}
 
   virtual Requested_Context request_context() const
   { return Requested_Context().add_usage(Set_Usage::SKELETON).add_role_names(); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; }
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string*)
   { return new Role_Eval_Task(context.get_roles()); }
 };
 
@@ -447,7 +447,7 @@ struct Angle_Eval_Task : public Eval_Task
 {
   Angle_Eval_Task() : cache_way_ref(0u), cache_geom_ref(0) {}
 
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string*) const { return ""; }
 
   virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const;
   virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const;
@@ -480,14 +480,14 @@ public:
   Evaluator_Angle(int line_number_, const std::map< std::string, std::string >& input_attributes);
   virtual std::string get_name() const { return "eval-angle"; }
   virtual std::string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual ~Evaluator_Angle() {}
 
   virtual Requested_Context request_context() const
   { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; }
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context&, const std::string*)
   { return new Angle_Eval_Task(); }
 };
 

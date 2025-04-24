@@ -40,8 +40,8 @@ public:
   virtual void write_payload_header(const std::string& db_dir,
 				    const std::string& timestamp, const std::string& area_timestamp);
   virtual void write_footer() {}
-  virtual void display_remark(const std::string& text) {}
-  virtual void display_error(const std::string& text) {}
+  virtual void display_remark(const std::string&) {}
+  virtual void display_error(const std::string&) {}
 
   OSM_Data_Printer* get_data_printer() override { return nullptr; }
 };
@@ -54,14 +54,14 @@ bool Output_Timestamp::write_http_headers()
 }
 
 
-void Output_Timestamp::write_payload_header
-    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
+void Output_Timestamp::write_payload_header(
+    const std::string&, const std::string& timestamp, const std::string&)
 {
   std::cout<<timestamp<<"\n";
 }
 
 
-int main(int argc, char *argv[])
+int main(int, char**)
 {
   Output_Timestamp output;
   Web_Output error_output(Error_Output::ASSISTING);

@@ -62,7 +62,7 @@ class Statement_Dump
     const std::string& name() const { return name_; }
     std::string attribute(const std::string& key) const;
 
-    void add_final_text(std::string text) {}
+    void add_final_text(std::string) {}
 
     Statement* create_non_dump_stmt(Statement::Factory& stmt_factory);
 

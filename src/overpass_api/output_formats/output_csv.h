@@ -58,7 +58,7 @@ private:
   {
     Data_Printer(const Csv_Settings& csv_settings_) : csv_settings(csv_settings_) {}
     
-    virtual void print_global_bbox(const Bbox_Double& bbox) override {}
+    virtual void print_global_bbox(const Bbox_Double&) override {}
 
     virtual void print_item(
         const Node_Skeleton& skel,
@@ -95,7 +95,7 @@ private:
         Output_Mode mode,
         const Feature_Action& action = keep) override;
         
-    void print_redacted(Output_Mode mode, uint32_t skel_type, const Full_Monotype_Meta* meta) override {}
+    void print_redacted(Output_Mode, uint32_t, const Full_Monotype_Meta*) override {}
 
     Csv_Settings csv_settings;
   };

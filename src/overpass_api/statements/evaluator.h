@@ -233,30 +233,30 @@ struct Eval_Task
 
   virtual std::string eval(const std::string* key) const = 0;
 
-  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >&, const std::string* key) const
       { return eval(key); }
-  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >&, const std::string* key) const
       { return eval(key); }
-  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >&, const std::string* key) const
       { return eval(key); }
-  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >&, const std::string* key) const
       { return eval(key); }
-  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >&, const std::string* key) const
       { return eval(key); }
-  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >&, const std::string* key) const
       { return eval(key); }
-  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >&, const std::string* key) const
       { return eval(key); }
-  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >&, const std::string* key) const
       { return eval(key); }
 
-  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint /*pos*/, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
       { return eval(data, key); }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint /*pos*/, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
       { return eval(data, key); }
-  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+  virtual std::string eval(uint /*pos*/, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
       { return eval(data, key); }
-  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+  virtual std::string eval(uint /*pos*/, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
       { return eval(data, key); }
 };
 
@@ -265,7 +265,7 @@ struct Const_Eval_Task : public Eval_Task
 {
   Const_Eval_Task(const std::string& value_) : value(value_) {}
 
-  virtual std::string eval(const std::string* key) const { return value; }
+  virtual std::string eval(const std::string*) const { return value; }
 
 private:
   std::string value;
@@ -279,28 +279,28 @@ struct Eval_Container_Task
   virtual std::vector< std::string > eval(const std::string* key) const = 0;
 
   virtual std::vector< std::string > eval(
-      const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      const Element_With_Context< Node_Skeleton >&, const std::string* key) const
       { return eval(key); }
   virtual std::vector< std::string > eval(
-      const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      const Element_With_Context< Attic< Node_Skeleton > >&, const std::string* key) const
       { return eval(key); }
   virtual std::vector< std::string > eval(
-      const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      const Element_With_Context< Way_Skeleton >&, const std::string* key) const
       { return eval(key); }
   virtual std::vector< std::string > eval(
-      const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      const Element_With_Context< Attic< Way_Skeleton > >&, const std::string* key) const
       { return eval(key); }
   virtual std::vector< std::string > eval(
-      const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      const Element_With_Context< Relation_Skeleton >&, const std::string* key) const
       { return eval(key); }
   virtual std::vector< std::string > eval(
-      const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      const Element_With_Context< Attic< Relation_Skeleton > >&, const std::string* key) const
       { return eval(key); }
   virtual std::vector< std::string > eval(
-      const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      const Element_With_Context< Area_Skeleton >&, const std::string* key) const
       { return eval(key); }
   virtual std::vector< std::string > eval(
-      const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      const Element_With_Context< Derived_Skeleton >&, const std::string* key) const
       { return eval(key); }
 };
 
@@ -311,21 +311,21 @@ struct Eval_Geometry_Task
 
   virtual Opaque_Geometry* eval() const = 0;
 
-  virtual Opaque_Geometry* eval(const Element_With_Context< Node_Skeleton >& data) const
+  virtual Opaque_Geometry* eval(const Element_With_Context< Node_Skeleton >& /*data*/) const
       { return eval(); }
-  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Node_Skeleton > >& data) const
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Node_Skeleton > >& /*data*/) const
       { return eval(); }
-  virtual Opaque_Geometry* eval(const Element_With_Context< Way_Skeleton >& data) const
+  virtual Opaque_Geometry* eval(const Element_With_Context< Way_Skeleton >& /*data*/) const
       { return eval(); }
-  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Way_Skeleton > >& data) const
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Way_Skeleton > >& /*data*/) const
       { return eval(); }
-  virtual Opaque_Geometry* eval(const Element_With_Context< Relation_Skeleton >& data) const
+  virtual Opaque_Geometry* eval(const Element_With_Context< Relation_Skeleton >& /*data*/) const
       { return eval(); }
-  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Relation_Skeleton > >& data) const
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Relation_Skeleton > >& /*data*/) const
       { return eval(); }
-  virtual Opaque_Geometry* eval(const Element_With_Context< Area_Skeleton >& data) const
+  virtual Opaque_Geometry* eval(const Element_With_Context< Area_Skeleton >& /*data*/) const
       { return eval(); }
-  virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& data) const
+  virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& /*data*/) const
       { return eval(); }
 };
 
@@ -348,8 +348,9 @@ struct Evaluator : public Statement
   virtual Requested_Context request_context() const = 0;
 
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) = 0;
-  virtual Eval_Container_Task* get_container_task(Prepare_Task_Context& context, const std::string* key) { return 0; }
-  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context) { return 0; }
+  virtual Eval_Container_Task* get_container_task(Prepare_Task_Context& /*context*/, const std::string* /*key*/)
+  { return nullptr; }
+  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& /*context*/) { return nullptr; }
   virtual Statement::Eval_Return_Type return_type() const = 0;
 
   virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
@@ -361,7 +362,7 @@ template< typename Evaluator_ >
 struct Element_Function_Maker : public Statement::Evaluator_Maker
 {
   virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+      Statement::Factory&, Parsed_Query&, Error_Output* error_output)
   {
     if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
         || !tree_it.assert_has_arguments(error_output, false)
@@ -378,7 +379,7 @@ template< typename Evaluator_ >
 struct Member_Function_Maker : public Statement::Evaluator_Maker
 {
   virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+      Statement::Factory&, Parsed_Query&, Error_Output* error_output)
   {
     if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
         || !tree_it.assert_has_arguments(error_output, false)
@@ -402,7 +403,7 @@ template< typename Evaluator_ >
 struct Operator_Eval_Maker : public Statement::Evaluator_Maker
 {
   virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+      Statement::Factory& stmt_factory, Parsed_Query&, Error_Output* error_output)
   {
     if (tree_context != Statement::evaluator_expected && tree_context != Statement::elem_eval_possible
         && tree_context != Statement::member_eval_possible)

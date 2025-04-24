@@ -45,7 +45,7 @@
 #include <vector>
 
 
-int main(int argc, char *argv[])
+int main(int, char**)
 {
   Parsed_Query global_settings;
   Web_Output error_output(Error_Output::ASSISTING);

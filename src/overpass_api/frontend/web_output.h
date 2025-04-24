@@ -48,8 +48,7 @@ struct Web_Output : public Error_Output
   virtual void runtime_remark(const std::string& error);
 
   virtual void display_statement_progress
-      (uint timer, const std::string& name, int progress, int line_number,
-       const std::vector< std::pair< uint, uint > >& stack) {}
+      (uint, const std::string&, int, int, const std::vector< std::pair< uint, uint > >&) {}
 
   virtual bool display_encoding_errors() { return encoding_errors; }
   virtual bool display_parse_errors() { return parse_errors; }

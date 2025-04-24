@@ -34,7 +34,7 @@ std::string to_date(time_t time)
 }
 
 
-int main(int argc, char* argv[])
+int main(int, char**)
 {
   // read command line arguments
   bool areas = false;

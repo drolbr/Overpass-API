@@ -200,22 +200,22 @@ public:
   virtual void partial_finished() {}
 
   virtual void parser_started() {}
-  virtual void node_elapsed(Node::Id_Type id) {}
+  virtual void node_elapsed(Node::Id_Type) {}
   virtual void nodes_finished() {}
-  virtual void way_elapsed(Way::Id_Type id) {}
+  virtual void way_elapsed(Way::Id_Type) {}
   virtual void ways_finished() {}
-  virtual void relation_elapsed(Relation::Id_Type id) {}
+  virtual void relation_elapsed(Relation::Id_Type) {}
   virtual void relations_finished() {}
 
   virtual void parser_succeeded() {}
 
-  virtual void migration_started(const std::string& filename) {}
+  virtual void migration_started(const std::string&) {}
   virtual void migration_flush() {}
   virtual void migration_flush_single_kv() {}
   virtual void migration_write_frequent() {}
   virtual void migration_completed() {}
 
-  virtual void set_db_dir(const std::string& db_dir) {}
+  virtual void set_db_dir(const std::string&) {}
 };
 
 

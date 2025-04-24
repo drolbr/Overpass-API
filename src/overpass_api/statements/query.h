@@ -197,7 +197,7 @@ class Has_Kv_Statement : public Statement
     Has_Kv_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes);
     virtual std::string get_name() const { return "has-kv"; }
     virtual std::string get_result_name() const { return ""; }
-    virtual void execute(Resource_Manager& rman) {}
+    virtual void execute(Resource_Manager&) {}
     virtual ~Has_Kv_Statement();
 
     static Generic_Statement_Maker_2< Has_Kv_Statement > statement_maker;

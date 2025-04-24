@@ -62,7 +62,7 @@ struct Evaluator;
 class Set_Comparison
 {
 public:
-  Set_Comparison(Transaction& transaction, const Set& lhs_set, uint64 lhs_timestamp)
+  Set_Comparison(Transaction&, const Set& lhs_set, uint64 lhs_timestamp)
       : final_target(0), lhs_set_(lhs_set), lhs_timestamp_(lhs_timestamp) {}
 
   Diff_Set compare_to_lhs(Resource_Manager& rman, const Statement& stmt, const Set& input_set,

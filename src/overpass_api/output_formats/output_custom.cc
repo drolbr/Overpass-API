@@ -71,13 +71,13 @@ namespace
 }
 
 
-void Output_Custom::display_remark(const std::string& text)
+void Output_Custom::display_remark(const std::string&)
 {
   //TODO
 }
 
 
-void Output_Custom::display_error(const std::string& text)
+void Output_Custom::display_error(const std::string&)
 {
   //TODO
 }
@@ -438,12 +438,12 @@ std::string antiprocess_coords(const std::string& raw_template)
 }
 
 
-std::string process_template(const std::string& raw_template, unsigned long long id, std::string type,
-			double south, double west, double north, double east, uint zoom,
-			const std::vector< std::pair< std::string, std::string > >* tags,
-			const std::vector< Node::Id_Type >* nds,
-			const std::vector< Relation_Entry >* members,
-			const std::map< uint32, std::string >* roles)
+std::string process_template(
+    const std::string& raw_template, unsigned long long id, std::string type,
+    double south, double west, double north, double east, uint zoom,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const std::vector< Node::Id_Type >* nds,
+    const std::vector< Relation_Entry >* members, const std::map< uint32, std::string >* roles)
 {
   std::ostringstream result;
   std::string::size_type old_pos = 0;
@@ -564,13 +564,11 @@ void Output_Custom::write_footer()
 }
 
 
-void Output_Custom::Data_Printer::print_item(const Node_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_Custom::Data_Printer::print_item(
+    const Node_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta*, const std::map< uint32, std::string >*,
+    Output_Mode mode, const Feature_Action&)
 {
   if (count == 0)
   {
@@ -639,13 +637,11 @@ unsigned int detect_zoom(const Opaque_Geometry& geometry)
 }
 
 
-void Output_Custom::Data_Printer::print_item(const Way_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_Custom::Data_Printer::print_item(
+    const Way_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta*, const std::map< uint32, std::string >*,
+    Output_Mode mode, const Feature_Action&)
 {
   if (count == 0)
   {
@@ -673,14 +669,12 @@ void Output_Custom::Data_Printer::print_item(const Way_Skeleton& skel,
 }
 
 
-void Output_Custom::Data_Printer::print_item(const Relation_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* roles,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_Custom::Data_Printer::print_item(
+    const Relation_Skeleton& skel, const Opaque_Geometry& geometry,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta*,
+    const std::map< uint32, std::string >* roles,
+    const std::map< uint32, std::string >*, Output_Mode mode, const Feature_Action&)
 {
   if (count == 0)
   {
@@ -708,11 +702,9 @@ void Output_Custom::Data_Printer::print_item(const Relation_Skeleton& skel,
 }
 
 
-void Output_Custom::Data_Printer::print_item(const Derived_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_Custom::Data_Printer::print_item(
+    const Derived_Skeleton&, const Opaque_Geometry&,
+    const std::vector< std::pair< std::string, std::string > >*, Output_Mode, const Feature_Action&)
 {
   // Intentionally empty
 }

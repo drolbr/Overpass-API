@@ -88,7 +88,7 @@ class Id_Query_Statement : public Output_Statement
       return to_string(type) + dump_ql_in_query("") + dump_ql_result_name() + ";";
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
-    virtual std::string dump_ql_in_query(const std::string& indent) const
+    virtual std::string dump_ql_in_query(const std::string&) const
     {
       std::vector< uint64 >::const_iterator it = refs.begin();
 

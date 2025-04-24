@@ -87,7 +87,7 @@ void Set_Comparison::set_target(bool target)
 }
 
 
-void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper, const Node_Skeleton& skel,
+void Set_Comparison::print_item(Extra_Data_For_Diff&, uint32 ll_upper, const Node_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users)
@@ -99,7 +99,7 @@ void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper
 }
 
 
-void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+void Set_Comparison::print_item(Extra_Data_For_Diff&, uint32 ll_upper, const Attic< Node_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users)
@@ -496,7 +496,7 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
 void Set_Comparison::store_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users)
+                            const std::map< uint32, std::string >*)
 {
   nodes.push_back(Node_With_Context(ll_upper, skel, timestamp,
       meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
@@ -507,7 +507,7 @@ void Set_Comparison::store_item(uint32 ll_upper, const Node_Skeleton& skel,
 void Set_Comparison::compare_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users)
+                            const std::map< uint32, std::string >*)
 {
   std::vector< Node_With_Context >::iterator nodes_it
       = std::lower_bound(nodes.begin(), nodes.end(), Node_With_Context(ll_upper, skel, 0));
@@ -614,10 +614,10 @@ void Set_Comparison::clear_nodes(Request_Context& context, bool add_deletion_inf
 
 void Set_Comparison::store_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
-                            const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                            const std::pair< Quad_Coord, Quad_Coord* >*,
                             const std::vector< Quad_Coord >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users)
+                            const std::map< uint32, std::string >*)
 {
   ways.push_back(Way_With_Context(ll_upper, skel,
       geometry ? *geometry : std::vector< Quad_Coord >(),
@@ -628,10 +628,10 @@ void Set_Comparison::store_item(uint32 ll_upper, const Way_Skeleton& skel,
 
 void Set_Comparison::compare_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
-                            const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                            const std::pair< Quad_Coord, Quad_Coord* >*,
                             const std::vector< Quad_Coord >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users)
+                            const std::map< uint32, std::string >*)
 {
   std::vector< Way_With_Context >::iterator ways_it
       = std::lower_bound(ways.begin(), ways.end(),
@@ -744,10 +744,10 @@ void Set_Comparison::clear_ways(Request_Context& context, bool add_deletion_info
 
 void Set_Comparison::store_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
-                            const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                            const std::pair< Quad_Coord, Quad_Coord* >*,
                             const std::vector< std::vector< Quad_Coord > >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users)
+                            const std::map< uint32, std::string >*)
 {
   relations.push_back(Relation_With_Context(ll_upper, skel,
       geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
@@ -758,10 +758,10 @@ void Set_Comparison::store_item(uint32 ll_upper, const Relation_Skeleton& skel,
 
 void Set_Comparison::compare_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
-                            const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                            const std::pair< Quad_Coord, Quad_Coord* >*,
                             const std::vector< std::vector< Quad_Coord > >* geometry,
                             uint64 timestamp, const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-                            const std::map< uint32, std::string >* users)
+                            const std::map< uint32, std::string >*)
 {
   std::vector< Relation_With_Context >::iterator relations_it
       = std::lower_bound(relations.begin(), relations.end(),
@@ -877,7 +877,7 @@ void Set_Comparison::clear_relations(Request_Context& context, bool add_deletion
 
 struct Derived_Structure_Handle
 {
-  Derived_Structure_Handle(Uint31_Index idx, const Derived_Structure& elem_)
+  Derived_Structure_Handle(Uint31_Index, const Derived_Structure& elem_)
     : elem(&elem_), center(elem_.get_geometry() && elem_.get_geometry()->has_center() ?
         Point_Double(elem_.get_geometry()->center_lat(), elem_.get_geometry()->center_lon())
         : Point_Double(100., 0.)) {}

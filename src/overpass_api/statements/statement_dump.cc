@@ -34,7 +34,7 @@ Statement_Dump::~Statement_Dump()
 }
 
 
-void Statement_Dump::add_statement(Statement_Dump* statement, std::string text)
+void Statement_Dump::add_statement(Statement_Dump* statement, std::string)
 {
   substatements.push_back(statement);
 }

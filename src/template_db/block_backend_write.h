@@ -412,7 +412,7 @@ void create_from_scratch(
     File_Handler< Index, File_Blocks >& file_handler,
     const std::map< Index, Container >& to_insert,
     const std::vector< Index >& relevant_idxs,
-    std::map< Index, Delta_Count >* obj_count)
+    std::map< Index, Delta_Count >*)
 {
   Void_Pointer< uint8 > dest(file_handler.block_size);
 

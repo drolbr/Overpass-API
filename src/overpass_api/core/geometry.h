@@ -139,20 +139,20 @@ public:
 
   virtual unsigned int way_size() const { return 0; }
   virtual bool has_faithful_way_geometry() const { return false; }
-  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
-  virtual double way_pos_lat(unsigned int pos) const { return 0; }
-  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  virtual bool way_pos_is_valid(unsigned int) const { return false; }
+  virtual double way_pos_lat(unsigned int) const { return 0; }
+  virtual double way_pos_lon(unsigned int) const { return 0; }
 
   virtual bool has_faithful_relation_geometry() const { return false; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos) const { return 0; }
-  virtual unsigned int relation_way_size(unsigned int member_pos) const { return 0; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int) const { return 0; }
+  virtual unsigned int relation_way_size(unsigned int) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int, unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int, unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int, unsigned int) const { return 0; }
 
-  virtual bool relevant_to_bbox(const Bbox_Double& bbox) const { return false; }
+  virtual bool relevant_to_bbox(const Bbox_Double&) const { return false; }
 };
 
 
@@ -178,18 +178,18 @@ public:
 
   virtual unsigned int way_size() const { return 0; }
   virtual bool has_faithful_way_geometry() const { return false; }
-  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
-  virtual double way_pos_lat(unsigned int pos) const { return 0; }
-  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  virtual bool way_pos_is_valid(unsigned int) const { return false; }
+  virtual double way_pos_lat(unsigned int) const { return 0; }
+  virtual double way_pos_lon(unsigned int) const { return 0; }
 
   virtual bool has_faithful_relation_geometry() const { return false; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos) const { return 0; }
-  virtual unsigned int relation_way_size(unsigned int member_pos) const { return 0; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int) const { return 0; }
+  virtual unsigned int relation_way_size(unsigned int) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int, unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int, unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int, unsigned int) const { return 0; }
 
   virtual bool relevant_to_bbox(const Bbox_Double& bbox) const;
 
@@ -221,20 +221,20 @@ public:
 
   virtual unsigned int way_size() const { return 0; }
   virtual bool has_faithful_way_geometry() const { return false; }
-  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
-  virtual double way_pos_lat(unsigned int pos) const { return 0; }
-  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  virtual bool way_pos_is_valid(unsigned int) const { return false; }
+  virtual double way_pos_lat(unsigned int) const { return 0; }
+  virtual double way_pos_lon(unsigned int) const { return 0; }
 
   virtual bool has_faithful_relation_geometry() const { return false; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos) const { return 0; }
-  virtual unsigned int relation_way_size(unsigned int member_pos) const { return 0; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int) const { return 0; }
+  virtual unsigned int relation_way_size(unsigned int) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int, unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int, unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int, unsigned int) const { return 0; }
 
-  virtual bool relevant_to_bbox(const Bbox_Double& bbox) const { return false; }
+  virtual bool relevant_to_bbox(const Bbox_Double&) const { return false; }
 
 private:
   Bbox_Double bbox;
@@ -271,13 +271,13 @@ public:
   virtual double way_pos_lon(unsigned int pos) const { return points[pos].lon; }
 
   virtual bool has_faithful_relation_geometry() const { return false; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos) const { return 0; }
-  virtual unsigned int relation_way_size(unsigned int member_pos) const { return 0; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int) const { return 0; }
+  virtual unsigned int relation_way_size(unsigned int) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int, unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int, unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int, unsigned int) const { return 0; }
 
   virtual bool relevant_to_bbox(const Bbox_Double& bbox) const;
 
@@ -324,13 +324,13 @@ public:
   void add_point(const Point_Double& point);
 
   virtual bool has_faithful_relation_geometry() const { return false; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos) const { return 0; }
-  virtual unsigned int relation_way_size(unsigned int member_pos) const { return 0; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int) const { return 0; }
+  virtual unsigned int relation_way_size(unsigned int) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int, unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int, unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int, unsigned int) const { return 0; }
 
   virtual bool relevant_to_bbox(const Bbox_Double& bbox) const;
 
@@ -367,18 +367,18 @@ public:
 
   virtual unsigned int way_size() const { return 0; }
   virtual bool has_faithful_way_geometry() const { return false; }
-  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
-  virtual double way_pos_lat(unsigned int pos) const { return 0; }
-  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  virtual bool way_pos_is_valid(unsigned int) const { return false; }
+  virtual double way_pos_lat(unsigned int) const { return 0; }
+  virtual double way_pos_lon(unsigned int) const { return 0; }
 
   virtual bool has_faithful_relation_geometry() const { return false; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos) const { return 0; }
-  virtual unsigned int relation_way_size(unsigned int member_pos) const { return 0; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int) const { return 0; }
+  virtual unsigned int relation_way_size(unsigned int) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int, unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int, unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int, unsigned int) const { return 0; }
 
   virtual bool relevant_to_bbox(const Bbox_Double& bbox) const;
 
@@ -414,18 +414,18 @@ public:
 
   virtual unsigned int way_size() const { return 0; }
   virtual bool has_faithful_way_geometry() const { return false; }
-  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
-  virtual double way_pos_lat(unsigned int pos) const { return 0; }
-  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  virtual bool way_pos_is_valid(unsigned int) const { return false; }
+  virtual double way_pos_lat(unsigned int) const { return 0; }
+  virtual double way_pos_lon(unsigned int) const { return 0; }
 
   virtual bool has_faithful_relation_geometry() const { return false; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos) const { return 0; }
-  virtual unsigned int relation_way_size(unsigned int member_pos) const { return 0; }
-  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
-  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
-  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int) const { return 0; }
+  virtual unsigned int relation_way_size(unsigned int) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int, unsigned int) const { return false; }
+  virtual double relation_pos_lat(unsigned int, unsigned int) const { return 0; }
+  virtual double relation_pos_lon(unsigned int, unsigned int) const { return 0; }
 
   virtual bool relevant_to_bbox(const Bbox_Double& bbox) const;
 
@@ -475,9 +475,9 @@ public:
 
   virtual unsigned int way_size() const { return 0; }
   virtual bool has_faithful_way_geometry() const { return false; }
-  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
-  virtual double way_pos_lat(unsigned int pos) const { return 0; }
-  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  virtual bool way_pos_is_valid(unsigned int) const { return false; }
+  virtual double way_pos_lat(unsigned int) const { return 0; }
+  virtual double way_pos_lon(unsigned int) const { return 0; }
 
   virtual bool has_faithful_relation_geometry() const { return true; }
   virtual bool relation_pos_is_valid(unsigned int member_pos) const;
@@ -547,9 +547,9 @@ public:
 
   virtual unsigned int way_size() const { return 0; }
   virtual bool has_faithful_way_geometry() const { return false; }
-  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
-  virtual double way_pos_lat(unsigned int pos) const { return 0; }
-  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  virtual bool way_pos_is_valid(unsigned int) const { return false; }
+  virtual double way_pos_lat(unsigned int) const { return 0; }
+  virtual double way_pos_lon(unsigned int) const { return 0; }
 
   virtual bool has_faithful_relation_geometry() const { return true; }
   virtual bool relation_pos_is_valid(unsigned int member_pos) const;

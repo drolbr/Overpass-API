@@ -208,8 +208,7 @@ bool Output_Popup::write_http_headers()
 }
 
 
-void Output_Popup::write_payload_header
-    (const std::string& db_dir_, const std::string& timestamp_, const std::string& area_timestamp_)
+void Output_Popup::write_payload_header(const std::string&, const std::string&, const std::string&)
 {
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -224,13 +223,13 @@ void Output_Popup::write_payload_header
 }
 
 
-void Output_Popup::display_remark(const std::string& text)
+void Output_Popup::display_remark(const std::string&)
 {
   //TODO
 }
 
 
-void Output_Popup::display_error(const std::string& text)
+void Output_Popup::display_error(const std::string&)
 {
   //TODO
 }
@@ -245,13 +244,10 @@ void Output_Popup::write_footer()
 }
 
 
-void Output_Popup::Data_Printer::print_item(const Node_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_Popup::Data_Printer::print_item(
+    const Node_Skeleton& skel, const Opaque_Geometry&,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta*, const std::map< uint32, std::string >*, Output_Mode, const Feature_Action&)
 {
   for (std::vector< Category_Filter* >::iterator it = categories.begin(); it != categories.end(); ++it)
   {
@@ -261,13 +257,10 @@ void Output_Popup::Data_Printer::print_item(const Node_Skeleton& skel,
 }
 
 
-void Output_Popup::Data_Printer::print_item(const Way_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_Popup::Data_Printer::print_item(
+    const Way_Skeleton& skel, const Opaque_Geometry&,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta*, const std::map< uint32, std::string >*, Output_Mode, const Feature_Action&)
 {
   for (std::vector< Category_Filter* >::iterator it = categories.begin(); it != categories.end(); ++it)
   {
@@ -277,14 +270,11 @@ void Output_Popup::Data_Printer::print_item(const Way_Skeleton& skel,
 }
 
 
-void Output_Popup::Data_Printer::print_item(const Relation_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      const Full_Monotype_Meta* meta,
-      const std::map< uint32, std::string >* roles,
-      const std::map< uint32, std::string >* users,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_Popup::Data_Printer::print_item(
+    const Relation_Skeleton& skel, const Opaque_Geometry&,
+    const std::vector< std::pair< std::string, std::string > >* tags,
+    const Full_Monotype_Meta*, const std::map< uint32, std::string >*,
+    const std::map< uint32, std::string >*, Output_Mode, const Feature_Action&)
 {
   for (std::vector< Category_Filter* >::iterator it = categories.begin(); it != categories.end(); ++it)
   {
@@ -294,11 +284,9 @@ void Output_Popup::Data_Printer::print_item(const Relation_Skeleton& skel,
 }
 
 
-void Output_Popup::Data_Printer::print_item(const Derived_Skeleton& skel,
-      const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode,
-      const Feature_Action& action)
+void Output_Popup::Data_Printer::print_item(
+    const Derived_Skeleton&, const Opaque_Geometry&,
+    const std::vector< std::pair< std::string, std::string > >*, Output_Mode, const Feature_Action&)
 {
   // Intentionally empty
 }

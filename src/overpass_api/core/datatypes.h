@@ -274,7 +274,7 @@ struct Derived_Structure : public Derived_Skeleton
   std::vector< std::pair< std::string, std::string > > tags;
 
   const Opaque_Geometry* get_geometry() const { return &*geometry; }
-  const void acquire_geometry(Opaque_Geometry* geometry_)
+  void acquire_geometry(Opaque_Geometry* geometry_)
   {
     geometry.acquire(geometry_);
   }
@@ -547,7 +547,7 @@ struct Timestamp
 
   uint32 size_of() const { return 5; }
   static constexpr uint32 const_size() { return 5; }
-  static uint32 size_of(void* data) { return 5; }
+  static uint32 size_of(void*) { return 5; }
 
   void to_data(void* data) const
   {

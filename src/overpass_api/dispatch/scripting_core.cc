@@ -117,7 +117,7 @@ void start(const char *el, const char **attr)
 }
 
 template< class TStatement >
-void end(const char *el)
+void end(const char*)
 {
   if (statement_stack< TStatement >().size() > 1)
   {

@@ -75,9 +75,9 @@ class Trivial_Predicate
 {
 public:
   Trivial_Predicate() {}
-  bool match(const Object& obj) const { return true; }
-  bool match(const Handle< Object >& h) const { return true; }
-  bool match(const Handle< Attic< Object > >& h) const { return true; }
+  bool match(const Object&) const { return true; }
+  bool match(const Handle< Object >&) const { return true; }
+  bool match(const Handle< Attic< Object > >&) const { return true; }
   bool possible() const { return true; }
 };
 

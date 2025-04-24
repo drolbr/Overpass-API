@@ -129,7 +129,7 @@ struct Ternary_Evaluator : public Evaluator
   }
 
   virtual void add_statement(Statement* statement, std::string text);
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
   virtual std::string get_result_name() const { return ""; }
 
   virtual Requested_Context request_context() const;
