@@ -76,7 +76,7 @@ public:
   virtual std::string get_name() const { return "eval-set-key"; }
   virtual std::string get_result_name() const { return ""; }
 
-  virtual void execute(Resource_Manager& rman) {}
+  virtual void execute(Resource_Manager&) {}
 
   virtual Requested_Context request_context() const
   {
@@ -84,7 +84,7 @@ public:
   }
 
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string*);
-  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context) { return 0; }
+  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context&) { return nullptr; }
 
 private:
   std::string input;

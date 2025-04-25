@@ -134,7 +134,7 @@ double way_meta_north(unsigned int pattern_size)
     return 10.0827263;
 }
 
-double way_meta_west(unsigned int pattern_size)
+double way_meta_west(unsigned int)
 {
   return 0.9961472;
 }
@@ -183,7 +183,7 @@ double relation_meta_north(unsigned int pattern_size)
     return 10.0827263;
 }
 
-double relation_meta_west(unsigned int pattern_size)
+double relation_meta_west(unsigned int)
 {
   return 0.9961472;
 }

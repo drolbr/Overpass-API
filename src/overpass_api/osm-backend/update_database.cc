@@ -129,13 +129,13 @@ int main(int argc, char* argv[])
     {
       Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
       //reading the main document
-      osm_updater.parse_file_completely(stdin);
+      osm_updater.parse_stdin_completely();
     }
     else
     {
       Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
       //reading the main document
-      osm_updater.parse_file_completely(stdin);
+      osm_updater.parse_stdin_completely();
     }
   }
   catch(Context_Error e)

@@ -392,6 +392,16 @@ struct Block_Backend_Discrete_Iterator
 
   Block_Backend_Discrete_Iterator(const Block_Backend_Discrete_Iterator& it)
     : Block_Backend_Basic_Iterator< Index, Object, Discrete_Idx_Assessor< Index, Iterator >, File_Handle_ >(it) {}
+    
+  Block_Backend_Discrete_Iterator& operator=(const Block_Backend_Discrete_Iterator& rhs)
+  {
+    if (&rhs == this)
+      return *this;
+    
+    Block_Backend_Basic_Iterator< Index, Object, Discrete_Idx_Assessor< Index, Iterator >, File_Handle_ >::operator=(rhs);
+    
+    return *this;
+  }
 };
 
 

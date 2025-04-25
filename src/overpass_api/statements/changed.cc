@@ -37,8 +37,8 @@ Changed_Statement::Criterion_Maker Changed_Statement::criterion_maker;
 
 
 Statement* Changed_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
-    const std::string& type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string&,
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   std::string since;
   std::string until;
@@ -139,7 +139,7 @@ std::vector< typename Skeleton::Id_Type > collect_changed_elements
 template< typename Id_Type >
 struct Trivial_Id_Predicate
 {
-  bool operator()(Id_Type id) const { return true; }
+  bool operator()(Id_Type) const { return true; }
 };
 
 
@@ -189,7 +189,7 @@ class Changed_Constraint : public Query_Constraint
   public:
     Changed_Constraint(Changed_Statement& stmt_) : stmt(&stmt_) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return prefer_ranges; }
+    Query_Filter_Strategy delivers_data(Resource_Manager&) override { return prefer_ranges; }
 
     bool get_node_ids
         (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids);

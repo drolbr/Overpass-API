@@ -27,7 +27,7 @@ Set_Prop_Statement::Evaluator_Maker Set_Prop_Statement::evaluator_maker;
 
 Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory& stmt_factory, Parsed_Query&, Error_Output* error_output)
 {
   if ((tree_context == Statement::generic || tree_context == Statement::in_convert)
       && tree_it->token == "!" && tree_it->rhs)
@@ -154,7 +154,7 @@ Set_Prop_Statement::Set_Prop_Statement
 }
 
 
-void Set_Prop_Statement::add_statement(Statement* statement, std::string text)
+void Set_Prop_Statement::add_statement(Statement* statement, std::string)
 {
   Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (tag_value_ && !tag_value)
@@ -442,7 +442,7 @@ void Set_Prop_Generic_Task::add_key(const std::string& key, Eval_Task* task)
 }
 
 
-void Set_Prop_Generic_Task::process(Derived_Structure& result, bool& id_set) const
+void Set_Prop_Generic_Task::process(Derived_Structure& result, bool&) const
 {
   for (unsigned int i = 0; i < keys.size(); ++i)
     result.tags.push_back(std::make_pair(keys[i], rhs[i]->eval(&keys[i])));
@@ -459,62 +459,62 @@ void process_generic(const Owning_Array< Eval_Task* >& rhs, const std::vector< s
 
 
 void Set_Prop_Generic_Task::process(const Element_With_Context< Node_Skeleton>& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   ::process_generic(rhs, keys, data, result);
 }
 
 
 void Set_Prop_Generic_Task::process(const Element_With_Context< Attic< Node_Skeleton > >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   ::process_generic(rhs, keys, data, result);
 }
 
 
 void Set_Prop_Generic_Task::process(const Element_With_Context< Way_Skeleton >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   ::process_generic(rhs, keys, data, result);
 }
 
 
 void Set_Prop_Generic_Task::process(const Element_With_Context< Attic< Way_Skeleton > >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   ::process_generic(rhs, keys, data, result);
 }
 
 
 void Set_Prop_Generic_Task::process(const Element_With_Context< Relation_Skeleton >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   ::process_generic(rhs, keys, data, result);
 }
 
 
 void Set_Prop_Generic_Task::process(const Element_With_Context< Attic< Relation_Skeleton > >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   ::process_generic(rhs, keys, data, result);
 }
 
 
 void Set_Prop_Generic_Task::process(const Element_With_Context< Area_Skeleton >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   ::process_generic(rhs, keys, data, result);
 }
 
 
 void Set_Prop_Generic_Task::process(const Element_With_Context< Derived_Skeleton >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   ::process_generic(rhs, keys, data, result);
 }
 
 
-void Set_Prop_Geometry_Task::process(Derived_Structure& result, bool& id_set) const
+void Set_Prop_Geometry_Task::process(Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval());
@@ -522,7 +522,7 @@ void Set_Prop_Geometry_Task::process(Derived_Structure& result, bool& id_set) co
 
 
 void Set_Prop_Geometry_Task::process(const Element_With_Context< Node_Skeleton>& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval(data));
@@ -530,7 +530,7 @@ void Set_Prop_Geometry_Task::process(const Element_With_Context< Node_Skeleton>&
 
 
 void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Node_Skeleton > >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval(data));
@@ -538,7 +538,7 @@ void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Node_Ske
 
 
 void Set_Prop_Geometry_Task::process(const Element_With_Context< Way_Skeleton >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval(data));
@@ -546,7 +546,7 @@ void Set_Prop_Geometry_Task::process(const Element_With_Context< Way_Skeleton >&
 
 
 void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Way_Skeleton > >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval(data));
@@ -554,7 +554,7 @@ void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Way_Skel
 
 
 void Set_Prop_Geometry_Task::process(const Element_With_Context< Relation_Skeleton >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval(data));
@@ -562,7 +562,7 @@ void Set_Prop_Geometry_Task::process(const Element_With_Context< Relation_Skelet
 
 
 void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Relation_Skeleton > >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval(data));
@@ -570,7 +570,7 @@ void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Relation
 
 
 void Set_Prop_Geometry_Task::process(const Element_With_Context< Area_Skeleton >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval(data));
@@ -578,7 +578,7 @@ void Set_Prop_Geometry_Task::process(const Element_With_Context< Area_Skeleton >
 
 
 void Set_Prop_Geometry_Task::process(const Element_With_Context< Derived_Skeleton >& data,
-    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+    const std::vector< std::string >&, Derived_Structure& result, bool&) const
 {
   if (rhs)
     result.acquire_geometry(rhs->eval(data));

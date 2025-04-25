@@ -378,7 +378,7 @@ void Four_Field_Index::compute_inside_parts(uint32 lat, int32 lon, int significa
 
 namespace
 {
-  void print_index(std::ostringstream& out, const std::vector< Four_Field_Entry >& tree,
+  void print_index(std::ostringstream& out,
       uint32 base_lat, int32 base_lon, int significant_bits, int32 value,
       uint32 min_lat, uint32 max_lat, int32 min_lon, int32 max_lon)
   {
@@ -405,21 +405,21 @@ namespace
       print_indexes(out, tree, -entry.sw, base_lat, base_lon, significant_bits+1,
           min_lat, max_lat, min_lon, max_lon);
     else if (entry.sw > 0)
-      print_index(out, tree, base_lat, base_lon, significant_bits, entry.sw,
+      print_index(out, base_lat, base_lon, significant_bits, entry.sw,
           min_lat, max_lat, min_lon, max_lon);
 
     if (entry.se < 0)
       print_indexes(out, tree, -entry.se, base_lat, base_lon + (0x80000000u>>significant_bits), significant_bits+1,
           min_lat, max_lat, min_lon, max_lon);
     else if (entry.se > 0)
-      print_index(out, tree, base_lat, base_lon + (0x80000000u>>significant_bits), significant_bits, entry.se,
+      print_index(out, base_lat, base_lon + (0x80000000u>>significant_bits), significant_bits, entry.se,
           min_lat, max_lat, min_lon, max_lon);
 
     if (entry.nw < 0)
       print_indexes(out, tree, -entry.nw, base_lat + (0x80000000u>>significant_bits), base_lon, significant_bits+1,
           min_lat, max_lat, min_lon, max_lon);
     else if (entry.nw > 0)
-      print_index(out, tree, base_lat + (0x80000000u>>significant_bits), base_lon, significant_bits, entry.nw,
+      print_index(out, base_lat + (0x80000000u>>significant_bits), base_lon, significant_bits, entry.nw,
           min_lat, max_lat, min_lon, max_lon);
 
     if (entry.ne < 0)
@@ -427,7 +427,7 @@ namespace
           base_lon + (0x80000000u>>significant_bits), significant_bits+1,
           min_lat, max_lat, min_lon, max_lon);
     else if (entry.ne > 0)
-      print_index(out, tree, base_lat + (0x80000000u>>significant_bits),
+      print_index(out, base_lat + (0x80000000u>>significant_bits),
           base_lon + (0x80000000u>>significant_bits), significant_bits, entry.ne,
           min_lat, max_lat, min_lon, max_lon);
   }

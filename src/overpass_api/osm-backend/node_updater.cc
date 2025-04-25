@@ -776,9 +776,9 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 }
 
 
-void Node_Updater::update_node_ids
-    (std::map< uint32, std::vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves,
-     const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions)
+void Node_Updater::update_node_ids(
+    std::map< uint32, std::vector< Node::Id_Type > >& to_delete, bool,
+    const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >&)
 {
   static Pair_Comparator_By_Id< Node::Id_Type, bool > pair_comparator_by_id;
   static Pair_Equal_Id< Node::Id_Type, bool > pair_equal_id;

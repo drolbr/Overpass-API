@@ -500,7 +500,7 @@ void Osm_Updater::finish_updater()
 }
 
 
-void Osm_Updater::parse_file_completely(FILE* in)
+void Osm_Updater::parse_stdin_completely()
 {
   callback->parser_started();
   parse(stdin, start, end);

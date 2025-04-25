@@ -37,7 +37,7 @@ Evaluator_Point::Evaluator_Maker Evaluator_Point::evaluator_maker;
 
 Statement* Evaluator_Point::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory& stmt_factory, Parsed_Query&, Error_Output* error_output)
 {
   if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
       || !tree_it.assert_has_arguments(error_output, true))
@@ -77,7 +77,7 @@ Evaluator_Point::Evaluator_Point
 }
 
 
-void Evaluator_Point::add_statement(Statement* statement, std::string text)
+void Evaluator_Point::add_statement(Statement* statement, std::string)
 {
   Evaluator* eval = dynamic_cast< Evaluator* >(statement);
   if (!eval)
@@ -145,7 +145,7 @@ Evaluator_Linestring::Evaluator_Maker Evaluator_Linestring::evaluator_maker;
 
 Statement* Evaluator_Linestring::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory& stmt_factory, Parsed_Query&, Error_Output* error_output)
 {
   if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
       || !tree_it.assert_has_arguments(error_output, true))
@@ -194,7 +194,7 @@ Evaluator_Linestring::Evaluator_Linestring
 }
 
 
-void Evaluator_Linestring::add_statement(Statement* statement, std::string text)
+void Evaluator_Linestring::add_statement(Statement* statement, std::string)
 {
   Evaluator* eval = dynamic_cast< Evaluator* >(statement);
   if (!eval)
@@ -250,7 +250,7 @@ Evaluator_Polygon::Evaluator_Maker Evaluator_Polygon::evaluator_maker;
 
 Statement* Evaluator_Polygon::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory& stmt_factory, Parsed_Query&, Error_Output* error_output)
 {
   if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
       || !tree_it.assert_has_arguments(error_output, true))
@@ -299,7 +299,7 @@ Evaluator_Polygon::Evaluator_Polygon
 }
 
 
-void Evaluator_Polygon::add_statement(Statement* statement, std::string text)
+void Evaluator_Polygon::add_statement(Statement* statement, std::string)
 {
   Evaluator* eval = dynamic_cast< Evaluator* >(statement);
   if (!eval)

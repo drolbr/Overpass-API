@@ -52,25 +52,25 @@ struct Data_Modifier
 
 struct Accept_All_Tags : public Data_Modifier
 {
-  virtual bool admit_node_skeleton(uint id) const { return true; }
-  virtual bool admit_node_tags(uint id) const { return true; }
-  virtual bool admit_way_skeleton(uint id) const { return true; }
-  virtual bool admit_way_tags(uint id) const { return true; }
-  virtual bool admit_relation_skeleton(uint id) const { return true; }
-  virtual bool admit_relation_tags(uint id) const { return true; }
+  virtual bool admit_node_skeleton(uint) const { return true; }
+  virtual bool admit_node_tags(uint) const { return true; }
+  virtual bool admit_way_skeleton(uint) const { return true; }
+  virtual bool admit_way_tags(uint) const { return true; }
+  virtual bool admit_relation_skeleton(uint) const { return true; }
+  virtual bool admit_relation_tags(uint) const { return true; }
 };
 
 struct Accept_All : public Accept_All_Tags
 {
-  virtual bool admit_node(uint id) const { return true; }
-  virtual bool admit_node_skeleton(uint id) const { return true; }
-  virtual bool admit_node_tags(uint id) const { return true; }
-  virtual bool admit_way(uint id) const { return true; }
-  virtual bool admit_way_skeleton(uint id) const { return true; }
-  virtual bool admit_way_tags(uint id) const { return true; }
-  virtual bool admit_relation(uint id) const { return true; }
-  virtual bool admit_relation_skeleton(uint id) const { return true; }
-  virtual bool admit_relation_tags(uint id) const { return true; }
+  virtual bool admit_node(uint) const { return true; }
+  virtual bool admit_node_skeleton(uint) const { return true; }
+  virtual bool admit_node_tags(uint) const { return true; }
+  virtual bool admit_way(uint) const { return true; }
+  virtual bool admit_way_skeleton(uint) const { return true; }
+  virtual bool admit_way_tags(uint) const { return true; }
+  virtual bool admit_relation(uint) const { return true; }
+  virtual bool admit_relation_skeleton(uint) const { return true; }
+  virtual bool admit_relation_tags(uint) const { return true; }
 };
 
 std::vector< std::pair< std::string, std::string > > collect_tags(std::string prefix, uint id)
@@ -456,7 +456,7 @@ void create_multpolys_test_pattern_nodes
   create_node(id + 15, lat + 2*scale, lon + 7*scale);
 }
 
-void create_multpolys_test_pattern_ways(uint id, uint node_ref, double scale)
+void create_multpolys_test_pattern_ways(uint id, uint node_ref)
 {
   std::vector< std::pair< std::string, std::string > > tags;
   for (uint i = 0; i < 3; ++i)
@@ -603,7 +603,7 @@ int main(int argc, char* args[])
     create_shapes_test_pattern_ways(151, 1501, 0.00001);
     create_shapes_test_pattern_ways(161, 1601, 0.000001);
 
-    create_multpolys_test_pattern_ways(201, 2001, 0.1);
+    create_multpolys_test_pattern_ways(201, 2001);
 
     create_area_way_ways(300, 3000000000u);
 

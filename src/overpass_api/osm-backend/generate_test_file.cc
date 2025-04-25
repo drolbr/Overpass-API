@@ -55,25 +55,25 @@ struct Data_Modifier
 
 struct Accept_All_Tags : public Data_Modifier
 {
-  virtual bool admit_node_skeleton(uint id) const { return true; }
-  virtual bool admit_node_tags(uint id) const { return true; }
-  virtual bool admit_way_skeleton(uint id) const { return true; }
-  virtual bool admit_way_tags(uint id) const { return true; }
-  virtual bool admit_relation_skeleton(uint id) const { return true; }
-  virtual bool admit_relation_tags(uint id) const { return true; }
+  virtual bool admit_node_skeleton(uint) const { return true; }
+  virtual bool admit_node_tags(uint) const { return true; }
+  virtual bool admit_way_skeleton(uint) const { return true; }
+  virtual bool admit_way_tags(uint) const { return true; }
+  virtual bool admit_relation_skeleton(uint) const { return true; }
+  virtual bool admit_relation_tags(uint) const { return true; }
 };
 
 struct Accept_All : public Accept_All_Tags
 {
-  virtual bool admit_node(uint id) const { return true; }
-  virtual bool admit_node_skeleton(uint id) const { return true; }
-  virtual bool admit_node_tags(uint id) const { return true; }
-  virtual bool admit_way(uint id) const { return true; }
-  virtual bool admit_way_skeleton(uint id) const { return true; }
-  virtual bool admit_way_tags(uint id) const { return true; }
-  virtual bool admit_relation(uint id) const { return true; }
-  virtual bool admit_relation_skeleton(uint id) const { return true; }
-  virtual bool admit_relation_tags(uint id) const { return true; }
+  virtual bool admit_node(uint) const { return true; }
+  virtual bool admit_node_skeleton(uint) const { return true; }
+  virtual bool admit_node_tags(uint) const { return true; }
+  virtual bool admit_way(uint) const { return true; }
+  virtual bool admit_way_skeleton(uint) const { return true; }
+  virtual bool admit_way_tags(uint) const { return true; }
+  virtual bool admit_relation(uint) const { return true; }
+  virtual bool admit_relation_skeleton(uint) const { return true; }
+  virtual bool admit_relation_tags(uint) const { return true; }
 };
 
 struct Accept_Print_1 : public Accept_All_Tags
@@ -86,27 +86,27 @@ struct Accept_Print_1 : public Accept_All_Tags
 struct Accept_Print_2 : public Data_Modifier
 {
   virtual bool admit_node(uint id) const { return (id % 10000 == 0); }
-  virtual bool admit_node_skeleton(uint id) const { return true; }
-  virtual bool admit_node_tags(uint id) const { return false; }
+  virtual bool admit_node_skeleton(uint) const { return true; }
+  virtual bool admit_node_tags(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 1000 == 0); }
-  virtual bool admit_way_skeleton(uint id) const { return true; }
-  virtual bool admit_way_tags(uint id) const { return false; }
+  virtual bool admit_way_skeleton(uint) const { return true; }
+  virtual bool admit_way_tags(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id % 4 == 0); }
-  virtual bool admit_relation_skeleton(uint id) const { return true; }
-  virtual bool admit_relation_tags(uint id) const { return false; }
+  virtual bool admit_relation_skeleton(uint) const { return true; }
+  virtual bool admit_relation_tags(uint) const { return false; }
 };
 
 struct Accept_Print_3 : public Data_Modifier
 {
   virtual bool admit_node(uint id) const { return (id % 10000 == 0); }
-  virtual bool admit_node_skeleton(uint id) const { return false; }
-  virtual bool admit_node_tags(uint id) const { return false; }
+  virtual bool admit_node_skeleton(uint) const { return false; }
+  virtual bool admit_node_tags(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 1000 == 0); }
-  virtual bool admit_way_skeleton(uint id) const { return false; }
-  virtual bool admit_way_tags(uint id) const { return false; }
+  virtual bool admit_way_skeleton(uint) const { return false; }
+  virtual bool admit_way_tags(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id % 4 == 0); }
-  virtual bool admit_relation_skeleton(uint id) const { return false; }
-  virtual bool admit_relation_tags(uint id) const { return false; }
+  virtual bool admit_relation_skeleton(uint) const { return false; }
+  virtual bool admit_relation_tags(uint) const { return false; }
 };
 
 struct Accept_Recurse_1 : public Accept_All_Tags
@@ -115,8 +115,8 @@ struct Accept_Recurse_1 : public Accept_All_Tags
 
   virtual bool admit_node(uint id) const
       { return ((id > pattern_size) && (id <= pattern_size*3/2+1)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -129,8 +129,8 @@ struct Accept_Recurse_2 : public Accept_All_Tags
   virtual bool admit_node(uint id) const
       { return ((id % pattern_size == pattern_size/2+1)
           && (id < 2*pattern_size*pattern_size)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -138,21 +138,21 @@ private:
 
 struct Accept_Recurse_3 : public Accept_All_Tags
 {
-  Accept_Recurse_3(uint pattern_size_) {}
+  Accept_Recurse_3(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Recurse_4 : public Accept_All_Tags
 {
   Accept_Recurse_4(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
       { return (id == pattern_size*pattern_size - pattern_size/2); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -162,10 +162,10 @@ struct Accept_Recurse_5 : public Accept_All_Tags
 {
   Accept_Recurse_5(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
       { return (id <= pattern_size*(pattern_size/2-1)); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -179,8 +179,8 @@ struct Accept_Recurse_6 : public Accept_All_Tags
       { return ((id == 1) || (id == 2)
           || (id == pattern_size+1) || (id == pattern_size+2)
 	  || (id == pattern_size*pattern_size)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -188,10 +188,10 @@ private:
 
 struct Accept_Recurse_7 : public Accept_All_Tags
 {
-  Accept_Recurse_7(uint pattern_size_) {}
+  Accept_Recurse_7(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
       { return ((id == 2) || (id == 8) || (id == 10) || (id == 11)); }
 };
@@ -200,12 +200,12 @@ struct Accept_Recurse_8 : public Accept_All_Tags
 {
   Accept_Recurse_8(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
       { return ((id == 1) || (id == 2)
           || (id == pattern_size/2*(pattern_size/2-1) + 1)
 	  || (id == pattern_size/2*(pattern_size/2+1) + 1)); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -213,30 +213,30 @@ private:
 
 struct Accept_Recurse_9 : public Accept_All_Tags
 {
-  Accept_Recurse_9(uint pattern_size_) {}
+  Accept_Recurse_9(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
       { return ((id == 6) || (id == 8) || (id == 10)); }
 };
 
 struct Accept_Recurse_10 : public Accept_All_Tags
 {
-  Accept_Recurse_10(uint pattern_size_) {}
+  Accept_Recurse_10(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
       { return ((id == 1) || (id == 2)); }
 };
 
 struct Accept_Recurse_11 : public Accept_All_Tags
 {
-  Accept_Recurse_11(uint pattern_size_) {}
+  Accept_Recurse_11(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
       { return ((id == 9) || (id == 10)); }
 };
@@ -249,8 +249,8 @@ struct Accept_Recurse_12 : public Accept_All_Tags
   {
     return (id == 1 || id == pattern_size + 2);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -272,7 +272,7 @@ struct Accept_Recurse_13 : public Accept_All_Tags
         || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
 	|| id == pattern_size*pattern_size/4 + pattern_size/2 + 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -335,7 +335,7 @@ struct Accept_Recurse_16 : public Accept_All_Tags
 {
   Accept_Recurse_16(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == 1 || id == 2
@@ -353,10 +353,10 @@ private:
 
 struct Accept_Recurse_17 : public Accept_All_Tags
 {
-  Accept_Recurse_17(uint pattern_size_) {}
+  Accept_Recurse_17(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 6 || id == 8 || id == 10);
@@ -367,7 +367,7 @@ struct Accept_Recurse_18 : public Accept_All_Tags
 {
   Accept_Recurse_18(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == pattern_size*pattern_size/4 - pattern_size/2 + 1);
@@ -383,10 +383,10 @@ private:
 
 struct Accept_Recurse_19 : public Accept_All_Tags
 {
-  Accept_Recurse_19(uint pattern_size_) {}
+  Accept_Recurse_19(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 6 || id == 8 || id == 9 || id == 10);
@@ -395,10 +395,10 @@ struct Accept_Recurse_19 : public Accept_All_Tags
 
 struct Accept_Recurse_20 : public Accept_All_Tags
 {
-  Accept_Recurse_20(uint pattern_size_) {}
+  Accept_Recurse_20(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 1 || id == 9 || id == 10);
@@ -413,8 +413,8 @@ struct Accept_Recurse_21 : public Accept_All_Tags
   {
     return (id == pattern_size + 1 || id == pattern_size + 2);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -422,22 +422,22 @@ private:
 
 struct Accept_Recurse_23 : public Accept_All_Tags
 {
-  Accept_Recurse_23(uint pattern_size_) {}
+  Accept_Recurse_23(uint) {}
 
   virtual bool admit_node(uint id) const
   {
     return (id == 1);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Recurse_24 : public Accept_All_Tags
 {
-  Accept_Recurse_24(uint pattern_size_) {}
+  Accept_Recurse_24(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 11);
@@ -448,12 +448,12 @@ struct Accept_Recurse_25 : public Accept_All_Tags
 {
   Accept_Recurse_25(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == pattern_size*(pattern_size/2-1) + 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -461,10 +461,10 @@ private:
 
 struct Accept_Recurse_26 : public Accept_All_Tags
 {
-  Accept_Recurse_26(uint pattern_size_) {}
+  Accept_Recurse_26(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 6 || id == 8 || id == 10);
@@ -473,10 +473,10 @@ struct Accept_Recurse_26 : public Accept_All_Tags
 
 struct Accept_Recurse_27 : public Accept_All_Tags
 {
-  Accept_Recurse_27(uint pattern_size_) {}
+  Accept_Recurse_27(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 3);
@@ -485,10 +485,10 @@ struct Accept_Recurse_27 : public Accept_All_Tags
 
 struct Accept_Recurse_28 : public Accept_All_Tags
 {
-  Accept_Recurse_28(uint pattern_size_) {}
+  Accept_Recurse_28(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 9);
@@ -500,8 +500,8 @@ struct Accept_Recurse_29 : public Accept_All_Tags
   Accept_Recurse_29(uint pattern_size_) : pattern_size(pattern_size_) {}
 
   virtual bool admit_node(uint id) const { return id == 2 || (pattern_size + 1 <= id && id <= pattern_size + 4); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -512,8 +512,8 @@ struct Accept_Recurse_30 : public Accept_All_Tags
   Accept_Recurse_30(uint pattern_size_) : pattern_size(pattern_size_) {}
 
   virtual bool admit_node(uint id) const { return id == pattern_size + 3; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -521,11 +521,11 @@ private:
 
 struct Accept_Recurse_31 : public Accept_All_Tags
 {
-  Accept_Recurse_31(uint pattern_size_) {}
+  Accept_Recurse_31(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Recurse_34 : public Accept_All_Tags
@@ -536,8 +536,8 @@ struct Accept_Recurse_34 : public Accept_All_Tags
       || id == pattern_size*pattern_size - pattern_size/2 + 1 || id == pattern_size*pattern_size - pattern_size/2 + 2
       || id == pattern_size*pattern_size/2 + 1 || id == pattern_size*pattern_size/2 + pattern_size
       || id == pattern_size*pattern_size/2 + pattern_size + 1 || id == pattern_size*pattern_size/2 + 2*pattern_size; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -557,8 +557,8 @@ struct Accept_Recurse_35 : public Accept_All_Tags
       && id != pattern_size*pattern_size/2 + pattern_size + 1
       && id != pattern_size*pattern_size/2 + 3*pattern_size/2 + 1
       && id != pattern_size*pattern_size/2 + 3*pattern_size/2 + 2; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -572,8 +572,8 @@ struct Accept_Recurse_36 : public Accept_All_Tags
       || id == pattern_size*pattern_size/2 + pattern_size/2 + 2
       || id == pattern_size*pattern_size/2 + 3*pattern_size/2 + 1
       || id == pattern_size*pattern_size/2 + 3*pattern_size/2 + 2; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -588,8 +588,8 @@ struct Accept_Bbox_Query_1 : public Accept_All_Tags
        && (id <= pattern_size*pattern_size*6/5)
        && (id % pattern_size > 0)
        && (id % pattern_size <= pattern_size/5)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -604,8 +604,8 @@ struct Accept_Bbox_Query_2 : public Accept_All_Tags
        && (id <= pattern_size*pattern_size*11/10)
        && (id % pattern_size > 0)
        && (id % pattern_size <= pattern_size/10)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -619,8 +619,8 @@ struct Accept_Bbox_Query_3 : public Accept_All_Tags
   { return ((id > pattern_size*pattern_size)
   && (id <= pattern_size*pattern_size*11/10)
   && ((id-1) % pattern_size >= pattern_size*9/10)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -635,8 +635,8 @@ struct Accept_Bbox_Query_4 : public Accept_All_Tags
   && (id <= pattern_size*pattern_size*11/10)
   && ((id % pattern_size > pattern_size*9/10)
     || (id % pattern_size <= pattern_size/10))); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -644,11 +644,11 @@ private:
 
 struct Accept_Bbox_Query_5 : public Accept_All_Tags
 {
-  Accept_Bbox_Query_5(uint pattern_size_) {}
+  Accept_Bbox_Query_5(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Bbox_Query_6 : public Accept_All_Tags
@@ -659,8 +659,8 @@ struct Accept_Bbox_Query_6 : public Accept_All_Tags
   { return ((id > pattern_size*pattern_size)
       && (id <= pattern_size*pattern_size*11/10)
       && (id % pattern_size == 1)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -674,8 +674,8 @@ struct Accept_Bbox_Query_8 : public Accept_All_Tags
   { return ((id > pattern_size*pattern_size)
       && (id <= pattern_size*pattern_size + pattern_size)
       && ((id-1) % pattern_size < pattern_size/10)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -683,81 +683,81 @@ private:
 
 struct Accept_Query_1 : public Accept_All_Tags
 {
-  Accept_Query_1(uint pattern_size_) {}
+  Accept_Query_1(uint) {}
 
   virtual bool admit_node(uint id) const
   { return (id == 11); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_2 : public Accept_All_Tags
 {
-  Accept_Query_2(uint pattern_size_) {}
+  Accept_Query_2(uint) {}
 
   virtual bool admit_node(uint id) const
   { return (id % 5 == 0); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_3 : public Accept_All_Tags
 {
-  Accept_Query_3(uint pattern_size_) {}
+  Accept_Query_3(uint) {}
 
   virtual bool admit_node(uint id) const
   { return (id % 11 == 0); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_4 : public Accept_All_Tags
 {
-  Accept_Query_4(uint pattern_size_) {}
+  Accept_Query_4(uint) {}
 
   virtual bool admit_node(uint id) const
   { return (id % 15 == 0); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_5 : public Accept_All_Tags
 {
-  Accept_Query_5(uint pattern_size_) {}
+  Accept_Query_5(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_6 : public Accept_All_Tags
 {
-  Accept_Query_6(uint pattern_size_) {}
+  Accept_Query_6(uint) {}
 
   virtual bool admit_node(uint id) const
   { return (id == 77); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_7 : public Accept_All_Tags
 {
-  Accept_Query_7(uint pattern_size_) {}
+  Accept_Query_7(uint) {}
 
   virtual bool admit_node(uint id) const
   { return (id % 105 == 0); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_8 : public Accept_All_Tags
 {
-  Accept_Query_8(uint pattern_size_) {}
+  Accept_Query_8(uint) {}
 
   virtual bool admit_node(uint id) const
   { return (id == 11); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_9 : public Accept_All_Tags
@@ -770,8 +770,8 @@ struct Accept_Query_9 : public Accept_All_Tags
        && (id % pattern_size > 0)
        && (id % pattern_size <= pattern_size/10)
        && (id % 5 == 0)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -787,8 +787,8 @@ struct Accept_Query_10 : public Accept_All_Tags
        && (id % pattern_size > 0)
        && (id % pattern_size <= pattern_size/10)
        && (id % 7 == 0)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -796,121 +796,121 @@ private:
 
 struct Accept_Query_11 : public Accept_All_Tags
 {
-  Accept_Query_11(uint pattern_size_) {}
+  Accept_Query_11(uint) {}
 
   virtual bool admit_node(uint id) const
   { return (id % 105 == 0); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_12 : public Accept_All_Tags
 {
-  Accept_Query_12(uint pattern_size_) {}
+  Accept_Query_12(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
       { return (id == 11); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_13 : public Accept_All_Tags
 {
-  Accept_Query_13(uint pattern_size_) {}
+  Accept_Query_13(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
       { return (id % 5 == 0); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_14 : public Accept_All_Tags
 {
-  Accept_Query_14(uint pattern_size_) {}
+  Accept_Query_14(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 11 == 0); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_15 : public Accept_All_Tags
 {
-  Accept_Query_15(uint pattern_size_) {}
+  Accept_Query_15(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 15 == 0); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_17 : public Accept_All_Tags
 {
-  Accept_Query_17(uint pattern_size_) {}
+  Accept_Query_17(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id == 77); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_18 : public Accept_All_Tags
 {
-  Accept_Query_18(uint pattern_size_) {}
+  Accept_Query_18(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 105 == 0); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_19 : public Accept_All_Tags
 {
-  Accept_Query_19(uint pattern_size_) {}
+  Accept_Query_19(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 105 == 0); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_20 : public Accept_All_Tags
 {
-  Accept_Query_20(uint pattern_size_) {}
+  Accept_Query_20(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id == 11); }
 };
 
 struct Accept_Query_21 : public Accept_All_Tags
 {
-  Accept_Query_21(uint pattern_size_) {}
+  Accept_Query_21(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id % 4 == 1); }
 };
 
 struct Accept_Query_22 : public Accept_All_Tags
 {
-  Accept_Query_22(uint pattern_size_) {}
+  Accept_Query_22(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id % 4 != 3); }
 };
 
 struct Accept_Query_23 : public Accept_All_Tags
 {
-  Accept_Query_23(uint pattern_size_) {}
+  Accept_Query_23(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id % 5 == 0); }
 };
 
 struct Accept_Query_25 : public Accept_All_Tags
 {
-  Accept_Query_25(uint pattern_size_) {}
+  Accept_Query_25(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id % 10 == 0); }
 };
 
@@ -918,7 +918,7 @@ struct Accept_Query_28 : public Accept_All_Tags
 {
   Accept_Query_28(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     if (id % 5 != 0)
@@ -938,7 +938,7 @@ struct Accept_Query_28 : public Accept_All_Tags
       return true;
     return false;
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -948,7 +948,7 @@ struct Accept_Query_29 : public Accept_All_Tags
 {
   Accept_Query_29(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     if (id % 5 != 0)
@@ -966,7 +966,7 @@ struct Accept_Query_29 : public Accept_All_Tags
       return true;
     return false;
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -976,8 +976,8 @@ struct Accept_Query_30 : public Accept_All_Tags
 {
   Accept_Query_30(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     if (id == 18)
@@ -993,8 +993,8 @@ struct Accept_Query_31 : public Accept_All_Tags
 {
   Accept_Query_31(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     if (id == 14)
@@ -1010,13 +1010,13 @@ struct Accept_Query_37 : public Accept_All_Tags
 {
   Accept_Query_37(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == 2*(2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2) - pattern_size + 1
         || id == 2*(2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2) - 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1026,12 +1026,12 @@ struct Accept_Query_38 : public Accept_All_Tags
 {
   Accept_Query_38(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == 2*(2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1039,10 +1039,10 @@ private:
 
 struct Accept_Query_39 : public Accept_All_Tags
 {
-  Accept_Query_39(uint pattern_size_) {}
+  Accept_Query_39(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return ((id >= 12 && id <= 15) || id == 17 || id == 19 || id == 21 || id == 22);
@@ -1051,10 +1051,10 @@ struct Accept_Query_39 : public Accept_All_Tags
 
 struct Accept_Query_40 : public Accept_All_Tags
 {
-  Accept_Query_40(uint pattern_size_) {}
+  Accept_Query_40(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 18 || id == 22);
@@ -1074,8 +1074,8 @@ struct Accept_Query_41 : public Accept_All_Tags
 	|| id == pattern_size*pattern_size + 2*pattern_size + 1
 	|| id == pattern_size*pattern_size + 2*pattern_size + 2);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1085,7 +1085,7 @@ struct Accept_Query_42 : public Accept_All_Tags
 {
   Accept_Query_42(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return ((id >= 2*(pattern_size*pattern_size/2 - 2) + 1
@@ -1093,7 +1093,7 @@ struct Accept_Query_42 : public Accept_All_Tags
 	|| id == 2*(pattern_size*pattern_size/2 - 2 + pattern_size/2) - 1
 	|| id == 2*(pattern_size*pattern_size/2 - 2 + pattern_size/2));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1110,8 +1110,8 @@ struct Accept_Query_43 : public Accept_All_Tags
 	|| id == pattern_size*pattern_size + pattern_size/2*pattern_size/2
 	|| id == pattern_size*pattern_size + pattern_size/2*pattern_size/2 + pattern_size);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1121,7 +1121,7 @@ struct Accept_Query_44 : public Accept_All_Tags
 {
   Accept_Query_44(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == pattern_size*pattern_size/2 - 2 + pattern_size/2 + 1
@@ -1139,7 +1139,7 @@ struct Accept_Query_44 : public Accept_All_Tags
 	|| id == pattern_size*pattern_size/2 - 2 + pattern_size/2*(pattern_size/2+2) + 1
 	|| id == pattern_size*pattern_size/2 - 2 + pattern_size/2*(pattern_size/2+3));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1147,28 +1147,28 @@ private:
 
 struct Accept_Query_45 : public Accept_All_Tags
 {
-  Accept_Query_45(uint pattern_size_) {}
+  Accept_Query_45(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id % 21 != 14); }
 };
 
 struct Accept_Query_46 : public Accept_All_Tags
 {
-  Accept_Query_46(uint pattern_size_) {}
+  Accept_Query_46(uint) {}
 
   virtual bool admit_node(uint id) const { return (id < 100 && id % 21 != 0); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_47 : public Accept_All_Tags
 {
-  Accept_Query_47(uint pattern_size_) {}
+  Accept_Query_47(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id % 21 != 14 && id % 21 != 0); }
 };
 
@@ -1180,8 +1180,8 @@ struct Accept_Query_51 : public Accept_All_Tags
   {
     return (id > pattern_size*(pattern_size/2) && id <= pattern_size*(pattern_size/2+1));
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1196,8 +1196,8 @@ struct Accept_Query_52 : public Accept_All_Tags
     return (id > pattern_size*(pattern_size/2) && id <= pattern_size*(pattern_size/2+1)
         && id % 5 == 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1211,8 +1211,8 @@ struct Accept_Query_53 : public Accept_All_Tags
   {
     return (id > (pattern_size+1)*(pattern_size/2) && id <= pattern_size*(pattern_size/2+1));
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1227,8 +1227,8 @@ struct Accept_Query_54 : public Accept_All_Tags
     return (id > (pattern_size+1)*(pattern_size/2) && id <= pattern_size*(pattern_size/2+1)
         && id % 5 == 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1242,8 +1242,8 @@ struct Accept_Query_55 : public Accept_All_Tags
   {
     return (id == pattern_size*(pattern_size/2+1) - 1);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1257,8 +1257,8 @@ struct Accept_Query_56 : public Accept_All_Tags
   {
     return (id <= pattern_size*pattern_size && id <= 32767);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1272,8 +1272,8 @@ struct Accept_Query_57 : public Accept_All_Tags
   {
     return (id <= pattern_size*pattern_size && id <= 32767 && id % 5 == 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1289,8 +1289,8 @@ struct Accept_Query_58 : public Accept_All_Tags
         && (id % pattern_size > pattern_size/2 || id % pattern_size == 0)
         && id <= 32767);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1306,8 +1306,8 @@ struct Accept_Query_59 : public Accept_All_Tags
         && (id % pattern_size > pattern_size/2 || id % pattern_size == 0)
         && id <= 32767 && id % 5 == 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1321,8 +1321,8 @@ struct Accept_Query_60 : public Accept_All_Tags
   {
     return (id == 1 || id == pattern_size + 2);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1332,13 +1332,13 @@ struct Accept_Query_61 : public Accept_All_Tags
 {
   Accept_Query_61(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == 1 || id == 2 || id == pattern_size/2*(pattern_size/2-1) + 1
         || id == pattern_size/2*(pattern_size/2-1) + pattern_size + 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1348,13 +1348,13 @@ struct Accept_Query_62 : public Accept_All_Tags
 {
   Accept_Query_62(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return ((id == 1 || id == pattern_size/2*(pattern_size/2-1) + 1
         || id == pattern_size/2*(pattern_size/2-1) + pattern_size + 1) && id % 4 == 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1364,12 +1364,12 @@ struct Accept_Query_63 : public Accept_All_Tags
 {
   Accept_Query_63(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == 1 || id == 2 || id == pattern_size/2*(pattern_size/2-1) + 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1379,12 +1379,12 @@ struct Accept_Query_64 : public Accept_All_Tags
 {
   Accept_Query_64(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return ((id == 1 || id == pattern_size/2*(pattern_size/2-1) + 1) && id % 4 == 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1394,13 +1394,13 @@ struct Accept_Query_65 : public Accept_All_Tags
 {
   Accept_Query_65(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == 1 || id == 2 || id == pattern_size/2*(pattern_size/2-1) + 1
         || id == pattern_size/2*(pattern_size/2-1) + pattern_size + 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1408,10 +1408,10 @@ private:
 
 struct Accept_Query_66 : public Accept_All_Tags
 {
-  Accept_Query_66(uint pattern_size_) {}
+  Accept_Query_66(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id <= 6);
@@ -1420,10 +1420,10 @@ struct Accept_Query_66 : public Accept_All_Tags
 
 struct Accept_Query_67 : public Accept_All_Tags
 {
-  Accept_Query_67(uint pattern_size_) {}
+  Accept_Query_67(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id <= 6 && id % 2 == 0);
@@ -1432,10 +1432,10 @@ struct Accept_Query_67 : public Accept_All_Tags
 
 struct Accept_Query_68 : public Accept_All_Tags
 {
-  Accept_Query_68(uint pattern_size_) {}
+  Accept_Query_68(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 3 || id == 4);
@@ -1444,10 +1444,10 @@ struct Accept_Query_68 : public Accept_All_Tags
 
 struct Accept_Query_69 : public Accept_All_Tags
 {
-  Accept_Query_69(uint pattern_size_) {}
+  Accept_Query_69(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 4);
@@ -1456,10 +1456,10 @@ struct Accept_Query_69 : public Accept_All_Tags
 
 struct Accept_Query_70 : public Accept_All_Tags
 {
-  Accept_Query_70(uint pattern_size_) {}
+  Accept_Query_70(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 1 || id == 2);
@@ -1470,13 +1470,13 @@ struct Accept_Query_71 : public Accept_All_Tags
 {
   Accept_Query_71(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id >= (pattern_size+1)*(pattern_size/2-1) - 3
         && id <= (pattern_size+1)*(pattern_size/2-1));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1486,13 +1486,13 @@ struct Accept_Query_72 : public Accept_All_Tags
 {
   Accept_Query_72(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == (pattern_size+1)*(pattern_size/2-1) - 3
         || id == (pattern_size+1)*(pattern_size/2-1) - 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1502,13 +1502,13 @@ struct Accept_Query_73 : public Accept_All_Tags
 {
   Accept_Query_73(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == (pattern_size+1)*(pattern_size/2-1) - 1
     || id == (pattern_size+1)*(pattern_size/2-1));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1518,12 +1518,12 @@ struct Accept_Query_74 : public Accept_All_Tags
 {
   Accept_Query_74(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == (pattern_size+1)*(pattern_size/2-1) - 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1533,13 +1533,13 @@ struct Accept_Query_75 : public Accept_All_Tags
 {
   Accept_Query_75(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == (pattern_size+1)*(pattern_size/2-1) - 3
         || id == (pattern_size+1)*(pattern_size/2-1) - 2);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1547,10 +1547,10 @@ private:
 
 struct Accept_Query_76 : public Accept_All_Tags
 {
-  Accept_Query_76(uint pattern_size_) {}
+  Accept_Query_76(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 1 || id == 2 || id == 4 || id == 8 || id == 10 || id == 11);
@@ -1559,10 +1559,10 @@ struct Accept_Query_76 : public Accept_All_Tags
 
 struct Accept_Query_77 : public Accept_All_Tags
 {
-  Accept_Query_77(uint pattern_size_) {}
+  Accept_Query_77(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 2 || id == 4 || id == 8 || id == 10);
@@ -1571,10 +1571,10 @@ struct Accept_Query_77 : public Accept_All_Tags
 
 struct Accept_Query_78 : public Accept_All_Tags
 {
-  Accept_Query_78(uint pattern_size_) {}
+  Accept_Query_78(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 4 || (id == 11 && pattern_size*pattern_size < 32768));
@@ -1586,10 +1586,10 @@ private:
 
 struct Accept_Query_79 : public Accept_All_Tags
 {
-  Accept_Query_79(uint pattern_size_) {}
+  Accept_Query_79(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 4);
@@ -1600,8 +1600,8 @@ struct Accept_Query_80 : public Accept_All_Tags
 {
   Accept_Query_80(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 4 || (id == 11 && pattern_size*pattern_size < 32768));
@@ -1613,10 +1613,10 @@ private:
 
 struct Accept_Query_81 : public Accept_All_Tags
 {
-  Accept_Query_81(uint pattern_size_) {}
+  Accept_Query_81(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 6 || id == 8 || id == 10);
@@ -1625,10 +1625,10 @@ struct Accept_Query_81 : public Accept_All_Tags
 
 struct Accept_Query_82 : public Accept_All_Tags
 {
-  Accept_Query_82(uint pattern_size_) {}
+  Accept_Query_82(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 10);
@@ -1637,10 +1637,10 @@ struct Accept_Query_82 : public Accept_All_Tags
 
 struct Accept_Query_83 : public Accept_All_Tags
 {
-  Accept_Query_83(uint pattern_size_) {}
+  Accept_Query_83(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 6 || id == 8 || id == 10);
@@ -1649,10 +1649,10 @@ struct Accept_Query_83 : public Accept_All_Tags
 
 struct Accept_Query_84 : public Accept_All_Tags
 {
-  Accept_Query_84(uint pattern_size_) {}
+  Accept_Query_84(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 10);
@@ -1661,10 +1661,10 @@ struct Accept_Query_84 : public Accept_All_Tags
 
 struct Accept_Query_85 : public Accept_All_Tags
 {
-  Accept_Query_85(uint pattern_size_) {}
+  Accept_Query_85(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 6 || id == 8 || id == 10);
@@ -1673,10 +1673,10 @@ struct Accept_Query_85 : public Accept_All_Tags
 
 struct Accept_Query_86 : public Accept_All_Tags
 {
-  Accept_Query_86(uint pattern_size_) {}
+  Accept_Query_86(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 9 || id == 10);
@@ -1685,10 +1685,10 @@ struct Accept_Query_86 : public Accept_All_Tags
 
 struct Accept_Query_87 : public Accept_All_Tags
 {
-  Accept_Query_87(uint pattern_size_) {}
+  Accept_Query_87(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 10);
@@ -1697,10 +1697,10 @@ struct Accept_Query_87 : public Accept_All_Tags
 
 struct Accept_Query_88 : public Accept_All_Tags
 {
-  Accept_Query_88(uint pattern_size_) {}
+  Accept_Query_88(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 10);
@@ -1709,10 +1709,10 @@ struct Accept_Query_88 : public Accept_All_Tags
 
 struct Accept_Query_89 : public Accept_All_Tags
 {
-  Accept_Query_89(uint pattern_size_) {}
+  Accept_Query_89(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 10);
@@ -1721,10 +1721,10 @@ struct Accept_Query_89 : public Accept_All_Tags
 
 struct Accept_Query_90 : public Accept_All_Tags
 {
-  Accept_Query_90(uint pattern_size_) {}
+  Accept_Query_90(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 9 || id == 10);
@@ -1733,136 +1733,136 @@ struct Accept_Query_90 : public Accept_All_Tags
 
 struct Accept_Query_91 : public Accept_All_Tags
 {
-  Accept_Query_91(uint pattern_size_) {}
+  Accept_Query_91(uint) {}
 
   virtual bool admit_node(uint id) const { return (id <= 10); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_92 : public Accept_All_Tags
 {
-  Accept_Query_92(uint pattern_size_) {}
+  Accept_Query_92(uint) {}
 
   virtual bool admit_node(uint id) const { return (id == 5 || id == 10); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_93 : public Accept_All_Tags
 {
-  Accept_Query_93(uint pattern_size_) {}
+  Accept_Query_93(uint) {}
 
   virtual bool admit_node(uint id) const { return (id <= 5); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_94 : public Accept_All_Tags
 {
-  Accept_Query_94(uint pattern_size_) {}
+  Accept_Query_94(uint) {}
 
   virtual bool admit_node(uint id) const { return (id == 5); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_95 : public Accept_All_Tags
 {
-  Accept_Query_95(uint pattern_size_) {}
+  Accept_Query_95(uint) {}
 
   virtual bool admit_node(uint id) const { return (id == 9 || id == 10); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_96 : public Accept_All_Tags
 {
-  Accept_Query_96(uint pattern_size_) {}
+  Accept_Query_96(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id <= 10); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_97 : public Accept_All_Tags
 {
-  Accept_Query_97(uint pattern_size_) {}
+  Accept_Query_97(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id == 5 || id == 10); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_98 : public Accept_All_Tags
 {
-  Accept_Query_98(uint pattern_size_) {}
+  Accept_Query_98(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id <= 5); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_99 : public Accept_All_Tags
 {
-  Accept_Query_99(uint pattern_size_) {}
+  Accept_Query_99(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id == 5); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_100 : public Accept_All_Tags
 {
-  Accept_Query_100(uint pattern_size_) {}
+  Accept_Query_100(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id == 9 || id == 10); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_101 : public Accept_All_Tags
 {
-  Accept_Query_101(uint pattern_size_) {}
+  Accept_Query_101(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id <= 10); }
 };
 
 struct Accept_Query_102 : public Accept_All_Tags
 {
-  Accept_Query_102(uint pattern_size_) {}
+  Accept_Query_102(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id == 5 || id == 10); }
 };
 
 struct Accept_Query_103 : public Accept_All_Tags
 {
-  Accept_Query_103(uint pattern_size_) {}
+  Accept_Query_103(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id <= 10 && id != 5 && id != 9); }
 };
 
 struct Accept_Query_104 : public Accept_All_Tags
 {
-  Accept_Query_104(uint pattern_size_) {}
+  Accept_Query_104(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id == 10); }
 };
 
 struct Accept_Query_105 : public Accept_All_Tags
 {
-  Accept_Query_105(uint pattern_size_) {}
+  Accept_Query_105(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return (id == 9 || id == 10); }
 };
 
@@ -1876,8 +1876,8 @@ struct Accept_Query_106 : public Accept_All_Tags
     || id == pattern_size + 1 || id == pattern_size + 2 || id == pattern_size + 3
     || id == 2*pattern_size + 4 || id == 3*pattern_size + 4);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1887,14 +1887,14 @@ struct Accept_Query_107 : public Accept_All_Tags
 {
   Accept_Query_107(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == 1 || id == 2
     || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
     || id == pattern_size*pattern_size/4 + pattern_size/2 + 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1902,11 +1902,11 @@ private:
 
 struct Accept_Query_108 : public Accept_All_Tags
 {
-  Accept_Query_108(uint pattern_size_) {}
+  Accept_Query_108(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_109 : public Accept_All_Tags
@@ -1922,8 +1922,8 @@ struct Accept_Query_109 : public Accept_All_Tags
     || id == pattern_size*pattern_size - pattern_size
     || id == pattern_size*pattern_size);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1933,14 +1933,14 @@ struct Accept_Query_110 : public Accept_All_Tags
 {
   Accept_Query_110(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == 1 || id == 2
     || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
     || id == pattern_size*pattern_size/4 + pattern_size/2 + 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1948,10 +1948,10 @@ private:
 
 struct Accept_Query_111 : public Accept_All_Tags
 {
-  Accept_Query_111(uint pattern_size_) {}
+  Accept_Query_111(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return ((id >= 1 && id <= 6) || id == 9);
@@ -1962,12 +1962,12 @@ struct Accept_Query_113 : public Accept_All_Tags
 {
   Accept_Query_113(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id == pattern_size*pattern_size/4 - pattern_size/2 + 1);
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -1975,10 +1975,10 @@ private:
 
 struct Accept_Query_114 : public Accept_All_Tags
 {
-  Accept_Query_114(uint pattern_size_) {}
+  Accept_Query_114(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 2 || (id >= 6 && id <= 8) || id == 10 || id == 11);
@@ -1987,10 +1987,10 @@ struct Accept_Query_114 : public Accept_All_Tags
 
 struct Accept_Query_117 : public Accept_All_Tags
 {
-  Accept_Query_117(uint pattern_size_) {}
+  Accept_Query_117(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 2 || (id >= 6 && id <= 11));
@@ -2007,8 +2007,8 @@ struct Accept_Query_118 : public Accept_All_Tags
         id <= 3*pattern_size*pattern_size + pattern_size &&
         id % 35 == 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2024,8 +2024,8 @@ struct Accept_Query_119 : public Accept_All_Tags
         id <= 3*pattern_size*pattern_size + pattern_size &&
         id % 7 == 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2041,8 +2041,8 @@ struct Accept_Query_122 : public Accept_All_Tags
         id <= 3*pattern_size*pattern_size + pattern_size &&
         id % 7 == 0 && id % 3 != 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2058,8 +2058,8 @@ struct Accept_Query_124 : public Accept_All_Tags
         id <= 3*pattern_size*pattern_size + pattern_size &&
         id % 7 == 0 && id % 11 != 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2075,8 +2075,8 @@ struct Accept_Query_125 : public Accept_All_Tags
         id <= 3*pattern_size*pattern_size + pattern_size &&
         id % 7 == 0 && id % 3 == 0);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2084,56 +2084,56 @@ private:
 
 struct Accept_Query_139 : public Accept_All_Tags
 {
-  Accept_Query_139(uint pattern_size_) {}
+  Accept_Query_139(uint) {}
 
   virtual bool admit_node(uint id) const { return (id % 11 == 0 && id >= 99 && id <= 1078); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_140 : public Accept_All_Tags
 {
-  Accept_Query_140(uint pattern_size_) {}
+  Accept_Query_140(uint) {}
 
   virtual bool admit_node(uint id) const { return (id % 55 == 0 && id >= 99 && id <= 1078); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_141 : public Accept_All_Tags
 {
-  Accept_Query_141(uint pattern_size_) {}
+  Accept_Query_141(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 22 == 0 && id >= 99 && id <= 1078); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_142 : public Accept_All_Tags
 {
-  Accept_Query_142(uint pattern_size_) {}
+  Accept_Query_142(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 110 == 0 && id >= 99 && id <= 1078); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_143 : public Accept_All_Tags
 {
-  Accept_Query_143(uint pattern_size_) {}
+  Accept_Query_143(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 11 == 0 && id % 4 != 3 && id >= 99 && id <= 1078); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_144 : public Accept_All_Tags
 {
-  Accept_Query_144(uint pattern_size_) {}
+  Accept_Query_144(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id % 55 == 0 && id % 4 != 3 && id >= 99 && id <= 1078); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_145 : public Accept_All_Tags
@@ -2144,8 +2144,8 @@ struct Accept_Query_145 : public Accept_All_Tags
   {
     return (id % 11 == 0 && id >= 99 && id <= 1078 && id <= pattern_size*pattern_size/2);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2159,8 +2159,8 @@ struct Accept_Query_146 : public Accept_All_Tags
   {
     return (id % 55 == 0 && id >= 99 && id <= 1078 && id <= pattern_size*pattern_size/2);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2170,14 +2170,14 @@ struct Accept_Query_147 : public Accept_All_Tags
 {
   Accept_Query_147(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id % 22 == 0 && id >= 99 && id <= 1078 &&
       (id <= (pattern_size+1)*(pattern_size/2-1)
       || (id > (pattern_size+2)*(pattern_size/2-1) && id <= (pattern_size+3)*(pattern_size/2-1)+1)));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2187,14 +2187,14 @@ struct Accept_Query_148 : public Accept_All_Tags
 {
   Accept_Query_148(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id % 110 == 0 && id >= 99 && id <= 1078 &&
       (id <= (pattern_size+1)*(pattern_size/2-1)
       || (id > (pattern_size+2)*(pattern_size/2-1) && id <= (pattern_size+3)*(pattern_size/2-1)+1)));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2204,14 +2204,14 @@ struct Accept_Query_149 : public Accept_All_Tags
 {
   Accept_Query_149(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id % 11 == 0 && id % 4 != 3 && id >= 99 && id <= 1078 &&
       (id <= (pattern_size+1)*(pattern_size/2-1)
       || (id > (pattern_size+2)*(pattern_size/2-1) && id <= (pattern_size+3)*(pattern_size/2-1)+1)));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2221,14 +2221,14 @@ struct Accept_Query_150 : public Accept_All_Tags
 {
   Accept_Query_150(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return (id % 55 == 0 && id % 4 != 3 && id >= 99 && id <= 1078 &&
       (id <= (pattern_size+1)*(pattern_size/2-1)
       || (id > (pattern_size+2)*(pattern_size/2-1) && id <= (pattern_size+3)*(pattern_size/2-1)+1)));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2243,8 +2243,8 @@ struct Accept_Query_151 : public Accept_All_Tags
     return id % 5 == 0 && pattern_size*pattern_size/4*5 < id && id < pattern_size*pattern_size/2*3
       && id % pattern_size <= pattern_size/2 && id % pattern_size > 0;
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2254,8 +2254,8 @@ struct Accept_Query_153 : public Accept_All_Tags
 {
   Accept_Query_153(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return id == 18 || (id == 22 && pattern_size <= 362); }
 
 private:
@@ -2264,55 +2264,55 @@ private:
 
 struct Accept_Query_154 : public Accept_All_Tags
 {
-  Accept_Query_154(uint pattern_size_) {}
+  Accept_Query_154(uint) {}
 
   virtual bool admit_node(uint id) const { return id % 5 == 0 && id < 100; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_155 : public Accept_All_Tags
 {
-  Accept_Query_155(uint pattern_size_) {}
+  Accept_Query_155(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return id % 5 == 0 && id < 100; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_156 : public Accept_All_Tags
 {
-  Accept_Query_156(uint pattern_size_) {}
+  Accept_Query_156(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return id % 5 == 0 && id % 4 != 3; }
 };
 
 struct Accept_Query_157 : public Accept_All_Tags
 {
-  Accept_Query_157(uint pattern_size_) {}
+  Accept_Query_157(uint) {}
 
   virtual bool admit_node(uint id) const { return id == 11; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_158 : public Accept_All_Tags
 {
-  Accept_Query_158(uint pattern_size_) {}
+  Accept_Query_158(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return id == 11; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_159 : public Accept_All_Tags
 {
-  Accept_Query_159(uint pattern_size_) {}
+  Accept_Query_159(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return id == 11; }
 };
 
@@ -2339,16 +2339,16 @@ private:
 
 struct Accept_Query_170 : public Accept_All_Tags
 {
-  Accept_Query_170(uint pattern_size_) {}
+  Accept_Query_170(uint) {}
 
   virtual bool admit_node(uint id) const { return id % 15 == 0; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_171 : public Accept_All_Tags
 {
-  Accept_Query_171(uint pattern_size_) {}
+  Accept_Query_171(uint) {}
 
   virtual bool admit_node(uint id) const { return id == 10; }
   virtual bool admit_way(uint id) const { return id == 10; }
@@ -2357,28 +2357,28 @@ struct Accept_Query_171 : public Accept_All_Tags
 
 struct Accept_Query_172 : public Accept_All_Tags
 {
-  Accept_Query_172(uint pattern_size_) {}
+  Accept_Query_172(uint) {}
 
   virtual bool admit_node(uint id) const { return id == 10; }
   virtual bool admit_way(uint id) const { return id == 10; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Query_173 : public Accept_All_Tags
 {
-  Accept_Query_173(uint pattern_size_) {}
+  Accept_Query_173(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return id == 10; }
   virtual bool admit_relation(uint id) const { return id == 10; }
 };
 
 struct Accept_Query_174 : public Accept_All_Tags
 {
-  Accept_Query_174(uint pattern_size_) {}
+  Accept_Query_174(uint) {}
 
   virtual bool admit_node(uint id) const { return id == 10; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const { return id == 10; }
 };
 
@@ -2387,8 +2387,8 @@ struct Accept_Query_175 : public Accept_All_Tags
   Accept_Query_175(uint pattern_size_) : pattern_size(pattern_size_) {}
 
   virtual bool admit_node(uint id) const { return id == (pattern_size+1)*pattern_size/2 + 1; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2402,8 +2402,8 @@ struct Accept_Query_177 : public Accept_All_Tags
       ((pattern_size*pattern_size/2 + 2 <= id && id <= pattern_size*(pattern_size/2 + 1) - 1)
           || (id % pattern_size == pattern_size/2 + 1 && pattern_size < id && id < pattern_size*(pattern_size-1))));
       }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2415,8 +2415,8 @@ struct Accept_Query_178 : public Accept_All_Tags
 
   virtual bool admit_node(uint id) const { return id == (pattern_size+1)*pattern_size/2 + 2
       || id == (pattern_size+3)*pattern_size/2 + 1; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2442,16 +2442,16 @@ private:
 
 struct Accept_Foreach_2 : public Accept_All_Tags
 {
-  Accept_Foreach_2(uint pattern_size_) {}
+  Accept_Foreach_2(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Union_1 : public Accept_All_Tags
 {
-  Accept_Union_1(uint pattern_size_) {}
+  Accept_Union_1(uint) {}
 
   virtual bool admit_node(uint id) const { return (id == 2); }
   virtual bool admit_way(uint id) const { return (id == 11); }
@@ -2461,89 +2461,89 @@ struct Accept_Union_1 : public Accept_All_Tags
 
 struct Accept_Union_2 : public Accept_All_Tags
 {
-  Accept_Union_2(uint pattern_size_) {}
+  Accept_Union_2(uint) {}
 
   virtual bool admit_node(uint id) const { return ((id == 1) || (id == 2)); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Union_4 : public Accept_All_Tags
 {
-  Accept_Union_4(uint pattern_size_) {}
+  Accept_Union_4(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id == 1); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Union_5 : public Accept_All_Tags
 {
-  Accept_Union_5(uint pattern_size_) {}
+  Accept_Union_5(uint) {}
 
   virtual bool admit_node(uint id) const { return (id == 2); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Union_6 : public Accept_All_Tags
 {
-  Accept_Union_6(uint pattern_size_) {}
+  Accept_Union_6(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   { return ((id == 2) || (id == 8) || (id == 10) || (id == 11)); }
 };
 
 struct Accept_Difference_1 : public Accept_All_Tags
 {
-  Accept_Difference_1(uint pattern_size_) {}
+  Accept_Difference_1(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Difference_2 : public Accept_All_Tags
 {
-  Accept_Difference_2(uint pattern_size_) {}
+  Accept_Difference_2(uint) {}
 
   virtual bool admit_node(uint id) const { return (id == 2); }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Difference_4 : public Accept_All_Tags
 {
-  Accept_Difference_4(uint pattern_size_) {}
+  Accept_Difference_4(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id == 1 || id == 4); }
   virtual bool admit_relation(uint id) const { return (id == 1 || id == 4); }
 };
 
 struct Accept_Difference_5 : public Accept_All_Tags
 {
-  Accept_Difference_5(uint pattern_size_) {}
+  Accept_Difference_5(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id == 1 || id == 4); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Difference_6 : public Accept_All_Tags
 {
-  Accept_Difference_6(uint pattern_size_) {}
+  Accept_Difference_6(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return (id == 1); }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 struct Accept_Complete_1 : public Accept_All_Tags
 {
-  Accept_Complete_1(uint pattern_size_) {}
+  Accept_Complete_1(uint) {}
 
   virtual bool admit_node(uint id) const { return id == 1; }
   virtual bool admit_way(uint id) const { return id == 2; }
@@ -2552,7 +2552,7 @@ struct Accept_Complete_1 : public Accept_All_Tags
 
 struct Accept_Complete_6 : public Accept_All_Tags
 {
-  Accept_Complete_6(uint pattern_size_, bool admit_node_4_) : admit_node_4(admit_node_4_) {}
+  Accept_Complete_6(uint, bool admit_node_4_) : admit_node_4(admit_node_4_) {}
 
   virtual bool admit_node(uint id) const { return id == 1 || (id == 4 && admit_node_4); }
   virtual bool admit_way(uint id) const { return id == 2; }
@@ -2603,9 +2603,9 @@ struct Accept_If : public Accept_All_Tags
 {
   Accept_If(uint target_way_id_) : target_way_id(target_way_id_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return id == target_way_id; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint target_way_id;
@@ -2632,8 +2632,8 @@ struct Accept_Polygon_1 : public Accept_All_Tags
         || (id >= pattern_size*pattern_size*3 + pattern_size*11 + 8
             && id <= pattern_size*pattern_size*3 + pattern_size*11 + 10));
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2648,8 +2648,8 @@ struct Accept_Polygon_2 : public Accept_All_Tags
     return (id == pattern_size*pattern_size*2
         || id == pattern_size*pattern_size*4 - pattern_size + 1);
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2677,8 +2677,8 @@ struct Accept_Polygon_3 : public Accept_All_Tags
         || (id >= pattern_size*pattern_size*3 + pattern_size*11 + 8
             && id <= pattern_size*pattern_size*3 + pattern_size*11 + 10)));
   }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2688,7 +2688,7 @@ struct Accept_Polygon_4 : public Accept_All_Tags
 {
   Accept_Polygon_4(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   {
     return ((id >= pattern_size*pattern_size - pattern_size/2 - 1
@@ -2696,7 +2696,7 @@ struct Accept_Polygon_4 : public Accept_All_Tags
         || (id >= pattern_size*pattern_size + pattern_size/2 - 3
             && id <= pattern_size*pattern_size + pattern_size/4*3 - 3));
   }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2704,10 +2704,10 @@ private:
 
 struct Accept_Polygon_5 : public Accept_All_Tags
 {
-  Accept_Polygon_5(uint pattern_size_) {}
+  Accept_Polygon_5(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   {
     return (id == 18 || id == 22);
@@ -2716,7 +2716,7 @@ struct Accept_Polygon_5 : public Accept_All_Tags
 
 struct Accept_All_But_5 : public Accept_All_Tags
 {
-  Accept_All_But_5(uint pattern_size_) {}
+  Accept_All_But_5(uint) {}
 
   virtual bool admit_node(uint id) const
       { return (id != 5); }
@@ -2779,8 +2779,8 @@ struct Accept_Around_1 : public Accept_All_Tags
     return (great_circle_dist(lat_ne, lon_ne, arg_lat, arg_lon) <= radius);
   }
 
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2799,8 +2799,8 @@ struct Accept_Around_10 : public Accept_All_Tags
   virtual bool admit_node(uint id) const
   { return id == 1 || id == 2 || id == 3 || id == pattern_size + 1 || id == pattern_size + 2
        || id == 2*pattern_size + 1; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2813,8 +2813,8 @@ struct Accept_Around_11 : public Accept_All_Tags
 
   virtual bool admit_node(uint id) const
   { return id == 1 || id == 2 || id == 3 || id == pattern_size + 1 || id == pattern_size + 2; }
-  virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2825,13 +2825,13 @@ struct Accept_Around_17 : public Accept_All_Tags
 {
   Accept_Around_17(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const
   { return id == 1 || id == 2 || id == pattern_size/2+1
       || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
       || id == pattern_size*pattern_size/4 - pattern_size/2 + 2
       || id == pattern_size*pattern_size/4; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 
 private:
   uint pattern_size;
@@ -2840,10 +2840,10 @@ private:
 
 struct Accept_Around_18 : public Accept_All_Tags
 {
-  Accept_Around_18(uint pattern_size_) {}
+  Accept_Around_18(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
+  virtual bool admit_way(uint) const { return false; }
   virtual bool admit_relation(uint id) const
   { return id <= 11 && id != 5 && id != 7 && id != 9; }
 };
@@ -2851,11 +2851,11 @@ struct Accept_Around_18 : public Accept_All_Tags
 
 struct Accept_Around_19 : public Accept_All_Tags
 {
-  Accept_Around_19(uint pattern_size_) {}
+  Accept_Around_19(uint) {}
 
-  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_node(uint) const { return false; }
   virtual bool admit_way(uint id) const { return id == 1; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_relation(uint) const { return false; }
 };
 
 

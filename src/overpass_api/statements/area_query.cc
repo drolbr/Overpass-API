@@ -398,8 +398,8 @@ Area_Query_Statement::Criterion_Maker Area_Query_Statement::criterion_maker;
 
 
 Statement* Area_Query_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
-    const std::string& type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string& into,
+    Statement::Factory&, Parsed_Query&, Error_Output*)
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
@@ -500,7 +500,7 @@ void Area_Query_Statement::get_ranges
     (const std::map< Uint31_Index, std::vector< Way_Skeleton > >& input_ways,
      const std::map< Uint31_Index, std::vector< Area_Skeleton > >& input_areas,
      std::set< Uint31_Index >& area_blocks_req,
-     Resource_Manager& rman)
+     Resource_Manager&)
 {
   way_areas_id.clear();
   for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator it = input_ways.begin();
@@ -823,7 +823,7 @@ void Area_Query_Statement::collect_ways
       (const Way_Geometry_Store& way_geometries,
        std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
        const std::set< Uint31_Index >& req, bool add_border,
-       const Statement& query, Resource_Manager& rman)
+       const Statement&, Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block, std::set< Uint31_Index >::const_iterator > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));

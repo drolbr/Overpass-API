@@ -606,7 +606,7 @@ template< class Id_Type >
 void filter_non_ids(
     const std::vector< std::pair< std::string, std::string > >& key_nvalues,
     const std::vector< std::pair< std::string, Regular_Expression* > >& key_nregexes,
-    const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_nregexes,
+    const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >&,
     std::vector< std::pair< Id_Type, Uint31_Index > >& ids,
     const File_Properties& file_prop, const File_Properties& attic_file_prop,
     Request_Context& context, uint64 timestamp)

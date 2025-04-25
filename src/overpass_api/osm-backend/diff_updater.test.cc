@@ -92,7 +92,7 @@ struct Output_Sorter_Kv
   }
 };
 
-void dump_nodes(uint32 pattern_size, std::string db_dir)
+void dump_nodes(std::string db_dir)
 {
   Output_Sorter output_sorter;
 
@@ -111,7 +111,7 @@ void dump_nodes(uint32 pattern_size, std::string db_dir)
   }
 }
 
-void dump_node_tags_local(uint32 pattern_size, std::string db_dir)
+void dump_node_tags_local(std::string db_dir)
 {
   Output_Sorter output_sorter;
 
@@ -130,7 +130,7 @@ void dump_node_tags_local(uint32 pattern_size, std::string db_dir)
   }
 }
 
-void dump_node_tags_global(uint32 pattern_size, std::string db_dir)
+void dump_node_tags_global(std::string db_dir)
 {
   Output_Sorter_Kv output_sorter;
 
@@ -150,7 +150,7 @@ void dump_node_tags_global(uint32 pattern_size, std::string db_dir)
   }
 }
 
-void dump_ways(uint32 pattern_size, std::string db_dir)
+void dump_ways(std::string db_dir)
 {
   Output_Sorter output_sorter;
 
@@ -171,7 +171,7 @@ void dump_ways(uint32 pattern_size, std::string db_dir)
   }
 }
 
-void dump_way_tags_local(uint32 pattern_size, std::string db_dir)
+void dump_way_tags_local(std::string db_dir)
 {
   Output_Sorter output_sorter;
 
@@ -191,7 +191,7 @@ void dump_way_tags_local(uint32 pattern_size, std::string db_dir)
   }
 }
 
-void dump_way_tags_global(uint32 pattern_size, std::string db_dir)
+void dump_way_tags_global(std::string db_dir)
 {
   Output_Sorter_Kv output_sorter;
 
@@ -211,7 +211,7 @@ void dump_way_tags_global(uint32 pattern_size, std::string db_dir)
   }
 }
 
-void dump_relations(uint32 pattern_size, std::string db_dir)
+void dump_relations(std::string db_dir)
 {
   Output_Sorter output_sorter;
 
@@ -241,7 +241,7 @@ void dump_relations(uint32 pattern_size, std::string db_dir)
   }
 }
 
-void dump_relation_tags_local(uint32 pattern_size, std::string db_dir)
+void dump_relation_tags_local(std::string db_dir)
 {
   Output_Sorter output_sorter;
 
@@ -261,7 +261,7 @@ void dump_relation_tags_local(uint32 pattern_size, std::string db_dir)
   }
 }
 
-void dump_relation_tags_global(uint32 pattern_size, std::string db_dir)
+void dump_relation_tags_global(std::string db_dir)
 {
   Output_Sorter_Kv output_sorter;
 
@@ -309,15 +309,15 @@ int main(int argc, char* args[])
 
   try
   {
-    dump_nodes(pattern_size, db_dir);
-    dump_node_tags_local(pattern_size, db_dir);
-    dump_node_tags_global(pattern_size, db_dir);
-    dump_ways(pattern_size, db_dir);
-    dump_way_tags_local(pattern_size, db_dir);
-    dump_way_tags_global(pattern_size, db_dir);
-    dump_relations(pattern_size, db_dir);
-    dump_relation_tags_local(pattern_size, db_dir);
-    dump_relation_tags_global(pattern_size, db_dir);
+    dump_nodes(db_dir);
+    dump_node_tags_local(db_dir);
+    dump_node_tags_global(db_dir);
+    dump_ways(db_dir);
+    dump_way_tags_local(db_dir);
+    dump_way_tags_global(db_dir);
+    dump_relations(db_dir);
+    dump_relation_tags_local(db_dir);
+    dump_relation_tags_global(db_dir);
   }
   catch (File_Error e)
   {

@@ -35,7 +35,7 @@ class Newer_Constraint : public Query_Constraint
   public:
     Newer_Constraint(Newer_Statement& newer) : timestamp(newer.get_timestamp()) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return ids_required; }
+    Query_Filter_Strategy delivers_data(Resource_Manager&) override { return ids_required; }
 
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Newer_Constraint() {}
@@ -71,10 +71,8 @@ void newer_filter_map
 
 
 template< typename TIndex, typename TObject >
-void newer_filter_map_attic
-    (std::map< TIndex, std::vector< Attic< TObject > > >& modify,
-     Resource_Manager& rman, uint64 timestamp,
-     File_Properties& current_file_properties, File_Properties& attic_file_properties)
+void newer_filter_map_attic(
+    std::map< TIndex, std::vector< Attic< TObject > > >& modify,  Resource_Manager& rman, uint64 timestamp)
 {
   if (modify.empty())
     return;
@@ -95,23 +93,20 @@ void newer_filter_map_attic
 }
 
 
-void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
+void Newer_Constraint::filter(const Statement&, Resource_Manager& rman, Set& into)
 {
   newer_filter_map(into.nodes, rman, this->timestamp, *meta_settings().NODES_META);
   newer_filter_map(into.ways, rman, this->timestamp, *meta_settings().WAYS_META);
   newer_filter_map(into.relations, rman, this->timestamp, *meta_settings().RELATIONS_META);
 
   if (!into.attic_nodes.empty())
-    newer_filter_map_attic(into.attic_nodes, rman, this->timestamp,
-			   *meta_settings().NODES_META, *attic_settings().NODES_META);
+    newer_filter_map_attic(into.attic_nodes, rman, this->timestamp);
 
   if (!into.attic_ways.empty())
-    newer_filter_map_attic(into.attic_ways, rman, this->timestamp,
-			   *meta_settings().WAYS_META, *attic_settings().WAYS_META);
+    newer_filter_map_attic(into.attic_ways, rman, this->timestamp);
 
   if (!into.attic_relations.empty())
-    newer_filter_map_attic(into.attic_relations, rman, this->timestamp,
-			   *meta_settings().RELATIONS_META, *attic_settings().RELATIONS_META);
+    newer_filter_map_attic(into.attic_relations, rman, this->timestamp);
 
   into.areas.clear();
 }
@@ -123,8 +118,8 @@ Newer_Statement::Criterion_Maker Newer_Statement::criterion_maker;
 
 
 Statement* Newer_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
-    const std::string& type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string&,
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   uint line_nr = tree_it->line_col.first;
 
@@ -162,7 +157,7 @@ Newer_Statement::~Newer_Statement()
 }
 
 
-void Newer_Statement::execute(Resource_Manager& rman) {}
+void Newer_Statement::execute(Resource_Manager&) {}
 
 Query_Constraint* Newer_Statement::get_query_constraint()
 {

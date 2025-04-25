@@ -54,8 +54,7 @@ void perform_around_print(uint pattern_size, std::string radius, uint64 global_n
 }
 
 
-void perform_coord_print(uint pattern_size, std::string radius, uint64 global_node_offset,
-                          Transaction& transaction)
+void perform_coord_print(uint pattern_size, std::string radius, Transaction& transaction)
 {
   Parsed_Query global_settings;
   global_settings.set_output_handler(
@@ -82,8 +81,7 @@ void perform_coord_print(uint pattern_size, std::string radius, uint64 global_no
 }
 
 
-void perform_polyline_print(uint pattern_size, std::string polyline,
-    uint64 global_node_offset, Transaction& transaction)
+void perform_polyline_print(uint pattern_size, std::string polyline, Transaction& transaction)
 {
   Parsed_Query global_settings;
   global_settings.set_output_handler(
@@ -104,8 +102,7 @@ void perform_polyline_print(uint pattern_size, std::string polyline,
 
 
 void perform_polyline_in_query_print(uint pattern_size,
-    std::string radius, std::string type, std::string polyline,
-    uint64 global_node_offset, Transaction& transaction)
+    std::string radius, std::string type, std::string polyline, Transaction& transaction)
 {
   Parsed_Query global_settings;
   global_settings.set_output_handler(
@@ -190,36 +187,36 @@ int main(int argc, char* args[])
   }
 
   if ((test_to_execute == "") || (test_to_execute == "7"))
-    perform_coord_print(pattern_size, "20.01", global_node_offset, transaction);
+    perform_coord_print(pattern_size, "20.01", transaction);
   if ((test_to_execute == "") || (test_to_execute == "8"))
-    perform_coord_print(pattern_size, "200.1", global_node_offset, transaction);
+    perform_coord_print(pattern_size, "200.1", transaction);
   if ((test_to_execute == "") || (test_to_execute == "9"))
-    perform_coord_print(pattern_size, "2001", global_node_offset, transaction);
+    perform_coord_print(pattern_size, "2001", transaction);
   if ((test_to_execute == "") || (test_to_execute == "10"))
-    perform_polyline_print(pattern_size, "51.1,6.9,50.9,7.1", global_node_offset, transaction);
+    perform_polyline_print(pattern_size, "51.1,6.9,50.9,7.1", transaction);
   if ((test_to_execute == "") || (test_to_execute == "11"))
-    perform_polyline_print(pattern_size, "51.,7.,50.9,6.9", global_node_offset, transaction);
+    perform_polyline_print(pattern_size, "51.,7.,50.9,6.9", transaction);
   if ((test_to_execute == "") || (test_to_execute == "12"))
-    perform_polyline_print(pattern_size, "50.95,6.9,51.,7.,50.9,6.95", global_node_offset, transaction);
+    perform_polyline_print(pattern_size, "50.95,6.9,51.,7.,50.9,6.95", transaction);
   if ((test_to_execute == "") || (test_to_execute == "13"))
-    perform_polyline_print(pattern_size, "50.9,6.9,51.,7.", global_node_offset, transaction);
+    perform_polyline_print(pattern_size, "50.9,6.9,51.,7.", transaction);
   if ((test_to_execute == "") || (test_to_execute == "14"))
-    perform_polyline_print(pattern_size, "51.1,6.9,50.9,7.1,50.8,7.1,50.7,7.05", global_node_offset, transaction);
+    perform_polyline_print(pattern_size, "51.1,6.9,50.9,7.1,50.8,7.1,50.7,7.05", transaction);
   if ((test_to_execute == "") || (test_to_execute == "15"))
-    perform_polyline_print(pattern_size, "51.1,6.8,51.1,6.9,50.9,7.1,50.8,7.1", global_node_offset, transaction);
+    perform_polyline_print(pattern_size, "51.1,6.8,51.1,6.9,50.9,7.1,50.8,7.1", transaction);
   if ((test_to_execute == "") || (test_to_execute == "16"))
-    perform_polyline_print(pattern_size, "51.05,6.7,51.1,6.8,51.1,6.9,50.9,7.1", global_node_offset, transaction);
+    perform_polyline_print(pattern_size, "51.05,6.7,51.1,6.8,51.1,6.9,50.9,7.1", transaction);
   if ((test_to_execute == "") || (test_to_execute == "17"))
-    perform_polyline_in_query_print(pattern_size, to_string(200000./pattern_size), "way", "51.1,6.9,50.9,7.1",
-        global_node_offset, transaction);
+    perform_polyline_in_query_print(
+        pattern_size, to_string(200000./pattern_size), "way", "51.1,6.9,50.9,7.1", transaction);
   if ((test_to_execute == "") || (test_to_execute == "18"))
-    perform_polyline_in_query_print(pattern_size, to_string(200000./pattern_size), "relation", "51.1,6.9,50.9,7.1",
-        global_node_offset, transaction);
+    perform_polyline_in_query_print(
+        pattern_size, to_string(200000./pattern_size), "relation", "51.1,6.9,50.9,7.1", transaction);
   if ((test_to_execute == "") || (test_to_execute == "19"))
     perform_polyline_in_query_print(pattern_size, "0.", "way",
         to_string(51.+1./pattern_size) + "," + to_string(7.+1./pattern_size) + ","
         + to_string(51.+2./pattern_size) + "," + to_string(7.+1./pattern_size),
-        global_node_offset, transaction);
+        transaction);
 
   std::cout<<"</osm>\n";
   return 0;

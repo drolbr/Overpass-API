@@ -21,7 +21,7 @@
 #include "per_member.h"
 
 
-void Per_Member_Aggregator::add_statement(Statement* statement, std::string text)
+void Per_Member_Aggregator::add_statement(Statement* statement, std::string)
 {
   Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (!tag_value_)
@@ -239,7 +239,8 @@ Evaluator_Angle::Evaluator_Angle
 }
 
 
-std::string Angle_Eval_Task::eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+std::string Angle_Eval_Task::eval(
+    uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string*) const
 {
   if (!data.geometry)
     return "";
@@ -251,7 +252,8 @@ std::string Angle_Eval_Task::eval(uint pos, const Element_With_Context< Way_Skel
 }
 
 
-std::string Angle_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+std::string Angle_Eval_Task::eval(
+    uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string*) const
 {
   if (!data.geometry)
     return "";

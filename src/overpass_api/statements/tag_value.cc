@@ -26,8 +26,8 @@ Evaluator_Fixed::Evaluator_Maker Evaluator_Fixed::evaluator_maker;
 
 
 Statement* Evaluator_Fixed::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const Token_Node_Ptr& tree_it, Statement::QL_Context,
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   if (tree_it->lhs || tree_it->rhs)
     return 0;
@@ -133,7 +133,7 @@ Evaluator_Value::Evaluator_Maker Evaluator_Value::evaluator_maker;
 
 Statement* Evaluator_Value::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory& stmt_factory, Parsed_Query&, Error_Output* error_output)
 {
   if (!assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
@@ -176,7 +176,7 @@ Evaluator_Value::Evaluator_Value(int line_number_, const std::map< std::string, 
 }
 
 
-void Evaluator_Value::add_statement(Statement* statement, std::string text)
+void Evaluator_Value::add_statement(Statement* statement, std::string)
 {
   Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (!tag_value_)
@@ -203,7 +203,7 @@ Eval_Task* Evaluator_Value::get_string_task(Prepare_Task_Context& context, const
 }
 
 
-std::string Value_Eval_Task::eval(const std::string* key) const
+std::string Value_Eval_Task::eval(const std::string*) const
 {
   return "";
 }
@@ -282,7 +282,7 @@ Evaluator_Is_Tag::Evaluator_Maker Evaluator_Is_Tag::evaluator_maker;
 
 Statement* Evaluator_Is_Tag::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
       || !tree_it.assert_has_arguments(error_output, true)
@@ -422,8 +422,8 @@ Evaluator_Generic::Evaluator_Maker Evaluator_Generic::evaluator_maker;
 
 
 Statement* Evaluator_Generic::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const Token_Node_Ptr& tree_it, Statement::QL_Context,
+    Statement::Factory&, Parsed_Query&, Error_Output*)
 {
   if (tree_it->lhs || tree_it->rhs)
     return 0;
@@ -451,7 +451,7 @@ Evaluator_Properties_Count::Evaluator_Maker Evaluator_Properties_Count::evaluato
 
 Statement* Evaluator_Properties_Count::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
       || !assert_element_in_context(error_output, tree_it, tree_context))
@@ -627,7 +627,7 @@ Requested_Context Evaluator_Properties_Count::request_context() const
 }
 
 
-Eval_Task* Evaluator_Properties_Count::get_string_task(Prepare_Task_Context& context, const std::string* key)
+Eval_Task* Evaluator_Properties_Count::get_string_task(Prepare_Task_Context& context, const std::string*)
 {
   if (to_count == Evaluator_Properties_Count::by_role || to_count == Evaluator_Properties_Count::distinct_by_role)
     return new Prop_Count_Eval_Task(to_count, type_to_count, context.get_role_id(role));
@@ -636,7 +636,7 @@ Eval_Task* Evaluator_Properties_Count::get_string_task(Prepare_Task_Context& con
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Node_Skeleton >& data, const std::string*) const
 {
   if (to_count == Evaluator_Properties_Count::tags && data.tags)
     return to_string(data.tags->size());
@@ -645,7 +645,7 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Node_Skeleton
 
 
 std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Node_Skeleton > >& data,
-    const std::string* key) const
+    const std::string*) const
 {
   if (to_count == Evaluator_Properties_Count::tags && data.tags)
     return to_string(data.tags->size());
@@ -654,7 +654,7 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Node_S
 
 
 std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Way_Skeleton >& data,
-    const std::string* key) const
+    const std::string*) const
 {
   if (to_count == Evaluator_Properties_Count::members
       && type_to_count == Evaluator_Properties_Count::all && data.object)
@@ -673,7 +673,7 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Way_Skeleton 
 
 
 std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Way_Skeleton > >& data,
-    const std::string* key) const
+    const std::string*) const
 {
   if (to_count == Evaluator_Properties_Count::members
       && type_to_count == Evaluator_Properties_Count::all && data.object)
@@ -725,7 +725,7 @@ struct Relation_Member_Comparer
 
 
 std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Relation_Skeleton >& data,
-    const std::string* key) const
+    const std::string*) const
 {
   if (to_count == Evaluator_Properties_Count::members || to_count == Evaluator_Properties_Count::by_role)
   {
@@ -773,7 +773,7 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Relation_Skel
 
 
 std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Relation_Skeleton > >& data,
-    const std::string* key) const
+    const std::string*) const
 {
   if (to_count == Evaluator_Properties_Count::members || to_count == Evaluator_Properties_Count::by_role)
   {
@@ -820,7 +820,7 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Relati
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Area_Skeleton >& data, const std::string*) const
 {
   if (to_count == Evaluator_Properties_Count::tags && data.tags)
     return to_string(data.tags->size());
@@ -828,7 +828,7 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Area_Skeleton
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Derived_Skeleton >& data, const std::string*) const
 {
   if (to_count == Evaluator_Properties_Count::tags && data.tags)
     return to_string(data.tags->size());

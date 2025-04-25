@@ -268,7 +268,7 @@ namespace
   template< typename Skeleton >
   struct New_Current_Tracker
   {
-    const bool screen_ref(uint64_t ref);
+    bool screen_ref(uint64_t ref);
     void splice_deletions(std::vector< Meta_Per_Changeset_Skeleton >& loc_to_del);
     
     const Data_By_Id< Skeleton >& data_by_id;
@@ -277,7 +277,7 @@ namespace
 
 
   template< typename Skeleton >
-  const bool New_Current_Tracker< Skeleton >::screen_ref(uint64_t ref)
+  bool New_Current_Tracker< Skeleton >::screen_ref(uint64_t ref)
   {
     auto it = std::lower_bound(data_by_id.data.begin(), data_by_id.data.end(), ref,
         [](const typename Data_By_Id< Skeleton >::Entry& entry, uint64_t ref)
@@ -489,7 +489,7 @@ Meta_By_Changeset_Delta< Index > load_and_process_current(
   {
     auto& loc_to_add = result.to_add[idx];
     auto& loc_to_del = result.to_remove[idx];
-    New_Current_Tracker< Skeleton > new_current_tracker{ data_by_id };
+    New_Current_Tracker< Skeleton > new_current_tracker{ data_by_id, {} };
     
     while (extra_it != to_merge.end() && extra_it->first < idx)
       ++extra_it;  // Should never happen, but prevent infinite loop

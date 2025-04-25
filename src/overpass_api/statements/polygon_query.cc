@@ -53,20 +53,20 @@ class Polygon_Constraint : public Query_Constraint
 };
 
 
-Query_Filter_Strategy Polygon_Constraint::delivers_data(Resource_Manager& rman)
+Query_Filter_Strategy Polygon_Constraint::delivers_data(Resource_Manager&)
 {
   return (polygon && !polygon->covers_large_area()) ? prefer_ranges : ids_useful;
 }
 
 
-bool Polygon_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
+bool Polygon_Constraint::get_ranges(Resource_Manager&, Ranges< Uint32_Index >& ranges)
 {
   ranges = polygon->calc_ranges();
   return true;
 }
 
 
-bool Polygon_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
+bool Polygon_Constraint::get_ranges(Resource_Manager&, Ranges< Uint31_Index >& ranges)
 {
   Ranges< Uint32_Index > node_ranges = polygon->calc_ranges();
   ranges = calc_parents(node_ranges);
@@ -221,8 +221,8 @@ Polygon_Query_Statement::Criterion_Maker Polygon_Query_Statement::criterion_make
 
 
 Statement* Polygon_Query_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
-    const std::string& type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string& into,
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   uint line_nr = tree_it->line_col.first;
 
@@ -405,10 +405,10 @@ void Polygon_Query_Statement::collect_nodes(std::map< Uint32_Index, std::vector<
 
 
 template< typename Way_Skeleton >
-void Polygon_Query_Statement::collect_ways
-      (std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-       const Way_Geometry_Store& way_geometries,
-       bool add_border, const Statement& query, Resource_Manager& rman)
+void Polygon_Query_Statement::collect_ways(
+    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const Way_Geometry_Store& way_geometries,
+    bool add_border, const Statement&, Resource_Manager&)
 {
   if (ways.empty())
     return;

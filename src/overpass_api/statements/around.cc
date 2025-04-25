@@ -128,7 +128,7 @@ class Around_Constraint : public Query_Constraint
   public:
     Around_Constraint(Around_Statement& around_) : around(&around_), ranges_used(false) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override
+    Query_Filter_Strategy delivers_data(Resource_Manager&) override
     { return (around->get_radius() < 2000) ? prefer_ranges : ids_useful; }
 
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
@@ -388,8 +388,8 @@ Around_Statement::Criterion_Maker Around_Statement::criterion_maker;
 
 
 Statement* Around_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
-    const std::string& type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string& into,
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
@@ -664,7 +664,7 @@ bool intersect(double alat1, double alon1, double alat2, double alon2,
 }
 
 
-Ranges< Uint32_Index > Around_Statement::calc_ranges(const Set& input, Resource_Manager& rman) const
+Ranges< Uint32_Index > Around_Statement::calc_ranges(const Set& input, Resource_Manager&) const
 {
   if (points.size() == 1)
     return expand(ranges(points[0].lat, points[0].lon), radius);

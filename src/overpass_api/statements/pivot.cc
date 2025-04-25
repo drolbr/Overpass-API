@@ -32,8 +32,8 @@ Pivot_Statement::Criterion_Maker Pivot_Statement::criterion_maker;
 
 
 Statement* Pivot_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
-    const std::string& type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string& into,
+    Statement::Factory&, Parsed_Query&, Error_Output*)
 {
   uint line_nr = tree_it->line_col.first;
   std::string from = "_";
@@ -148,7 +148,7 @@ class Pivot_Constraint : public Query_Constraint
   public:
     Pivot_Constraint(Pivot_Statement& stmt_) : stmt(&stmt_) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return prefer_ranges; }
+    Query_Filter_Strategy delivers_data(Resource_Manager&) override { return prefer_ranges; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
                           const Ranges< Uint32_Index >& ranges,
@@ -168,8 +168,8 @@ class Pivot_Constraint : public Query_Constraint
 
 
 bool Pivot_Constraint::get_data
-    (const Statement& query, Resource_Manager& rman, Set& into,
-     const Ranges< Uint32_Index >& ranges,
+    (const Statement&, Resource_Manager& rman, Set& into,
+     const Ranges< Uint32_Index >&,
      const std::vector< Node_Skeleton::Id_Type >& ids,
      bool invert_ids)
 {
@@ -197,11 +197,10 @@ bool Pivot_Constraint::get_data
 
 
 bool Pivot_Constraint::get_data
-    (const Statement& query, Resource_Manager& rman, Set& into,
-     const Ranges< Uint31_Index >& ranges,
+    (const Statement&, Resource_Manager& rman, Set& into,
+     const Ranges< Uint31_Index >&,
      int type,
-     const std::vector< Uint32_Index >& ids,
-     bool invert_ids)
+     const std::vector< Uint32_Index >& ids, bool invert_ids)
 {
   const Set* input_set = rman.get_set(stmt->get_input());
 

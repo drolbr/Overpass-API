@@ -52,7 +52,7 @@ Convert_Statement::~Convert_Statement()
 }
 
 
-void Convert_Statement::add_statement(Statement* statement, std::string text)
+void Convert_Statement::add_statement(Statement* statement, std::string)
 {
   Set_Prop_Statement* set_prop = dynamic_cast< Set_Prop_Statement* >(statement);
   if (set_prop)
@@ -91,7 +91,7 @@ void Convert_Statement::add_statement(Statement* statement, std::string text)
 
 
 template< typename Index, typename Maybe_Attic >
-void generate_elems(const std::string& set_name,
+void generate_elems(const std::string&,
     const std::map< Index, std::vector< Maybe_Attic > >& items, Set_With_Context& context_from,
     Owning_Array< Set_Prop_Task* >& tasks, const std::vector< std::string >& declared_keys,
     Set& into, Resource_Manager& rman, const std::string& type)

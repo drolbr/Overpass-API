@@ -32,7 +32,7 @@ Evaluator_Aggregator::Evaluator_Aggregator
 }
 
 
-void Evaluator_Aggregator::add_statement(Statement* statement, std::string text)
+void Evaluator_Aggregator::add_statement(Statement* statement, std::string)
 {
   Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (!tag_value_)
@@ -398,8 +398,8 @@ bool Evaluator_Set_Count::try_parse_object_type(const std::string& input, Evalua
 
 
 Statement* Evaluator_Set_Count::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const Token_Node_Ptr& tree_it, Statement::QL_Context,
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   if (!tree_it.assert_is_function(error_output)
       || !tree_it.assert_has_arguments(error_output, true))
@@ -486,7 +486,7 @@ Requested_Context Evaluator_Set_Count::request_context() const
 }
 
 
-Eval_Task* Evaluator_Set_Count::get_string_task(Prepare_Task_Context& context, const std::string* key)
+Eval_Task* Evaluator_Set_Count::get_string_task(Prepare_Task_Context& context, const std::string*)
 {
   const Set_With_Context* set = context.get_set(input);
 

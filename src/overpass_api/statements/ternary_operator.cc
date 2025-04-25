@@ -21,7 +21,7 @@
 #include "ternary_operator.h"
 
 
-void Ternary_Evaluator::add_statement(Statement* statement, std::string text)
+void Ternary_Evaluator::add_statement(Statement* statement, std::string)
 {
   Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (!tag_value_)
@@ -45,12 +45,12 @@ struct Any_Return_Type_Checker : Statement::Return_Type_Checker
   Any_Return_Type_Checker() {}
 
   virtual bool eval_required() const { return true; }
-  virtual bool matches(Statement::Eval_Return_Type eval_type) const { return true; }
+  virtual bool matches(Statement::Eval_Return_Type) const { return true; }
   virtual std::string expectation() const { return "any nonempty type"; }
 };
 
 
-void Ternary_Evaluator::add_substatements(Statement* result, const std::string& operator_name,
+void Ternary_Evaluator::add_substatements(Statement* result, const std::string&,
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Error_Output* error_output)
 {

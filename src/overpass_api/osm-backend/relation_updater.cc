@@ -165,7 +165,7 @@ void new_implicit_skeletons
     (const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
      const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
      const std::map< Uint31_Index, std::set< Relation_Skeleton > >& existing_skeletons,
-     bool record_minuscule_moves,
+     bool,
      std::map< Uint31_Index, std::set< Relation_Skeleton > >& attic_skeletons,
      std::map< Uint31_Index, std::set< Relation_Skeleton > >& new_skeletons,
      std::vector< std::pair< Relation::Id_Type, Uint31_Index > >& moved_relations)
@@ -691,7 +691,7 @@ void add_intermediate_changelog_entries
          std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      const std::map< Way_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >& ways_by_id,
-     bool add_last_version, Uint31_Index attic_idx, Uint31_Index new_idx,
+     bool add_last_version, Uint31_Index attic_idx, Uint31_Index,
      std::map< Timestamp, std::vector< Relation_Skeleton::Id_Type > >& result)
 {
   std::vector< uint64 > relevant_timestamps;
@@ -949,7 +949,7 @@ std::map< Timestamp, std::vector< Relation_Skeleton::Id_Type > > compute_changel
     const Data_By_Id< Relation_Skeleton >& new_data,
     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& implicitly_moved_skeletons,
     const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-    const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& attic_map_positions,
+    const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >&,
     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& attic_skeletons,
     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
     const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,

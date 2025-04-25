@@ -61,7 +61,7 @@ Recurse_Statement::Criterion_Maker_2 Recurse_Statement::criterion_maker_2;
 
 Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& result_type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
@@ -212,8 +212,8 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
 
 
 Statement* Recurse_Statement::Criterion_Maker_2::create_criterion(const Token_Node_Ptr& input_tree,
-    const std::string& result_type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string& into,
+    Statement::Factory&, Parsed_Query&, Error_Output*)
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
@@ -483,7 +483,7 @@ public:
   Ranges< Uint31_Index > get_way_ranges(Resource_Manager& rman) override;
   Ranges< Uint31_Index > get_relation_ranges(Resource_Manager& rman) override;
 
-  Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return prefer_ranges; }
+  Query_Filter_Strategy delivers_data(Resource_Manager&) override { return prefer_ranges; }
 
   virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
                         const Ranges< Uint32_Index >& ranges,

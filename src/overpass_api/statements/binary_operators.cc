@@ -24,7 +24,7 @@
 Evaluator_Pair_Operator::Evaluator_Pair_Operator(int line_number_) : Evaluator(line_number_), lhs(0), rhs(0) {}
 
 
-void Evaluator_Pair_Operator::add_statement(Statement* statement, std::string text)
+void Evaluator_Pair_Operator::add_statement(Statement* statement, std::string)
 {
   Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (!tag_value_)

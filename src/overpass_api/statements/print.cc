@@ -272,7 +272,7 @@ void print_item(
 
 
 void print_item(
-    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Way_Skeleton& skel,
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32, const Way_Skeleton& skel,
     const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   Geometry_From_Quad_Coords broker;
@@ -283,7 +283,7 @@ void print_item(
 
 
 void print_item(
-    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32, const Attic< Way_Skeleton >& skel,
     const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   Geometry_From_Quad_Coords broker;
@@ -295,7 +295,7 @@ void print_item(
 
 
 void print_item(
-    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Relation_Skeleton& skel,
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32, const Relation_Skeleton& skel,
     const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   Geometry_From_Quad_Coords broker;
@@ -306,7 +306,7 @@ void print_item(
 
 
 void print_item(
-    Extra_Data& extra_data, OSM_Data_Printer& output, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+    Extra_Data& extra_data, OSM_Data_Printer& output, uint32, const Attic< Relation_Skeleton >& skel,
     const std::vector< std::pair< std::string, std::string > >* tags, const Full_Monotype_Meta* meta)
 {
   Geometry_From_Quad_Coords broker;

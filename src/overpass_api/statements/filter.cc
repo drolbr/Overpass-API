@@ -27,12 +27,12 @@
 class Filter_Constraint : public Query_Constraint
 {
   public:
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return ids_required; }
+    Query_Filter_Strategy delivers_data(Resource_Manager&) override { return ids_required; }
 
     Filter_Constraint(Filter_Statement& stmt_) : stmt(&stmt_) {}
-    bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges) { return false; }
-    bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges) { return false; }
-    void filter(Resource_Manager& rman, Set& into) {}
+    bool get_ranges(Resource_Manager&, Ranges< Uint32_Index >&) { return false; }
+    bool get_ranges(Resource_Manager&, Ranges< Uint31_Index >&) { return false; }
+    void filter(Resource_Manager&, Set&) {}
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Filter_Constraint() {}
 
@@ -101,8 +101,8 @@ Filter_Statement::Criterion_Maker Filter_Statement::criterion_maker;
 
 
 Statement* Filter_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
-    const std::string& type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string&,
+    Statement::Factory& stmt_factory, Parsed_Query&, Error_Output*)
 {
   Statement* filter = 0;
   uint line_nr = tree_it->line_col.first;
@@ -148,7 +148,7 @@ Filter_Statement::~Filter_Statement()
 }
 
 
-void Filter_Statement::add_statement(Statement* statement, std::string text)
+void Filter_Statement::add_statement(Statement* statement, std::string)
 {
   Evaluator* tag_value = dynamic_cast< Evaluator* >(statement);
   if (tag_value)

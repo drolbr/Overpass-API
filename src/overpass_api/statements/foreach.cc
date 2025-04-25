@@ -81,7 +81,7 @@ void add_to_set(Set& target, Uint31_Index idx, const Derived_Structure& skel)
 
 template< typename Index, typename Object >
 void loop_over_elements(const std::map< Index, std::vector< Object > >& source, Resource_Manager& rman,
-    std::vector< Statement* >& substatements, const std::string& input, const std::string& result_name)
+    std::vector< Statement* >& substatements, const std::string&, const std::string& result_name)
 {
   for (typename std::map< Index, std::vector< Object > >::const_iterator
       it = source.begin(); it != source.end(); ++it)

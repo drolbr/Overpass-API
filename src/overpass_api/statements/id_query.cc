@@ -38,7 +38,7 @@ Id_Query_Statement::Criterion_Maker Id_Query_Statement::criterion_maker;
 
 Statement* Id_Query_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& result_type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    Statement::Factory&, Parsed_Query&, Error_Output*)
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
@@ -132,7 +132,7 @@ class Id_Query_Constraint : public Query_Constraint
   public:
     Id_Query_Constraint(Id_Query_Statement& stmt_) : stmt(&stmt_) {}
 
-    Query_Filter_Strategy delivers_data(Resource_Manager& rman) override { return prefer_ranges; }
+    Query_Filter_Strategy delivers_data(Resource_Manager&) override { return prefer_ranges; }
 
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
@@ -154,28 +154,28 @@ class Id_Query_Constraint : public Query_Constraint
 };
 
 
-bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
+bool Id_Query_Constraint::get_node_ids(Resource_Manager&, std::vector< Node_Skeleton::Id_Type >& ids)
 {
   ids = filtered_assign< Node_Skeleton::Id_Type >(stmt->get_refs());
   return true;
 }
 
 
-bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids)
+bool Id_Query_Constraint::get_way_ids(Resource_Manager&, std::vector< Way_Skeleton::Id_Type >& ids)
 {
   ids = filtered_assign< Way_Skeleton::Id_Type >(stmt->get_refs());
   return true;
 }
 
 
-bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
+bool Id_Query_Constraint::get_relation_ids(Resource_Manager&, std::vector< Relation_Skeleton::Id_Type >& ids)
 {
   ids = filtered_assign< Relation_Skeleton::Id_Type >(stmt->get_refs());
   return true;
 }
 
 
-bool Id_Query_Constraint::get_area_ids(Resource_Manager& rman, std::vector< Area_Skeleton::Id_Type >& ids)
+bool Id_Query_Constraint::get_area_ids(Resource_Manager&, std::vector< Area_Skeleton::Id_Type >& ids)
 {
   ids = filtered_assign< Area_Skeleton::Id_Type >(stmt->get_refs());
   return true;
@@ -223,7 +223,7 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Inde
 }
 
 
-void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
+void Id_Query_Constraint::filter(Resource_Manager&, Set& into)
 {
   filter_elems(stmt->get_refs(), into.nodes);
   filter_elems(stmt->get_refs(), into.attic_nodes);
@@ -385,7 +385,7 @@ struct Attic_Skeleton_By_Id
 
 
 template< typename Index, typename Skeleton >
-void get_elements(const std::vector< uint64 >& refs, Statement* stmt, Request_Context& context,
+void get_elements(const std::vector< uint64 >& refs, Statement*, Request_Context& context,
     std::map< Index, std::vector< Skeleton > >& current_result,
     std::map< Index, std::vector< Attic< Skeleton > > >& attic_result)
 {

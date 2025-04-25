@@ -105,8 +105,8 @@ void end(const char *el)
   ++osm_element_count;
 }
 
-void cleanup_files(const File_Properties& file_properties, std::string db_dir,
-		   bool cleanup_map)
+
+void cleanup_files(const File_Properties&, std::string, bool)
 {
 //   remove((db_dir + file_properties.get_file_name_trunk() +
 //           file_properties.get_data_suffix() +
@@ -122,7 +122,8 @@ void cleanup_files(const File_Properties& file_properties, std::string db_dir,
 //   }
 }
 
-int main(int argc, char* args[])
+
+int main(int, char**)
 {
   std::string db_dir("./");
 

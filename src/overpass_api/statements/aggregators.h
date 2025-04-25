@@ -93,8 +93,8 @@ template< typename Evaluator_ >
 struct Aggregator_Evaluator_Maker : Statement::Evaluator_Maker
 {
   virtual Statement* create_evaluator(
-      const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+      const Token_Node_Ptr& tree_it, Statement::QL_Context,
+      Statement::Factory& stmt_factory, Parsed_Query&, Error_Output* error_output)
   {
     std::map< std::string, std::string > attributes;
     bool input_set = false;

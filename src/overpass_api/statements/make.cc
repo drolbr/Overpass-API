@@ -49,7 +49,7 @@ Make_Statement::~Make_Statement()
 }
 
 
-void Make_Statement::add_statement(Statement* statement, std::string text)
+void Make_Statement::add_statement(Statement* statement, std::string)
 {
   Set_Prop_Statement* set_prop = dynamic_cast< Set_Prop_Statement* >(statement);
   if (set_prop)

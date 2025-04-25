@@ -187,7 +187,7 @@ private:
 
 struct Count_Node_Use
 {
-  void operator()(Uint31_Index idx, const Way_Skeleton& way)
+  void operator()(Uint31_Index, const Way_Skeleton& way)
   {
     if (!way.nds.empty())
     {
@@ -207,7 +207,7 @@ private:
 
 struct Partition_Into_Links
 {
-  void operator()(Uint31_Index idx, const Way_Skeleton& way)
+  void operator()(Uint31_Index, const Way_Skeleton& way)
   {
     if (!way.nds.empty())
     {
@@ -271,7 +271,7 @@ private:
 
 struct Figure_Out_Local_Ids_Of_Links
 {
-  void operator()(Uint31_Index idx, const Way_Skeleton& way)
+  void operator()(Uint31_Index, const Way_Skeleton& way)
   {
     if (!way.nds.empty())
     {
@@ -426,7 +426,7 @@ NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Se
 }
 
 
-void NWR_Context::prepare_links(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
+void NWR_Context::prepare_links(Resource_Manager&, const Statement&, const Set&,
     const Owner< Bbox_Double >& bbox)
 {
   // Figure out links
@@ -535,7 +535,7 @@ void process_vertices(const std::map< Index, std::vector< Maybe_Attic > >& items
 template< typename Index, typename Maybe_Attic >
 void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, Set_With_Context& context_from,
     Set& into, Resource_Manager& rman, NWR_Context& nwr_context,
-    Localize_Statement::Mode mode, const Owner< Bbox_Double >& bbox)
+    Localize_Statement::Mode mode)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -830,9 +830,9 @@ void Localize_Statement::execute(Resource_Manager& rman)
       process_vertices(context_from->base->attic_nodes, *context_from, into, rman, nwr_context, type, bbox);
 
     nwr_context.prepare_links(rman, *this, *input_set, bbox);
-    generate_links(context_from->base->ways, *context_from, into, rman, nwr_context, type, bbox);
+    generate_links(context_from->base->ways, *context_from, into, rman, nwr_context, type);
     if (!context_from->base->attic_ways.empty())
-      generate_links(context_from->base->attic_ways, *context_from, into, rman, nwr_context, type, bbox);
+      generate_links(context_from->base->attic_ways, *context_from, into, rman, nwr_context, type);
 
     if (type >= also_loose)
     {

@@ -257,7 +257,7 @@ void cleanup_files(const File_Properties& file_properties, std::string db_dir,
   }
 }
 
-int main(int argc, char* args[])
+int main(int, char**)
 {
   std::string db_dir("./");
 

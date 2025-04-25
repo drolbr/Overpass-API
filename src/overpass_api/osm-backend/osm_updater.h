@@ -40,7 +40,7 @@ class Osm_Updater
     ~Osm_Updater();
 
     void finish_updater();
-    void parse_file_completely(FILE* in);
+    void parse_stdin_completely();
 
   private:
     Nonsynced_Transaction* transaction;

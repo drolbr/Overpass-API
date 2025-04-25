@@ -53,7 +53,7 @@ class Bbox_Constraint : public Query_Constraint
 };
 
 
-Query_Filter_Strategy Bbox_Constraint::delivers_data(Resource_Manager& rman)
+Query_Filter_Strategy Bbox_Constraint::delivers_data(Resource_Manager&)
 {
   const Bbox_Double& bbox_ = filter_.get_bbox();
 
@@ -64,7 +64,7 @@ Query_Filter_Strategy Bbox_Constraint::delivers_data(Resource_Manager& rman)
 }
 
 
-bool Bbox_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
+bool Bbox_Constraint::get_ranges(Resource_Manager&, Ranges< Uint32_Index >& ranges)
 {
   ranges = filter_.get_ranges_32();
   return true;
@@ -72,14 +72,14 @@ bool Bbox_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >&
 
 
 bool Bbox_Constraint::get_ranges
-    (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
+    (Resource_Manager&, Ranges< Uint31_Index >& ranges)
 {
   ranges = filter_.get_ranges_31();
   return true;
 }
 
 
-void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
+void Bbox_Constraint::filter(Resource_Manager&, Set& into)
 {
   filter_.filter(into);
 }
@@ -99,8 +99,8 @@ Bbox_Query_Statement::Criterion_Maker Bbox_Query_Statement::criterion_maker;
 
 
 Statement* Bbox_Query_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
-    const std::string& result_type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    const std::string&, const std::string& into,
+    Statement::Factory&, Parsed_Query&, Error_Output* error_output)
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
