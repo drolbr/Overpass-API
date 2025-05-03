@@ -60,8 +60,83 @@ struct Socket_To_Client
 
 struct Global_Reading_State
 {
+  struct Statistics
+  {
+    Statistics() : shedded_per_second(60, 0), average_used_time_(15, 0), average_used_size_(15, 0) {}
+    
+    // Assert: shedded_per_minute is always the sum of all shedded_per_second
+    time_t last_updated = 0;
+    std::vector< uint32_t > shedded_per_second;
+    uint32_t shedded_per_minute = 0;
+    
+    uint64_t sum_used_time = 0;
+    uint64_t sum_used_size = 0;
+    uint64_t num_average_samples = 0;
+    std::vector< uint64_t > average_used_time_;
+    std::vector< uint64_t > average_used_size_;
+    
+    void measure(uint32_t num_shedded, uint64_t maxtime_used, uint64_t maxsize_used, time_t now)
+    {
+      shedded_per_second[now % 60] += num_shedded;
+      shedded_per_minute += num_shedded;
+      
+      sum_used_time += maxtime_used;
+      sum_used_size += maxsize_used;
+      ++num_average_samples;
+    }
+    
+    void calc_data_per_second(time_t now)
+    {
+      if (last_updated == 0)
+        last_updated = now;
+      else if (last_updated < now)
+      {
+        while (last_updated < now)
+        {
+          shedded_per_minute -= shedded_per_second[last_updated % 60];
+          shedded_per_second[last_updated % 60] = 0;
+          
+          average_used_time_[last_updated % 15] = 0;
+          average_used_size_[last_updated % 15] = 0;
+          ++last_updated;
+        }
+        
+        if (num_average_samples > 0)
+        {
+          average_used_time_[last_updated % 15] = sum_used_time/num_average_samples;
+          average_used_size_[last_updated % 15] = sum_used_size/num_average_samples;
+          sum_used_size = 0;
+          sum_used_time = 0;
+          num_average_samples = 0;
+        }
+        else
+        {
+          average_used_time_[last_updated % 15] = 0;
+          average_used_size_[last_updated % 15] = 0;
+        }
+      }
+    }
+    
+    uint64_t average_used_time() const
+    {
+      uint64_t result = 0;
+      for (auto i : average_used_time_)
+        result += i;
+      return result / average_used_time_.size();
+    }
+    
+    uint64_t average_used_size() const
+    {
+      uint64_t result = 0;
+      for (auto i : average_used_size_)
+        result += i;
+      return result / average_used_size_.size();
+    }
+  };
+
+  
   Global_Reading_State(Resource_State global_state_)
-    : global_state(global_state_), request_queue(client_register), shedded_per_second(60, 0) {}
+    : global_state(global_state_), request_queue(client_register) {}
 
   bool poll_reading_requests(std::unordered_map< int, Socket_To_Client >& clients, time_t now)
   {
@@ -131,18 +206,8 @@ struct Global_Reading_State
       reading_idx.insert(fd);
       clients[fd].send(REQUEST_READ_AND_IDX);
     }
-    
-    if (last_updated == 0)
-      last_updated = now;
-    else if (last_updated < now)
-    {
-      while (last_updated < now)
-      {
-        shedded_per_minute -= shedded_per_second[last_updated % 60];
-        shedded_per_second[last_updated % 60] = 0;
-        ++last_updated;
-      }
-    }
+
+    statistics.calc_data_per_second(now);
 
     std::pair< std::vector< int >, std::vector< int > > purged = request_queue.purge(global_state, now);
     for (int fd : purged.first)
@@ -155,12 +220,13 @@ struct Global_Reading_State
       queued.erase(fd);
       clients[fd].send_and_close(RATE_LIMITED);
     }
-    shedded_per_second[now % 60] += purged.first.size();
-    shedded_per_minute += purged.first.size();
+    statistics.measure(purged.first.size(), global_state.maxtime_used, global_state.maxsize_used, now);    
   }
 
   const Client_State* get_client_state(Client_Token t, time_t now)
   { return client_register.get_client_state(t, now); }
+  
+  const Statistics& get_statistics() const { return statistics; }
 
 private:
   Resource_State global_state;
@@ -169,16 +235,13 @@ private:
   std::unordered_set< int > reading_idx;
   Client_Register client_register;
   Request_Queue request_queue;
-  
-  // Assert: shedded_per_minute is always the sum of all shedded_per_second
-  time_t last_updated = 0;
-  std::vector< uint32_t > shedded_per_second;
-  uint32_t shedded_per_minute = 0;
+  Statistics statistics;
 
   void finish_request(const std::pair< const int, Request_State >& arg, time_t now)
   {
     time_t cooldown_time = now +
-        ((uint64_t)now - arg.second.start_time + 5) * std::min(60u, shedded_per_minute) / 5;
+        ((uint64_t)now - arg.second.start_time + 15)
+        * std::max(10u, std::min(60u, statistics.shedded_per_minute)) / 10;
     //std::cout<<"DEBUG "<<(cooldown_time - now)<<'\n';
     global_state.maxtime_used -= arg.second.maxtime;
     global_state.maxsize_used -= arg.second.maxsize;
@@ -222,12 +285,14 @@ int main(int argc, char* args[])
   std::vector< uint32_t > http_429(16, 0);
   std::vector< uint32_t > http_504(16, 0);
   std::vector< uint32_t > http_200(16, 0);
-  Global_Reading_State global_reading_state({ 10, 0, 3*86400, (uint64_t)16*1024*1024*1024 });
+  Global_Reading_State global_reading_state({ 10, 4/*atoi(args[1])*/, 3*86400, (uint64_t)16*1024*1024*1024 });
 
   for (time_t tsec = 1080000; tsec < 1166400; ++tsec)
   {
     if (tsec % 3600 == 0)
-      std::cout<<"Nominal time: "<<tsec/3600<<'\n';
+      std::cout<<"Nominal time: "<<tsec/3600<<
+          ", Avg_Time "<<global_reading_state.get_statistics().average_used_time()<<
+          ", Avg_Size "<<global_reading_state.get_statistics().average_used_size()<<'\n';
     
     for (uint32_t j = 0; j < 100; ++j)
     {
