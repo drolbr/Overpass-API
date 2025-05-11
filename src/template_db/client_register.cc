@@ -32,7 +32,7 @@ uint32_t Client_Register::try_enqueue(Client_Token t, uint32_t rate_limit, time_
   state.purge_cooldown(now);
   if (rate_limit > 0)
   {
-    if (state.reading.size() + state.cooldown.size() + state.enqueued >= 2*rate_limit)
+    if (state.reading.size() + state.cooldown.size() + state.enqueued > 2*rate_limit)
       return 0;
     ++state.enqueued;
   }
