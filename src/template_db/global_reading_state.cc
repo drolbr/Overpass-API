@@ -37,7 +37,10 @@ struct Socket_To_Client
   void send(uint32_t arg)
   {
     if (arg == REQUEST_READ_AND_IDX)
+    {
       commands_to_send = { READ_IDX_FINISHED, 0 };
+      global_runtime += read_runtime;
+    }
     else if (arg == READ_IDX_FINISHED)
       commands_to_send = { READ_FINISHED };
     last_answer = arg;
@@ -53,6 +56,7 @@ struct Socket_To_Client
   uint32_t read_runtime = 3;
   uint32_t last_answer = 0;
   bool is_open = true;
+  static uint64_t global_runtime;
 };
 
 
@@ -93,26 +97,27 @@ struct Global_Reading_State
       {
         while (last_updated < now)
         {
+          ++last_updated;
+
           shedded_per_minute -= shedded_per_second[last_updated % 60];
           shedded_per_second[last_updated % 60] = 0;
-          
+
           average_used_time_[last_updated % 15] = 0;
           average_used_size_[last_updated % 15] = 0;
-          ++last_updated;
         }
         
         if (num_average_samples > 0)
         {
-          average_used_time_[last_updated % 15] = sum_used_time/num_average_samples;
-          average_used_size_[last_updated % 15] = sum_used_size/num_average_samples;
+          average_used_time_[now % 15] = sum_used_time/num_average_samples;
+          average_used_size_[now % 15] = sum_used_size/num_average_samples;
           sum_used_size = 0;
           sum_used_time = 0;
           num_average_samples = 0;
         }
         else
         {
-          average_used_time_[last_updated % 15] = 0;
-          average_used_size_[last_updated % 15] = 0;
+          average_used_time_[now % 15] = 0;
+          average_used_size_[now % 15] = 0;
         }
       }
     }
@@ -239,9 +244,9 @@ private:
 
   void finish_request(const std::pair< const int, Request_State >& arg, time_t now)
   {
-    time_t cooldown_time = now +
-        ((uint64_t)now - arg.second.start_time + 15)
-        * std::max(10u, std::min(60u, statistics.shedded_per_minute)) / 10;
+    time_t cooldown_time = now + 90 +
+        ((uint64_t)now - arg.second.start_time + 1)
+        * std::max(10u, std::min(100u, statistics.shedded_per_minute)) / 3;
     //std::cout<<"DEBUG "<<(cooldown_time - now)<<'\n';
     global_state.maxtime_used -= arg.second.maxtime;
     global_state.maxsize_used -= arg.second.maxsize;
@@ -275,6 +280,8 @@ int dispense_fd(int& next_fd, std::vector< int >& available_fd)
 }
 
 
+uint64_t Socket_To_Client::global_runtime = 0;
+
 int main(int argc, char* args[])
 {
   std::unordered_map< int, Socket_To_Client > clients;
@@ -285,14 +292,15 @@ int main(int argc, char* args[])
   std::vector< uint32_t > http_429(16, 0);
   std::vector< uint32_t > http_504(16, 0);
   std::vector< uint32_t > http_200(16, 0);
-  Global_Reading_State global_reading_state({ 10, 4/*atoi(args[1])*/, 3*86400, (uint64_t)16*1024*1024*1024 });
+  Global_Reading_State global_reading_state({ 10, atoi(args[1]), 3*86400, (uint64_t)16*1024*1024*1024 });
 
   for (time_t tsec = 1080000; tsec < 1166400; ++tsec)
   {
     if (tsec % 3600 == 0)
       std::cout<<"Nominal time: "<<tsec/3600<<
           ", Avg_Time "<<global_reading_state.get_statistics().average_used_time()<<
-          ", Avg_Size "<<global_reading_state.get_statistics().average_used_size()<<'\n';
+          ", Avg_Size "<<global_reading_state.get_statistics().average_used_size()<<
+          ", Total_Runtime "<<Socket_To_Client::global_runtime<<'\n';
     
     for (uint32_t j = 0; j < 100; ++j)
     {
@@ -317,7 +325,7 @@ int main(int argc, char* args[])
         global_reading_state.request_read_and_idx(fd, tsec, socket);
       }
       
-      if (j % 5 == 2) // Once per minute clients
+      if (j % 5 == 2 && j + 1080000 < tsec) // Once per minute clients
       {
         int fd = dispense_fd(next_fd, available_fd);
         Socket_To_Client& socket = clients[fd];

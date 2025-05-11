@@ -35,8 +35,8 @@ std::vector< int > Request_Queue::grant_idx_and_read(Resource_State& res, time_t
 
       for (auto it = queue[i][j].begin(); it != queue[i][j].end(); )
       {
-        if (2*it->maxsize <= res.maxsize_limit - res.maxsize_used
-            && 2*it->maxtime <= res.maxtime_limit - res.maxtime_used
+        if ((2+4*i)*it->maxsize <= res.maxsize_limit - res.maxsize_used
+            && (2+4*i)*it->maxtime <= res.maxtime_limit - res.maxtime_used
             && (res.rate_limit == 0 || client_register.num_active(it->t, now) <= res.rate_limit))
         {
           res.maxsize_used += it->maxsize;
@@ -104,9 +104,9 @@ std::pair< std::vector< int >, std::vector< int > > Request_Queue::purge(const R
 }
 
 
-#include <iostream>
+/*#include <iostream>
 
-/*int main(int argc, char* args[])
+int main(int argc, char* args[])
 {
   {
     std::cout<<"\nIsolated test of regular lifecycle:\n";
