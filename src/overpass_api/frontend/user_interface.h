@@ -28,7 +28,7 @@
 struct Input_From_CGI
 {
   std::map< std::string, std::string > cgi;
-  bool has_origin = false;
+  std::string origin;
   std::string allow_header;
   Http_Methods http_method = http_get;
 };

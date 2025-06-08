@@ -44,6 +44,26 @@
 #include <vector>
 
 
+bool origin_is_blacklisted(const std::string& db_dir, const std::string& origin)
+{
+  if (origin.empty())
+    return false;
+  
+  try
+  {
+    std::ifstream origin_blacklist_f((db_dir + "origin_blacklist").c_str());
+    for (std::string buf; std::getline(origin_blacklist_f, buf); )
+    {
+      if (buf == origin)
+        return true;
+    }
+  }
+  catch(...) {}
+
+  return false;
+}
+
+
 int main(int argc, char *argv[])
 {
   Parsed_Query global_settings;
@@ -53,13 +73,11 @@ int main(int argc, char *argv[])
 
   try
   {
-    {
-      Input_From_CGI input = get_xml_cgi(&error_output, 16*1024*1024);
-      error_output.http_method = input.http_method;
-      error_output.allow_headers = input.allow_header;
-      error_output.has_origin = input.has_origin;
-      global_settings.set_input_params(input.cgi);
-    }
+    Input_From_CGI from_cgi = get_xml_cgi(&error_output, 16*1024*1024);
+    error_output.http_method = from_cgi.http_method;
+    error_output.allow_headers = from_cgi.allow_header;
+    error_output.has_origin = !from_cgi.origin.empty();
+    global_settings.set_input_params(from_cgi.cgi);
 
     if (error_output.display_encoding_errors())
       return 0;
@@ -100,6 +118,13 @@ int main(int argc, char *argv[])
           "", &error_output, global_settings.get_input_params().find("data")->second,
           area_level, max_allowed_time, max_allowed_space, global_settings);
       db_dir = dispatcher.get_db_dir();
+      
+      if (origin_is_blacklisted(db_dir, from_cgi.origin))
+      {
+        error_output.write_html_header("", "", 403, false);
+        error_output.runtime_error("Please contact the server administrator.");
+      }
+      
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
 

@@ -122,7 +122,8 @@ Input_From_CGI get_xml_cgi(Error_Output* error_output, uint32 max_input_size)
   char* allow_header_c = getenv("HTTP_ACCESS_CONTROL_REQUEST_HEADERS");
   result.allow_header = ((allow_header_c) ? allow_header_c : "");
   char* origin = getenv("HTTP_ORIGIN");
-  result.has_origin = ((origin) && strnlen(origin, 1) > 0);
+  if (origin)
+    result.origin = origin;
 
   int line_number(1);
   // If there is nonempty input from GET method, use GET
