@@ -25,9 +25,15 @@
 #include "web_output.h"
 
 
-std::map< std::string, std::string > get_xml_cgi(
-    Error_Output* error_output, uint32 max_input_size,
-    Http_Methods& http_method, std::string& allow_header, bool& has_origin);
+struct Input_From_CGI
+{
+  std::map< std::string, std::string > cgi;
+  bool has_origin = false;
+  std::string allow_header;
+  Http_Methods http_method = http_get;
+};
+
+Input_From_CGI get_xml_cgi(Error_Output* error_output, uint32 max_input_size);
 
 std::string get_xml_console(Error_Output* error_output, uint32 max_input_size = 1048576);
 

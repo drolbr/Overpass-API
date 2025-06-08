@@ -106,23 +106,23 @@ namespace
   }
 }
 
-std::map< std::string, std::string > get_xml_cgi(
-    Error_Output* error_output, uint32 max_input_size,
-    Http_Methods& http_method, std::string& allow_header, bool& has_origin)
+Input_From_CGI get_xml_cgi(Error_Output* error_output, uint32 max_input_size)
 {
+  Input_From_CGI result;
+
   // Check for various HTTP headers
   char* method = getenv("REQUEST_METHOD");
   if (method)
   {
     if (!strncmp(method, "HEAD", 5))
-      http_method = http_head;
+      result.http_method = http_head;
     else if (!strncmp(method, "OPTIONS", 8))
-      http_method = http_options;
+      result.http_method = http_options;
   }
   char* allow_header_c = getenv("HTTP_ACCESS_CONTROL_REQUEST_HEADERS");
-  allow_header = ((allow_header_c) ? allow_header_c : "");
+  result.allow_header = ((allow_header_c) ? allow_header_c : "");
   char* origin = getenv("HTTP_ORIGIN");
-  has_origin = ((origin) && strnlen(origin, 1) > 0);
+  result.has_origin = ((origin) && strnlen(origin, 1) > 0);
 
   int line_number(1);
   // If there is nonempty input from GET method, use GET
@@ -135,16 +135,14 @@ std::map< std::string, std::string > get_xml_cgi(
     ++pos;
   }
 
-  std::map< std::string, std::string > decoded;
-
   if (pos == input.size())
   {
-    if (http_method == http_options)
+    if (result.http_method == http_options)
     {
       // if we have an OPTIONS request then assume the query is valid
       // As a quick hack set the input to a valid dummy value
-      decoded["data"] = "out;";
-      return decoded;
+      result.cgi["data"] = "out;";
+      return result;
     }
 
     // otherwise use POST input
@@ -181,8 +179,8 @@ std::map< std::string, std::string > get_xml_cgi(
 	if (error_output)
 	  error_output->add_encoding_error("Your input contains only whitespace.");
       }
-      decoded["data"] = input;
-      return decoded;
+      result.cgi["data"] = input;
+      return result;
     }
   }
   else
@@ -198,13 +196,13 @@ std::map< std::string, std::string > get_xml_cgi(
   {
     if (error_output)
       error_output->add_encoding_remark("The server now removes the CGI character escaping.");
-   decode_cgi_to_plain(input).swap(decoded);
-    std::string jsonp = decoded["jsonp"];
-    input = decoded["data"];
+    decode_cgi_to_plain(input).swap(result.cgi);
+    std::string jsonp = result.cgi["jsonp"];
+    input = result.cgi["data"];
 
-    if (decoded["bbox"] != "")
+    if (result.cgi["bbox"] != "")
     {
-      const std::string& lonlat = decoded["bbox"];
+      const std::string& lonlat = result.cgi["bbox"];
 
       std::vector< std::string > coords;
       std::string::size_type pos = 0;
@@ -241,8 +239,8 @@ std::map< std::string, std::string > get_xml_cgi(
   }
 
   input = autocomplete(input, error_output, max_input_size);
-  decoded["data"] = input;
-  return decoded;
+  result.cgi["data"] = input;
+  return result;
 }
 
 

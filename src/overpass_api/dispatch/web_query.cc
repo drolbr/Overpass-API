@@ -53,9 +53,13 @@ int main(int argc, char *argv[])
 
   try
   {
-    global_settings.set_input_params(
-	get_xml_cgi(&error_output, 16*1024*1024,
-	error_output.http_method, error_output.allow_headers, error_output.has_origin));
+    {
+      Input_From_CGI input = get_xml_cgi(&error_output, 16*1024*1024);
+      error_output.http_method = input.http_method;
+      error_output.allow_headers = input.allow_header;
+      error_output.has_origin = input.has_origin;
+      global_settings.set_input_params(input.cgi);
+    }
 
     if (error_output.display_encoding_errors())
       return 0;
