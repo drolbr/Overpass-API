@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
       {
         error_output.write_html_header("", "", 403, false);
         error_output.runtime_error("Please contact the server administrator.");
+        return 0;
       }
       
       if (osm_script && osm_script->get_desired_timestamp())
