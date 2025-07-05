@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 
 /*void millisleep(uint32_t milliseconds)
 {
@@ -28,6 +29,94 @@ int dispense_fd(int& next_fd, std::vector< int >& available_fd)
 }
 
 
+void trigger_new_requests(
+    std::unordered_map< int, Socket_To_Client >& clients,
+    std::vector< int >& new_connections,
+    int& next_fd, std::vector< int >& available_fd,
+    uint32_t& client_token, uint32_t& client_token_large,
+    time_t tsec, uint32_t j)
+{
+  if (j % 5 == 3) // One-time only clients
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.arguments[0] = ++client_token;
+    socket.read_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
+    new_connections.push_back(fd);
+  }
+  
+  if (j % 10 == 3) // One-time only clients with large requests
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.arguments[0] = ++client_token_large;
+    socket.arguments[3] = 1024*1024*1024;
+    socket.read_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
+    new_connections.push_back(fd);
+  }
+  
+  if (j % 5 == 2 && j + 1080000 < tsec) // Once per minute clients
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.arguments[0] = 144u*16777216u + j/5 + 100*(tsec%60);
+    socket.read_runtime = 140 + (2*j)%13;
+    new_connections.push_back(fd);
+  }
+  
+  if (j % 5 == 2) // Once every five seconds clients
+  {
+    /*const auto* state = global_reading_state.get_client_state(160u*16777216u + j/5 + 100*(tsec%5), tsec);
+    if (state)
+    {
+      std::cout<<"DEBUG Client_State: enqueued "<<state->enqueued<<", reading";
+      for (auto fd : state->reading)
+        std::cout<<' '<<fd;
+      std::cout<<", cooldown";
+      for (auto fd : state->cooldown)
+        std::cout<<' '<<fd;
+      std::cout<<'\n';
+    }*/
+    
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.arguments[0] = 160u*16777216u + j/5 + 100*(tsec%5);
+    socket.read_runtime = 160 + (3*j)%17;
+    new_connections.push_back(fd);
+  }
+
+  if (j % 5 == 2) // Once per second clients
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.arguments[0] = 176u*16777216u + j/5;
+    socket.read_runtime = 200 + (7*j)%11;
+    new_connections.push_back(fd);
+  }
+  
+  if (j % 100 == 41 && tsec % 30 == 11) // Long runtime heavy load client
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.arguments[0] = 192u*16777216u + j/5;
+    socket.read_runtime = 1500 + 500*(tsec % 60 / 30);
+    new_connections.push_back(fd);
+  }
+  
+  if (tsec % 3600 == 471) // Binge client
+  {
+    for (uint32_t k = 0; k < 5; ++k)
+    {
+      int fd = dispense_fd(next_fd, available_fd);
+      Socket_To_Client& socket = clients[fd];
+      socket.arguments[0] = 224u*16777216u;
+      socket.read_runtime = 500 + k;
+      new_connections.push_back(fd);
+    }
+  }
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 2)
@@ -37,6 +126,7 @@ int main(int argc, char* args[])
   }
   
   std::unordered_map< int, Socket_To_Client > clients;
+  std::vector< int > new_connections;
   std::vector< int > available_fd;
   int next_fd = 3;
   uint32_t client_token = 64u*16777216u;
@@ -56,86 +146,19 @@ int main(int argc, char* args[])
     
     for (uint32_t j = 0; j < 100; ++j)
     {
+      trigger_new_requests(
+          clients, new_connections, next_fd, available_fd, client_token, client_token_large, tsec, j);
+      
       global_reading_state.poll_reading_requests(clients, tsec);
-
-      if (j % 5 == 3) // One-time only clients
-      {
-        int fd = dispense_fd(next_fd, available_fd);
-        Socket_To_Client& socket = clients[fd];
-        socket.arguments[0] = ++client_token;
-        socket.read_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
-        global_reading_state.request_read_and_idx(fd, tsec, socket);
-      }
       
-      if (j % 10 == 3) // One-time only clients with large requests
+      for (int fd : new_connections)
       {
-        int fd = dispense_fd(next_fd, available_fd);
         Socket_To_Client& socket = clients[fd];
-        socket.arguments[0] = ++client_token_large;
-        socket.arguments[3] = 1024*1024*1024;
-        socket.read_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
-        global_reading_state.request_read_and_idx(fd, tsec, socket);
-      }
-      
-      if (j % 5 == 2 && j + 1080000 < tsec) // Once per minute clients
-      {
-        int fd = dispense_fd(next_fd, available_fd);
-        Socket_To_Client& socket = clients[fd];
-        socket.arguments[0] = 144u*16777216u + j/5 + 100*(tsec%60);
-        socket.read_runtime = 140 + (2*j)%13;
-        global_reading_state.request_read_and_idx(fd, tsec, socket);
-      }
-      
-      if (j % 5 == 2) // Once every five seconds clients
-      {
-        /*const auto* state = global_reading_state.get_client_state(160u*16777216u + j/5 + 100*(tsec%5), tsec);
-        if (state)
-        {
-          std::cout<<"DEBUG Client_State: enqueued "<<state->enqueued<<", reading";
-          for (auto fd : state->reading)
-            std::cout<<' '<<fd;
-          std::cout<<", cooldown";
-          for (auto fd : state->cooldown)
-            std::cout<<' '<<fd;
-          std::cout<<'\n';
-        }*/
-        
-        int fd = dispense_fd(next_fd, available_fd);
-        Socket_To_Client& socket = clients[fd];
-        socket.arguments[0] = 160u*16777216u + j/5 + 100*(tsec%5);
-        socket.read_runtime = 160 + (3*j)%17;
-        global_reading_state.request_read_and_idx(fd, tsec, socket);
-      }
-
-      if (j % 5 == 2) // Once per second clients
-      {
-        int fd = dispense_fd(next_fd, available_fd);
-        Socket_To_Client& socket = clients[fd];
-        socket.arguments[0] = 176u*16777216u + j/5;
-        socket.read_runtime = 200 + (7*j)%11;
-        global_reading_state.request_read_and_idx(fd, tsec, socket);
-      }
-      
-      if (j % 100 == 41 && tsec % 30 == 11) // Long runtime heavy load client
-      {
-        int fd = dispense_fd(next_fd, available_fd);
-        Socket_To_Client& socket = clients[fd];
-        socket.arguments[0] = 192u*16777216u + j/5;
-        socket.read_runtime = 1500 + 500*(tsec % 60 / 30);
-        global_reading_state.request_read_and_idx(fd, tsec, socket);
-      }
-      
-      if (tsec % 3600 == 471) // Binge client
-      {
-        for (uint32_t k = 0; k < 5; ++k)
-        {
-          int fd = dispense_fd(next_fd, available_fd);
-          Socket_To_Client& socket = clients[fd];
-          socket.arguments[0] = 224u*16777216u;
-          socket.read_runtime = 500 + k;
+        auto command = socket.get_command();
+        if (command == REQUEST_READ_AND_IDX)
           global_reading_state.request_read_and_idx(fd, tsec, socket);
-        }
       }
+      new_connections.clear();
 
       global_reading_state.grant_and_purge(clients, tsec);
     }
