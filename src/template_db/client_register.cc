@@ -30,7 +30,7 @@ uint32_t Client_Register::try_enqueue(Client_Token t, uint32_t rate_limit, time_
 {
   Client_State& state = data[t];
   state.purge_cooldown(now);
-  if (rate_limit > 0)
+  if (rate_limit > 0 && t != LOCALHOST_BYPASS)
   {
     if (state.reading.size() + state.cooldown.size() + state.enqueued > 2*rate_limit)
       return 0;

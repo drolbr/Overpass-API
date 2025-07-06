@@ -10,9 +10,12 @@ bool Request_Queue::accept(int fd, const Request_State& req, uint32_t rate_limit
   {
     if (queue.size() <= prio-1)
       queue.resize(prio);
-    if (queue[prio-1].size() <= req.maxsize / (256*1024*1024))
-      queue[prio-1].resize(req.maxsize / (256*1024*1024) + 1);
-    queue[prio-1][req.maxsize / (256*1024*1024)].push_back(
+    uint64_t size_bucket = req.maxsize / (256*1024*1024);
+    if (req.t == LOCALHOST_BYPASS)
+      size_bucket = 0;
+    if (queue[prio-1].size() <= size_bucket)
+      queue[prio-1].resize(size_bucket + 1);
+    queue[prio-1][size_bucket].push_back(
         { req.t, fd, req.maxtime, req.maxsize, now });
     return true;
   }
@@ -35,9 +38,10 @@ std::vector< int > Request_Queue::grant_idx_and_read(Resource_State& res, time_t
 
       for (auto it = queue[i][j].begin(); it != queue[i][j].end(); )
       {
-        if ((2+4*i)*it->maxsize <= res.maxsize_limit - res.maxsize_used
-            && (2+4*i)*it->maxtime <= res.maxtime_limit - res.maxtime_used
-            && (res.rate_limit == 0 || client_register.num_active(it->t, now) <= res.rate_limit))
+        if (((2+4*i)*it->maxsize <= res.maxsize_limit - res.maxsize_used
+                && (2+4*i)*it->maxtime <= res.maxtime_limit - res.maxtime_used
+                && (res.rate_limit == 0 || client_register.num_active(it->t, now) <= res.rate_limit))
+            || it->t == LOCALHOST_BYPASS)
         {
           res.maxsize_used += it->maxsize;
           res.maxtime_used += it->maxtime;

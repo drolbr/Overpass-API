@@ -8,6 +8,7 @@
 
 
 typedef uint64_t Client_Token;
+const Client_Token LOCALHOST_BYPASS = 0;
 
 
 struct Client_State

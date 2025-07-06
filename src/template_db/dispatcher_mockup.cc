@@ -114,6 +114,18 @@ void trigger_new_requests(
       new_connections.push_back(fd);
     }
   }
+  
+  if (tsec % 18000 == 305 && j == 0) // Area recreation loop
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.arguments[0] = 0;
+    socket.arguments[2] = 86400;
+    socket.arguments[3] = 0;
+    socket.arguments[4] = 1;
+    socket.read_runtime = 399501;
+    new_connections.push_back(fd);
+  }
 }
 
 
