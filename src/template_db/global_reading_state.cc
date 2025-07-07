@@ -120,20 +120,24 @@ bool Global_Reading_State::poll_reading_requests(std::unordered_map< int, Socket
 }
 
 
-void Global_Reading_State::grant_and_purge(std::unordered_map< int, Socket_To_Client >& clients, time_t now)
+void Global_Reading_State::grant_and_purge(
+    std::unordered_map< int, Socket_To_Client >& clients, bool pending_commit, time_t now)
 {
-  std::vector< int > granted = request_queue.grant_idx_and_read(global_state, now);
-  for (int fd : granted)
+  if (!pending_commit)
   {
-    auto queued_it = queued.find(fd);
-    if (queued_it == queued.end())
-      continue;
-    auto reading_it = reading.insert(*queued_it).first;
-    queued.erase(fd);
-    reading_it->second.start_time = now;
+    std::vector< int > granted = request_queue.grant_idx_and_read(global_state, now);
+    for (int fd : granted)
+    {
+      auto queued_it = queued.find(fd);
+      if (queued_it == queued.end())
+        continue;
+      auto reading_it = reading.insert(*queued_it).first;
+      queued.erase(fd);
+      reading_it->second.start_time = now;
 
-    reading_idx.insert(fd);
-    clients[fd].send(REQUEST_READ_AND_IDX);
+      reading_idx.insert(fd);
+      clients[fd].send(REQUEST_READ_AND_IDX);
+    }
   }
 
   statistics.calc_data_per_second(now);

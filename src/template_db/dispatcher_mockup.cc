@@ -1,7 +1,10 @@
 
 #include "global_reading_state.h"
+#include "types.h"
 
 #include <cstdint>
+#include <cstring>
+#include <fstream>
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
@@ -32,7 +35,7 @@ int dispense_fd(int& next_fd, std::vector< int >& available_fd)
 void trigger_new_requests(
     std::unordered_map< int, Socket_To_Client >& clients,
     std::vector< int >& new_connections,
-    int& next_fd, std::vector< int >& available_fd,
+    int& next_fd, std::vector< int >& available_fd, int& next_pid,
     uint32_t& client_token, uint32_t& client_token_large,
     time_t tsec, uint32_t j)
 {
@@ -126,6 +129,123 @@ void trigger_new_requests(
     socket.read_runtime = 399501;
     new_connections.push_back(fd);
   }
+  
+  if (tsec % 61 == 2 && j == 50) // Write loop
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.client_pid = next_pid++;
+    socket.commands_to_send = { WRITE_COMMIT, WRITE_START };
+    new_connections.push_back(fd);
+  }
+}
+
+
+struct Writing_State
+{
+  void poll_writing_process(std::unordered_map< int, Socket_To_Client >& clients, bool is_reading_idx)
+  {
+    if (writing_fd == 0)
+      return;
+    Socket_To_Client& socket = clients[writing_fd];
+    auto command = socket.get_command();
+    if (command == WRITE_COMMIT)
+      pending_commit = true;
+    if (pending_commit && !is_reading_idx)
+    {
+      try_write_commit(socket);
+      pending_commit = false;
+    }
+//     else
+//       std::cout<<"Waiting for reading_idx:\t"<<std::dec<<socket.client_pid<<'\t'<<writing_fd<<'\n';
+  }
+
+  void try_write_start(int fd, Socket_To_Client& socket);
+  void try_migrate_start(int fd, Socket_To_Client& socket) {}
+  
+  bool has_pending_commit() const { return pending_commit; }
+  
+private:
+  int writing_fd = 0;
+  bool pending_commit = false;
+  
+  void try_write_commit(Socket_To_Client& socket);
+
+  void try_write_pid_to_lockfile(pid_t pid)
+  {
+    try
+    {
+      std::ofstream lock("shadow.lock");
+      lock<<pid;
+    }
+    catch (...) {}
+  }
+
+
+  void confirm_lockfile_or_show_error(const File_Error& e, pid_t pid)
+  {
+    if ((e.error_number == EEXIST) && (e.filename == ("shadow.lock")))
+    {
+      pid_t locked_pid;
+      std::ifstream lock("shadow.lock");
+      lock>>locked_pid;
+      if (locked_pid == pid)
+        return;
+    }
+    std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+};
+
+
+void Writing_State::try_write_start(int fd, Socket_To_Client& socket)
+{
+  try
+  {
+    Raw_File shadow_file("shadow.lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start:1");
+
+//     transaction_insulator.copy_mains_to_shadows();
+//     transaction_insulator.write_index_of_empty_blocks();
+//     if (logger)
+//       logger->write_start(pid, transaction_insulator.registered_pids());
+  }
+  catch (File_Error e)
+  {
+    confirm_lockfile_or_show_error(e, socket.client_pid);
+    socket.send(WRITE_START);
+    return;
+  }
+  writing_fd = fd;
+  try_write_pid_to_lockfile(socket.client_pid);
+  socket.send(WRITE_START);
+}
+
+
+void Writing_State::try_write_commit(Socket_To_Client& socket)
+{
+//   if (!get_lock_for_idx_change(pid))
+//     return;
+//   if (logger)
+//     logger->write_commit(pid);
+  try
+  {
+    Raw_File shadow_file("shadow", O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
+//     transaction_insulator.copy_shadows_to_mains();
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File_Error "<<e.error_number<<' '<<std::strerror(e.error_number)
+        <<' '<<e.filename<<' '<<e.origin<<'\n';
+    socket.send_and_close(WRITE_COMMIT);
+    return;
+  }
+
+  remove("shadow");
+//   transaction_insulator.remove_shadows();
+  remove("shadow.lock");
+//   transaction_insulator.set_current_footprints();
+
+  socket.send_and_close(WRITE_COMMIT);
+  writing_fd = 0;
 }
 
 
@@ -141,12 +261,15 @@ int main(int argc, char* args[])
   std::vector< int > new_connections;
   std::vector< int > available_fd;
   int next_fd = 3;
+  int next_pid = 4096;
   uint32_t client_token = 64u*16777216u;
   uint32_t client_token_large = 48u*16777216u;
   std::vector< uint32_t > http_429(16, 0);
   std::vector< uint32_t > http_504(16, 0);
   std::vector< uint32_t > http_200(16, 0);
+  uint32_t sock_write_commit = 0;
   Global_Reading_State global_reading_state({ 10, atoi(args[1]), 3*86400, (uint64_t)16*1024*1024*1024 });
+  Writing_State writing_state;
 
   for (time_t tsec = 1080000; tsec < 1166400; ++tsec)
   {
@@ -159,9 +282,10 @@ int main(int argc, char* args[])
     for (uint32_t j = 0; j < 100; ++j)
     {
       trigger_new_requests(
-          clients, new_connections, next_fd, available_fd, client_token, client_token_large, tsec, j);
+          clients, new_connections, next_fd, available_fd, next_pid, client_token, client_token_large, tsec, j);
       
       global_reading_state.poll_reading_requests(clients, tsec);
+      writing_state.poll_writing_process(clients, global_reading_state.is_reading_idx());
       
       for (int fd : new_connections)
       {
@@ -169,10 +293,16 @@ int main(int argc, char* args[])
         auto command = socket.get_command();
         if (command == REQUEST_READ_AND_IDX)
           global_reading_state.request_read_and_idx(fd, tsec, socket);
+        else if (command == WRITE_START)
+          writing_state.try_write_start(fd, socket);
+        else if (command == MIGRATE_START)
+          writing_state.try_migrate_start(fd, socket);
+        else
+          std::cout<<"Request with invalid command dropped: 0x"<<std::hex<<command<<'\n';
       }
       new_connections.clear();
 
-      global_reading_state.grant_and_purge(clients, tsec);
+      global_reading_state.grant_and_purge(clients, writing_state.has_pending_commit(), tsec);
     }
 
     auto it = clients.begin();
@@ -190,6 +320,10 @@ int main(int argc, char* args[])
           ++http_504[it->second.arguments[0]>>28];
         else if (it->second.last_answer == READ_FINISHED)
           ++http_200[it->second.arguments[0]>>28];
+        else if (it->second.last_answer == WRITE_COMMIT)
+          ++sock_write_commit;
+        else
+          std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was 0x"<<std::hex<<it->second.last_answer<<'\n';
         available_fd.push_back(it->first);
         it = clients.erase(it);
       }
@@ -202,9 +336,9 @@ int main(int argc, char* args[])
     for (auto i : http_429)
     {
       sum += i;
-      std::cout<<'\t'<<i;
+      std::cout<<'\t'<<std::dec<<i;
     }
-    std::cout<<'\t'<<sum<<'\n';
+    std::cout<<'\t'<<std::dec<<sum<<'\n';
   }
   {
     uint32_t sum = 0;
@@ -212,9 +346,9 @@ int main(int argc, char* args[])
     for (auto i : http_504)
     {
       sum += i;
-      std::cout<<'\t'<<i;
+      std::cout<<'\t'<<std::dec<<i;
     }
-    std::cout<<'\t'<<sum<<'\n';
+    std::cout<<'\t'<<std::dec<<sum<<'\n';
   }
   {
     uint32_t sum = 0;
@@ -222,10 +356,11 @@ int main(int argc, char* args[])
     for (auto i : http_200)
     {
       sum += i;
-      std::cout<<'\t'<<i;
+      std::cout<<'\t'<<std::dec<<i;
     }
-    std::cout<<'\t'<<sum<<'\n';
+    std::cout<<'\t'<<std::dec<<sum<<'\n';
   }
+  std::cout<<"Write commit:\t"<<std::dec<<sock_write_commit<<'\n';
 
   return 0;
 }

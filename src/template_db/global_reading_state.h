@@ -16,6 +16,13 @@ static const uint32_t REQUEST_READ_AND_IDX = 0x20106;
 static const uint32_t READ_IDX_FINISHED = 0x20200;
 static const uint32_t READ_FINISHED = 0x20300;
 
+static const uint32_t WRITE_START = 0x10100;
+static const uint32_t WRITE_ROLLBACK = 0x10200;
+static const uint32_t WRITE_COMMIT = 0x10300;
+static const uint32_t MIGRATE_START = 0x11100;
+static const uint32_t MIGRATE_ROLLBACK = 0x11200;
+static const uint32_t MIGRATE_COMMIT = 0x11300;
+
 static const uint32_t PROTOCOL_INVALID = 0x1f100;
 static const uint32_t RATE_LIMITED = 0x1f200;
 static const uint32_t QUERY_REJECTED = 0x1f800;
@@ -41,7 +48,7 @@ struct Socket_To_Client
   {
     if (arg == REQUEST_READ_AND_IDX)
     {
-      commands_to_send = { READ_IDX_FINISHED, 0 };
+      commands_to_send = { READ_IDX_FINISHED, 0, 0, 0 };
       global_runtime += read_runtime;
     }
     else if (arg == READ_IDX_FINISHED)
@@ -58,6 +65,7 @@ struct Socket_To_Client
   std::vector< uint32_t > commands_to_send = { REQUEST_READ_AND_IDX };
   uint32_t read_runtime = 3;
   uint32_t last_answer = 0;
+  pid_t client_pid = 0;
   bool is_open = true;
   static uint64_t global_runtime;
 };
@@ -94,12 +102,13 @@ struct Global_Reading_State
 
   bool poll_reading_requests(std::unordered_map< int, Socket_To_Client >& clients, time_t now);
   void request_read_and_idx(int fd, time_t now, Socket_To_Client& socket);
-  void grant_and_purge(std::unordered_map< int, Socket_To_Client >& clients, time_t now);
+  void grant_and_purge(std::unordered_map< int, Socket_To_Client >& clients, bool pending_commit, time_t now);
 
   const Client_State* get_client_state(Client_Token t, time_t now)
   { return client_register.get_client_state(t, now); }
   
   const Statistics& get_statistics() const { return statistics; }
+  bool is_reading_idx() const { return !reading_idx.empty(); }
 
 private:
   Resource_State global_state;
