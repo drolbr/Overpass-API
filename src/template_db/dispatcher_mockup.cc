@@ -135,7 +135,10 @@ void trigger_new_requests(
     int fd = dispense_fd(next_fd, available_fd);
     Socket_To_Client& socket = clients[fd];
     socket.client_pid = next_pid++;
-    socket.commands_to_send = { WRITE_COMMIT, WRITE_START };
+    if (tsec % (61*1440) == 2 + 61*720)
+      socket.commands_to_send = { MIGRATE_COMMIT, MIGRATE_START };
+    else
+      socket.commands_to_send = { WRITE_COMMIT, WRITE_START };
     new_connections.push_back(fd);
   }
 }
@@ -149,11 +152,14 @@ struct Writing_State
       return;
     Socket_To_Client& socket = clients[writing_fd];
     auto command = socket.get_command();
-    if (command == WRITE_COMMIT)
+    if (command == WRITE_COMMIT || command == MIGRATE_COMMIT)
       pending_commit = true;
     if (pending_commit && !is_reading_idx)
     {
-      try_write_commit(socket);
+      if (is_migrate)
+        try_migrate_commit(socket);
+      else
+        try_write_commit(socket);
       pending_commit = false;
     }
 //     else
@@ -161,15 +167,17 @@ struct Writing_State
   }
 
   void try_write_start(int fd, Socket_To_Client& socket);
-  void try_migrate_start(int fd, Socket_To_Client& socket) {}
+  void try_migrate_start(int fd, Socket_To_Client& socket);
   
   bool has_pending_commit() const { return pending_commit; }
   
 private:
   int writing_fd = 0;
+  bool is_migrate = false;
   bool pending_commit = false;
   
   void try_write_commit(Socket_To_Client& socket);
+  void try_migrate_commit(Socket_To_Client& socket);
 
   void try_write_pid_to_lockfile(pid_t pid)
   {
@@ -215,15 +223,36 @@ void Writing_State::try_write_start(int fd, Socket_To_Client& socket)
     return;
   }
   writing_fd = fd;
+  is_migrate = false;
   try_write_pid_to_lockfile(socket.client_pid);
   socket.send(WRITE_START);
 }
 
 
+void Writing_State::try_migrate_start(int fd, Socket_To_Client& socket)
+{
+  try
+  {
+    Raw_File shadow_file("shadow.lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start:1");
+
+//     if (logger)
+//       logger->migrate_start(pid, transaction_insulator.registered_pids());
+  }
+  catch (File_Error e)
+  {
+    confirm_lockfile_or_show_error(e, socket.client_pid);
+    socket.send(MIGRATE_START);
+    return;
+  }
+  writing_fd = fd;
+  is_migrate = true;
+  try_write_pid_to_lockfile(socket.client_pid);
+  socket.send(MIGRATE_START);
+}
+
+
 void Writing_State::try_write_commit(Socket_To_Client& socket)
 {
-//   if (!get_lock_for_idx_change(pid))
-//     return;
 //   if (logger)
 //     logger->write_commit(pid);
   try
@@ -249,6 +278,33 @@ void Writing_State::try_write_commit(Socket_To_Client& socket)
 }
 
 
+void Writing_State::try_migrate_commit(Socket_To_Client& socket)
+{
+//   if (logger)
+//     logger->migrate_commit(pid);
+  try
+  {
+    Raw_File shadow_file("shadow", O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
+//     transaction_insulator.move_migrated_files_in_place();
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File_Error "<<e.error_number<<' '<<std::strerror(e.error_number)
+        <<' '<<e.filename<<' '<<e.origin<<'\n';
+    socket.send_and_close(WRITE_COMMIT);
+    return;
+  }
+
+  remove("shadow");
+//   transaction_insulator.remove_migrated();
+  remove("shadow.lock");
+//   transaction_insulator.set_current_footprints();
+
+  socket.send_and_close(MIGRATE_COMMIT);
+  writing_fd = 0;
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 2)
@@ -268,6 +324,7 @@ int main(int argc, char* args[])
   std::vector< uint32_t > http_504(16, 0);
   std::vector< uint32_t > http_200(16, 0);
   uint32_t sock_write_commit = 0;
+  uint32_t sock_migrate_commit = 0;
   Global_Reading_State global_reading_state({ 10, atoi(args[1]), 3*86400, (uint64_t)16*1024*1024*1024 });
   Writing_State writing_state;
 
@@ -322,6 +379,8 @@ int main(int argc, char* args[])
           ++http_200[it->second.arguments[0]>>28];
         else if (it->second.last_answer == WRITE_COMMIT)
           ++sock_write_commit;
+        else if (it->second.last_answer == MIGRATE_COMMIT)
+          ++sock_migrate_commit;
         else
           std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was 0x"<<std::hex<<it->second.last_answer<<'\n';
         available_fd.push_back(it->first);
@@ -361,6 +420,7 @@ int main(int argc, char* args[])
     std::cout<<'\t'<<std::dec<<sum<<'\n';
   }
   std::cout<<"Write commit:\t"<<std::dec<<sock_write_commit<<'\n';
+  std::cout<<"Migrate commit:\t"<<std::dec<<sock_migrate_commit<<'\n';
 
   return 0;
 }
