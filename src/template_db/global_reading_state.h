@@ -28,16 +28,38 @@ static const uint32_t RATE_LIMITED = 0x1f200;
 static const uint32_t QUERY_REJECTED = 0x1f800;
 
 
+#include <fstream>
 struct Socket_To_Client
 {
   uint32_t get_command()
   {
     if (commands_to_send.empty())
       return 0;
-    if (commands_to_send.back() == READ_FINISHED && read_runtime > 0)
+    if (commands_to_send.back() == READ_FINISHED && req_runtime > 0)
     {
-      --read_runtime;
+      --req_runtime;
       return 0;
+    }
+    else if (commands_to_send.back() == WRITE_COMMIT || commands_to_send.back() == MIGRATE_COMMIT)
+    {
+      if (!has_write_semaphore)
+      {
+        std::ifstream lock("shadow.lock");
+        if (lock.is_open())
+        {
+          pid_t locked_pid = 0;
+          lock>>locked_pid;
+          if (locked_pid == client_pid)
+            has_write_semaphore = true;
+        }
+        if (!has_write_semaphore)
+          return commands_to_send.back() == WRITE_COMMIT ? WRITE_START : MIGRATE_START;
+      }
+      if (req_runtime > 0)
+      {
+        --req_runtime;
+        return 0;
+      }
     }
     uint32_t result = commands_to_send.back();
     commands_to_send.pop_back();
@@ -49,7 +71,7 @@ struct Socket_To_Client
     if (arg == REQUEST_READ_AND_IDX)
     {
       commands_to_send = { READ_IDX_FINISHED, 0, 0, 0 };
-      global_runtime += read_runtime;
+      global_runtime += req_runtime;
     }
     else if (arg == READ_IDX_FINISHED)
       commands_to_send = { READ_FINISHED };
@@ -63,10 +85,11 @@ struct Socket_To_Client
 
   std::vector< uint32_t > arguments = { 16777216, 0, 180, 512*1024*1024, 0 };
   std::vector< uint32_t > commands_to_send = { REQUEST_READ_AND_IDX };
-  uint32_t read_runtime = 3;
+  uint32_t req_runtime = 3;
   uint32_t last_answer = 0;
   pid_t client_pid = 0;
   bool is_open = true;
+  bool has_write_semaphore = false;
   static uint64_t global_runtime;
 };
 

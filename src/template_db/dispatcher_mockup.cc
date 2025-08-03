@@ -44,7 +44,7 @@ void trigger_new_requests(
     int fd = dispense_fd(next_fd, available_fd);
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = ++client_token;
-    socket.read_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
+    socket.req_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
     new_connections.push_back(fd);
   }
   
@@ -54,7 +54,7 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = ++client_token_large;
     socket.arguments[3] = 1024*1024*1024;
-    socket.read_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
+    socket.req_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
     new_connections.push_back(fd);
   }
   
@@ -63,7 +63,7 @@ void trigger_new_requests(
     int fd = dispense_fd(next_fd, available_fd);
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 144u*16777216u + j/5 + 100*(tsec%60);
-    socket.read_runtime = 140 + (2*j)%13;
+    socket.req_runtime = 140 + (2*j)%13;
     new_connections.push_back(fd);
   }
   
@@ -84,7 +84,7 @@ void trigger_new_requests(
     int fd = dispense_fd(next_fd, available_fd);
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 160u*16777216u + j/5 + 100*(tsec%5);
-    socket.read_runtime = 160 + (3*j)%17;
+    socket.req_runtime = 160 + (3*j)%17;
     new_connections.push_back(fd);
   }
 
@@ -93,7 +93,7 @@ void trigger_new_requests(
     int fd = dispense_fd(next_fd, available_fd);
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 176u*16777216u + j/5;
-    socket.read_runtime = 200 + (7*j)%11;
+    socket.req_runtime = 200 + (7*j)%11;
     new_connections.push_back(fd);
   }
   
@@ -102,7 +102,7 @@ void trigger_new_requests(
     int fd = dispense_fd(next_fd, available_fd);
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 192u*16777216u + j/5;
-    socket.read_runtime = 1500 + 500*(tsec % 60 / 30);
+    socket.req_runtime = 1500 + 500*(tsec % 60 / 30);
     new_connections.push_back(fd);
   }
   
@@ -113,7 +113,7 @@ void trigger_new_requests(
       int fd = dispense_fd(next_fd, available_fd);
       Socket_To_Client& socket = clients[fd];
       socket.arguments[0] = 224u*16777216u;
-      socket.read_runtime = 500 + k;
+      socket.req_runtime = 500 + k;
       new_connections.push_back(fd);
     }
   }
@@ -126,7 +126,7 @@ void trigger_new_requests(
     socket.arguments[2] = 86400;
     socket.arguments[3] = 0;
     socket.arguments[4] = 1;
-    socket.read_runtime = 399501;
+    socket.req_runtime = 399501;
     new_connections.push_back(fd);
   }
   
@@ -136,9 +136,15 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.client_pid = next_pid++;
     if (tsec % (61*1440) == 2 + 61*720)
+    {
       socket.commands_to_send = { MIGRATE_COMMIT, MIGRATE_START };
+      socket.req_runtime = 30000;
+    }
     else
+    {
       socket.commands_to_send = { WRITE_COMMIT, WRITE_START };
+      socket.req_runtime = 150;
+    }
     new_connections.push_back(fd);
   }
 }
