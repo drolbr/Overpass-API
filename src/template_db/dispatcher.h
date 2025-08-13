@@ -106,7 +106,7 @@ public:
 
   // Returns true if the process is acceptable in terms of server load and quotas
   // In this case it is registered as running
-  int probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space);
+  int probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space, uint32 socket_ratio);
 
   // Unregisters the process
   void remove(pid_t pid);
@@ -168,6 +168,8 @@ public:
 
   void look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid);
   std::vector< int >::size_type num_started_connections() { return started_connections.size(); }
+  
+  uint get_open_socket_limit() const { return open_socket_limit; }
 
 private:
   Unix_Socket socket;

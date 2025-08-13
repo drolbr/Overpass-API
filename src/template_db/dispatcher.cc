@@ -115,10 +115,12 @@ bool Global_Resource_Planner::is_active(pid_t pid) const
 }
 
 
-int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space)
+int Global_Resource_Planner::probe(
+    pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space, uint32 socket_ratio)
 {
   std::map< uint32, std::vector< Pending_Client > >::iterator pending_it = pending.find(client_token);
   Pending_Client* handle = 0;
+  uint timeout_pending = 3 + std::min(12u, socket_ratio);
   uint32 cur_time = time(0);
 
   if (rate_limit > 0 && client_token > 0)
@@ -134,7 +136,8 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
     }
     if (!handle)
     {
-      if (pending_it->second.size() > 2*rate_limit)
+      auto num_reqs_same_client = pending_it->second.size();
+      if (num_reqs_same_client > 2*rate_limit || (timeout_pending < 9 && num_reqs_same_client > rate_limit))
         return Dispatcher::RATE_LIMITED;
 
       pending_it->second.push_back(Pending_Client(pid, cur_time));
@@ -149,7 +152,7 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
     }
     if (token_count >= rate_limit)
     {
-      if (cur_time - handle->first_seen < 15)
+      if (cur_time - handle->first_seen < timeout_pending)
         return 0;
       else
       {
@@ -178,7 +181,7 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
     }
     if (token_count >= rate_limit)
     {
-      if (cur_time - handle->first_seen < 15)
+      if (cur_time - handle->first_seen < timeout_pending)
         return 0;
       else
       {
@@ -198,7 +201,7 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
       global_available_space < global_used_space ||
       max_space > (global_available_space - global_used_space)/2))
   {
-    if (!handle || cur_time - handle->first_seen < 15)
+    if (!handle || cur_time - handle->first_seen < timeout_pending)
       return 0;
     else
       return Dispatcher::QUERY_REJECTED;
@@ -863,7 +866,9 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         if (global_resource_planner.get_allow_duplicate_queries() ||
             hashtable_full_request.probe({ request_full_hash, time(0) + max_allowed_time, client_pid }))
         {
-          command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
+          command = global_resource_planner.probe(
+              client_pid, client_token, max_allowed_time, max_allowed_space,
+              socket.get_open_socket_limit() / (1 + socket.num_started_connections() + connection_per_pid.size()));
           if (command == REQUEST_READ_AND_IDX)
             request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
           else if (command == QUERY_REJECTED)

@@ -225,7 +225,7 @@ void Writing_State::try_write_start(int fd, Socket_To_Client& socket)
   catch (File_Error e)
   {
     confirm_lockfile_or_show_error(e, socket.client_pid);
-    socket.send(WRITE_START);
+    socket.send_and_close(WRITE_START);
     return;
   }
   writing_fd = fd;
@@ -247,7 +247,7 @@ void Writing_State::try_migrate_start(int fd, Socket_To_Client& socket)
   catch (File_Error e)
   {
     confirm_lockfile_or_show_error(e, socket.client_pid);
-    socket.send(MIGRATE_START);
+    socket.send_and_close(MIGRATE_START);
     return;
   }
   writing_fd = fd;
