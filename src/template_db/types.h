@@ -33,6 +33,7 @@
 #define ftruncate64 ftruncate
 #define lseek64 lseek
 #define open64 open
+#define off64_t off_t
 #endif
 
 
