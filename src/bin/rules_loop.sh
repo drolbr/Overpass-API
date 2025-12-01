@@ -22,7 +22,7 @@ if [[ -z $1  ]]; then
   exit 0
 fi
 
-DB_DIR="$(pwd)/$1"
+DB_DIR=$1
 
 EXEC_DIR="$(dirname $0)/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
