@@ -156,6 +156,17 @@ Dispatcher_Stub::Dispatcher_Stub
     else
       client_logger.annotated_log("requesting " + escape_cstr(
           xml_raw.substr(0, MAX_LOG_SIZE/2) + " ... " + xml_raw.substr(xml_raw.size() - MAX_LOG_SIZE/2)));
+
+    if (hash_is_blacklisted(anon_hash, dispatcher_client->get_db_dir()))
+    {
+      std::ostringstream out;
+      out<<"hash_limited "<<std::hex<<anon_hash<<' '<<full_hash<<' '<<std::dec<<client_token<<' '<<client_identifier;
+      client_logger.annotated_log(out.str());
+      delete dispatcher_client;
+      dispatcher_client = 0;
+      throw File_Error(0, "-", "Dispatcher_Client::request_read_and_idx::timeout");
+    }
+
     try
     {
       db_logger.annotated_log("request_read_and_idx() start");
@@ -174,13 +185,6 @@ Dispatcher_Stub::Dispatcher_Stub
         out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
       client_logger.annotated_log(out.str());
       throw;
-    }
-    if (hash_is_blacklisted(anon_hash, dispatcher_client->get_db_dir()))
-    {
-      std::ostringstream out;
-      out<<"hash_limited "<<std::hex<<anon_hash<<' '<<full_hash<<' '<<std::dec<<client_token<<' '<<client_identifier;
-      client_logger.annotated_log(out.str());
-      throw File_Error(0, "-", "Dispatcher_Client::request_read_and_idx::timeout");
     }
     transaction = new Nonsynced_Transaction(Access_Mode::readonly, false, dispatcher_client->get_db_dir(), "");
 
