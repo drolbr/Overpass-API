@@ -89,6 +89,45 @@ void set_limits(uint32 time, uint64 space)
 }
 
 
+namespace
+{
+  uint64_t decode_hex(const std::string& representation)
+  {
+    uint64_t result = 0;
+    std::string::size_type pos = 0;
+
+    while (pos < representation.size())
+    {
+      if (representation[pos] >= '0' && representation[pos] <= '9')
+        result = (result<<4) | (representation[pos] - '0');
+      else if (representation[pos] >= 'a' && representation[pos] <= 'f')
+        result = (result<<4) | (representation[pos] - 'a' + 10);
+      else if (representation[pos] >= 'A' && representation[pos] <= 'F')
+        result = (result<<4) | (representation[pos] - 'A' + 10);
+      ++pos;
+    }
+    return result;
+  }
+}
+
+
+bool hash_is_blacklisted(uint64_t hash, const std::string& db_dir)
+{
+  try
+  {
+    std::ifstream blacklist_f((db_dir + "anon_hash_blacklist").c_str());
+    for (std::string buf; std::getline(blacklist_f, buf); )
+    {
+      if (hash == decode_hex(buf))
+        return true;
+    }
+  }
+  catch(...) {}
+
+  return false;
+}
+
+
 Dispatcher_Stub::Dispatcher_Stub
     (std::string db_dir_, Error_Output* error_output_, const std::string& xml_raw,
      int area_level, uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings)
@@ -136,6 +175,13 @@ Dispatcher_Stub::Dispatcher_Stub
       client_logger.annotated_log(out.str());
       throw;
     }
+    if (hash_is_blacklisted(anon_hash, dispatcher_client->get_db_dir()))
+    {
+      std::ostringstream out;
+      out<<"hash_limited "<<std::hex<<anon_hash<<' '<<full_hash<<' '<<std::dec<<client_token<<' '<<client_identifier;
+      client_logger.annotated_log(out.str());
+      throw File_Error(0, "-", "Dispatcher_Client::request_read_and_idx::timeout");
+    }
     transaction = new Nonsynced_Transaction(Access_Mode::readonly, false, dispatcher_client->get_db_dir(), "");
 
     for (auto i : osm_base_settings().bin_idxs())
@@ -176,15 +222,15 @@ Dispatcher_Stub::Dispatcher_Stub
 
       if (area_level == 1)
       {
-	try
-	{
+        try
+        {
           db_logger.annotated_log("request_read_and_idx() area start");
-	  area_dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space, client_token, full_hash);
+          area_dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space, client_token, full_hash);
           db_logger.annotated_log("request_read_and_idx() area end");
         }
-	catch (const File_Error& e)
-	{
-	  std::ostringstream out;
+        catch (const File_Error& e)
+        {
+          std::ostringstream out;
           if (e.origin == "Dispatcher_Client::request_read_and_idx::rate_limited"
               || e.origin == "Dispatcher_Client::request_read_and_idx::timeout"
               || e.origin == "Dispatcher_Client::request_read_and_idx::duplicate_query")
@@ -192,17 +238,17 @@ Dispatcher_Stub::Dispatcher_Stub
                 <<std::hex<<anon_hash<<' '<<full_hash<<' '<<std::dec<<client_token<<' '<<client_identifier;
           else
             out<<"Area::"<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
-	  client_logger.annotated_log(out.str());
-	  throw;
-	}
-	area_transaction = new Nonsynced_Transaction(
+          client_logger.annotated_log(out.str());
+          throw;
+        }
+        area_transaction = new Nonsynced_Transaction(
             Access_Mode::readonly, false, area_dispatcher_client->get_db_dir(), "");
-	{
-	  std::ifstream version((area_dispatcher_client->get_db_dir() +
-	      "area_version").c_str());
-	  getline(version, area_timestamp);
-	  area_timestamp = de_escape(area_timestamp);
-	}
+        {
+          std::ifstream version((area_dispatcher_client->get_db_dir() +
+              "area_version").c_str());
+          getline(version, area_timestamp);
+          area_timestamp = de_escape(area_timestamp);
+        }
       }
       else if (area_level == 2)
       {

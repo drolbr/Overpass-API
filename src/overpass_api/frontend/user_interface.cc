@@ -291,22 +291,25 @@ uint32 parse_ipv4_address(const std::string ip_addr)
 }
 
 
-int decode_hex(std::string representation)
+namespace
 {
-  int result = 0;
-  std::string::size_type pos = 0;
-
-  while (pos < representation.size())
+  int decode_hex(const std::string& representation)
   {
-    if (representation[pos] >= '0' && representation[pos] <= '9')
-      result = (result<<4) | (representation[pos] - '0');
-    else if (representation[pos] >= 'a' && representation[pos] <= 'f')
-      result = (result<<4) | (representation[pos] - 'a' + 10);
-    else if (representation[pos] >= 'A' && representation[pos] <= 'F')
-      result = (result<<4) | (representation[pos] - 'A' + 10);
-    ++pos;
+    int result = 0;
+    std::string::size_type pos = 0;
+
+    while (pos < representation.size())
+    {
+      if (representation[pos] >= '0' && representation[pos] <= '9')
+        result = (result<<4) | (representation[pos] - '0');
+      else if (representation[pos] >= 'a' && representation[pos] <= 'f')
+        result = (result<<4) | (representation[pos] - 'a' + 10);
+      else if (representation[pos] >= 'A' && representation[pos] <= 'F')
+        result = (result<<4) | (representation[pos] - 'A' + 10);
+      ++pos;
+    }
+    return result;
   }
-  return result;
 }
 
 
