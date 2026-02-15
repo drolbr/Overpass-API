@@ -139,6 +139,7 @@ void trigger_new_requests(
     {
       socket.commands_to_send = { MIGRATE_COMMIT, MIGRATE_START };
       socket.req_runtime = 30000;
+      std::cout<<"Triggered migrate: will replace one and displace four write cycles.\n";
     }
     else
     {
@@ -215,7 +216,7 @@ void Writing_State::try_write_start(int fd, Socket_To_Client& socket)
 {
   try
   {
-    Raw_File shadow_file("shadow.lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start:1");
+    Raw_File shadow_file("shadow.lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start::1");
 
 //     transaction_insulator.copy_mains_to_shadows();
 //     transaction_insulator.write_index_of_empty_blocks();
@@ -239,7 +240,7 @@ void Writing_State::try_migrate_start(int fd, Socket_To_Client& socket)
 {
   try
   {
-    Raw_File shadow_file("shadow.lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start:1");
+    Raw_File shadow_file("shadow.lock", O_RDWR|O_CREAT|O_EXCL, S_666, "migrate_start::1");
 
 //     if (logger)
 //       logger->migrate_start(pid, transaction_insulator.registered_pids());
@@ -290,7 +291,7 @@ void Writing_State::try_migrate_commit(Socket_To_Client& socket)
 //     logger->migrate_commit(pid);
   try
   {
-    Raw_File shadow_file("shadow", O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
+    Raw_File shadow_file("shadow", O_RDWR|O_CREAT|O_EXCL, S_666, "migrate_commit:1");
 //     transaction_insulator.move_migrated_files_in_place();
   }
   catch (File_Error e)
@@ -337,16 +338,18 @@ int main(int argc, char* args[])
   for (time_t tsec = 1080000; tsec < 1166400; ++tsec)
   {
     if (tsec % 3600 == 0)
-      std::cout<<"Nominal time: "<<tsec/3600<<
+      std::cout<<"Nominal time: "<<std::dec<<tsec/3600<<
           ", Avg_Time "<<global_reading_state.get_statistics().average_used_time()<<
           ", Avg_Size "<<global_reading_state.get_statistics().average_used_size()<<
           ", Total_Runtime "<<Socket_To_Client::global_runtime<<'\n';
     
     for (uint32_t j = 0; j < 100; ++j)
     {
+      // Scaffolding
       trigger_new_requests(
           clients, new_connections, next_fd, available_fd, next_pid, client_token, client_token_large, tsec, j);
-      
+      // Everything else in the loop is actual dispatcher work
+
       global_reading_state.poll_reading_requests(clients, tsec);
       writing_state.poll_writing_process(clients, global_reading_state.is_reading_idx());
       
@@ -387,6 +390,10 @@ int main(int argc, char* args[])
           ++sock_write_commit;
         else if (it->second.last_answer == MIGRATE_COMMIT)
           ++sock_migrate_commit;
+        else if (it->second.last_answer == WRITE_START)
+          std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was WRITE_START"<<'\n';
+        else if (it->second.last_answer == MIGRATE_START)
+          std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was MIGRATE_START"<<'\n';
         else
           std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was 0x"<<std::hex<<it->second.last_answer<<'\n';
         available_fd.push_back(it->first);

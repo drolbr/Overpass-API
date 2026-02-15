@@ -777,7 +777,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     if (idle_counter > 0)
     {
       if (logger)
-	logger->idle_counter(idle_counter);
+        logger->idle_counter(idle_counter);
       idle_counter = 0;
     }
 
@@ -838,9 +838,9 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == READ_IDX_FINISHED)
       {
-	read_idx_finished(client_pid);
+        read_idx_finished(client_pid);
         if (connection_per_pid.get(client_pid) != 0)
-	  connection_per_pid.get(client_pid)->send_result(command);
+          connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
@@ -886,42 +886,42 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == PURGE)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
-	if (arguments.size() < 1)
+        std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
+        if (arguments.size() < 1)
         {
           connection_per_pid.get(client_pid)->clear_state();
-	  continue;
+          continue;
         }
-	uint32 target_pid = arguments[0];
+        uint32 target_pid = arguments[0];
 
-	read_aborted(target_pid);
+        read_aborted(target_pid);
         if (connection_per_pid.get(target_pid) != 0)
         {
-	  connection_per_pid.get(target_pid)->send_result(READ_FINISHED);
-	  connection_per_pid.erase(target_pid);
+          connection_per_pid.get(target_pid)->send_result(READ_FINISHED);
+          connection_per_pid.erase(target_pid);
         }
 
-	connection_per_pid.get(client_pid)->send_result(command);
+        connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == QUERY_BY_TOKEN)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
-	if (arguments.size() < 1)
+        std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
+        if (arguments.size() < 1)
         {
           connection_per_pid.get(client_pid)->clear_state();
-	  continue;
+          continue;
         }
-	uint32 target_token = arguments[0];
+        uint32 target_token = arguments[0];
 
-	pid_t target_pid = 0;
+        pid_t target_pid = 0;
         for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
-	    it != global_resource_planner.get_active().end(); ++it)
-	{
-	  if (it->client_token == target_token)
-	    target_pid = it->client_pid;
-	}
+            it != global_resource_planner.get_active().end(); ++it)
+        {
+          if (it->client_token == target_token)
+            target_pid = it->client_pid;
+        }
 
-	connection_per_pid.get(client_pid)->send_result(target_pid);
+        connection_per_pid.get(client_pid)->send_result(target_pid);
       }
       else if (command == QUERY_MY_STATUS)
       {
@@ -970,22 +970,22 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == SET_GLOBAL_LIMITS)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(6);
-	if (arguments.size() < 6)
+        std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(6);
+        if (arguments.size() < 6)
         {
           connection_per_pid.get(client_pid)->clear_state();
-	  continue;
+          continue;
         }
 
-	uint64 new_total_available_space = (((uint64)arguments[1])<<32 | arguments[0]);
-	uint64 new_total_available_time_units = (((uint64)arguments[3])<<32 | arguments[2]);
+        uint64 new_total_available_space = (((uint64)arguments[1])<<32 | arguments[0]);
+        uint64 new_total_available_time_units = (((uint64)arguments[3])<<32 | arguments[2]);
         int32_t rate_limit_ = arguments[4];
         int32_t bit_limits = arguments[5];
 
-	if (new_total_available_space > 0)
-	  global_resource_planner.set_total_available_space(new_total_available_space);
-	if (new_total_available_time_units > 0)
-	  global_resource_planner.set_total_available_time(new_total_available_time_units);
+        if (new_total_available_space > 0)
+          global_resource_planner.set_total_available_space(new_total_available_space);
+        if (new_total_available_time_units > 0)
+          global_resource_planner.set_total_available_time(new_total_available_time_units);
         if (rate_limit_ > -1)
           global_resource_planner.set_rate_limit(rate_limit_);
         if (bit_limits & 0x2)
@@ -993,7 +993,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         if (bit_limits & 0x8)
           global_resource_planner.set_exempt_client_zero(bit_limits & 0x4);
 
-	connection_per_pid.get(client_pid)->send_result(command);
+        connection_per_pid.get(client_pid)->send_result(command);
       }
       else
         connection_per_pid.get(client_pid)->clear_state();
