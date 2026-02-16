@@ -10,6 +10,7 @@
 #include <vector>
 
 
+static const uint32_t TERMINATE = 0x100;
 static const uint32_t HANGUP = 0x300;
 
 static const uint32_t REQUEST_READ_AND_IDX = 0x20106;

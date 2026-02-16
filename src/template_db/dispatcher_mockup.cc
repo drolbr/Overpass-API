@@ -117,6 +117,15 @@ void trigger_new_requests(
       new_connections.push_back(fd);
     }
   }
+
+  if (j == 0 && tsec == 1166400)
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.client_pid = next_pid++;
+    socket.commands_to_send = { TERMINATE };
+    new_connections.push_back(fd);
+  }
   
   if (tsec % 18000 == 305 && j == 0) // Area recreation loop
   {
@@ -148,6 +157,24 @@ void trigger_new_requests(
     }
     new_connections.push_back(fd);
   }
+
+  if (tsec % (61*720) == 32 + 360*61 && j == 50) // Rollback test
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.client_pid = next_pid++;
+    if (tsec % (61*1440) == 32 + 360*61)
+    {
+      socket.commands_to_send = { WRITE_ROLLBACK, WRITE_START };
+      socket.req_runtime = 50;
+    }
+    else
+    {
+      socket.commands_to_send = { MIGRATE_ROLLBACK, MIGRATE_START };
+      socket.req_runtime = 50;
+    }
+    new_connections.push_back(fd);
+  }
 }
 
 
@@ -161,6 +188,14 @@ struct Writing_State
     auto command = socket.get_command();
     if (command == WRITE_COMMIT || command == MIGRATE_COMMIT)
       pending_commit = true;
+    else if (command == WRITE_ROLLBACK || command == MIGRATE_ROLLBACK || command == HANGUP)
+    {
+      if (is_migrate)
+         migrate_rollback(command == HANGUP ? nullptr : &socket);
+      else
+        write_rollback(command == HANGUP ? nullptr : &socket);
+    }
+
     if (pending_commit && !is_reading_idx)
     {
       if (is_migrate)
@@ -185,6 +220,8 @@ private:
   
   void try_write_commit(Socket_To_Client& socket);
   void try_migrate_commit(Socket_To_Client& socket);
+  void write_rollback(Socket_To_Client* socket);
+  void migrate_rollback(Socket_To_Client* socket);
 
   void try_write_pid_to_lockfile(pid_t pid)
   {
@@ -312,6 +349,35 @@ void Writing_State::try_migrate_commit(Socket_To_Client& socket)
 }
 
 
+
+void Writing_State::write_rollback(Socket_To_Client* socket)
+{
+  //   if (logger)
+  //     logger->write_rollback(pid);
+
+  //   transaction_insulator.remove_shadows();
+  remove("shadow.lock");
+
+  if (socket)
+    socket->send_and_close(WRITE_ROLLBACK);
+  writing_fd = 0;
+}
+
+
+void Writing_State::migrate_rollback(Socket_To_Client* socket)
+{
+  //   if (logger)
+  //     logger->migrate_rollback(pid);
+
+  //   transaction_insulator.remove_migrated();
+  remove("shadow.lock");
+
+  if (socket)
+    socket->send_and_close(MIGRATE_ROLLBACK);
+  writing_fd = 0;
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 2)
@@ -332,10 +398,13 @@ int main(int argc, char* args[])
   std::vector< uint32_t > http_200(16, 0);
   uint32_t sock_write_commit = 0;
   uint32_t sock_migrate_commit = 0;
+  uint32_t sock_write_rollback = 0;
+  uint32_t sock_migrate_rollback = 0;
   Global_Reading_State global_reading_state({ 10, atoi(args[1]), 3*86400, (uint64_t)16*1024*1024*1024 });
   Writing_State writing_state;
+  bool terminate = false;
 
-  for (time_t tsec = 1080000; tsec < 1166400; ++tsec)
+  for (time_t tsec = 1080000; tsec <= 1166400; ++tsec)
   {
     if (tsec % 3600 == 0)
       std::cout<<"Nominal time: "<<std::dec<<tsec/3600<<
@@ -363,10 +432,18 @@ int main(int argc, char* args[])
           writing_state.try_write_start(fd, socket);
         else if (command == MIGRATE_START)
           writing_state.try_migrate_start(fd, socket);
+        else if (command == TERMINATE)
+        {
+          terminate = true;
+          socket.send(command);
+          break;
+        }
         else
           std::cout<<"Request with invalid command dropped: 0x"<<std::hex<<command<<'\n';
       }
       new_connections.clear();
+      if (terminate)
+        break;
 
       global_reading_state.grant_and_purge(clients, writing_state.has_pending_commit(), tsec);
     }
@@ -390,6 +467,10 @@ int main(int argc, char* args[])
           ++sock_write_commit;
         else if (it->second.last_answer == MIGRATE_COMMIT)
           ++sock_migrate_commit;
+        else if (it->second.last_answer == WRITE_ROLLBACK)
+          ++sock_write_rollback;
+        else if (it->second.last_answer == MIGRATE_ROLLBACK)
+          ++sock_migrate_rollback;
         else if (it->second.last_answer == WRITE_START)
           std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was WRITE_START"<<'\n';
         else if (it->second.last_answer == MIGRATE_START)
@@ -400,6 +481,8 @@ int main(int argc, char* args[])
         it = clients.erase(it);
       }
     }
+    if (terminate)
+      break;
   }
 
   {
@@ -434,6 +517,8 @@ int main(int argc, char* args[])
   }
   std::cout<<"Write commit:\t"<<std::dec<<sock_write_commit<<'\n';
   std::cout<<"Migrate commit:\t"<<std::dec<<sock_migrate_commit<<'\n';
+  std::cout<<"Write rollback:\t"<<std::dec<<sock_write_rollback<<'\n';
+  std::cout<<"Migrate rollback:\t"<<std::dec<<sock_migrate_rollback<<'\n';
 
   return 0;
 }
