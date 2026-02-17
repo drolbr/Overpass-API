@@ -103,9 +103,20 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 192u*16777216u + j/5;
     socket.req_runtime = 1500 + 500*(tsec % 60 / 30);
+    socket.client_pid = tsec / 30 + 1920000000;
     new_connections.push_back(fd);
   }
-  
+
+  if (j % 100 == 81 && tsec % 30 == 12)
+  {
+    int fd = dispense_fd(next_fd, available_fd);
+    Socket_To_Client& socket = clients[fd];
+    socket.commands_to_send = { QUERY_BY_TOKEN };
+    socket.arguments[0] = 192u*16777216u + j/5 - 8;
+    socket.client_pid = 1920000000;
+    new_connections.push_back(fd);
+  }
+
   if (tsec % 3600 == 471) // Binge client
   {
     for (uint32_t k = 0; k < 5; ++k)
@@ -400,7 +411,8 @@ int main(int argc, char* args[])
   uint32_t sock_migrate_commit = 0;
   uint32_t sock_write_rollback = 0;
   uint32_t sock_migrate_rollback = 0;
-  Global_Reading_State global_reading_state({ 10, atoi(args[1]), 3*86400, (uint64_t)16*1024*1024*1024 });
+  uint32_t no_query_found_by_token = 0;
+  Global_Reading_State global_reading_state({ 10, (uint32_t)atoi(args[1]), 3*86400, (uint64_t)16*1024*1024*1024 });
   Writing_State writing_state;
   bool terminate = false;
 
@@ -435,8 +447,21 @@ int main(int argc, char* args[])
         else if (command == TERMINATE)
         {
           terminate = true;
-          socket.send(command);
+          socket.send_and_close(command);
           break;
+        }
+        else if (command == QUERY_BY_TOKEN)
+        {
+          std::vector< uint32_t > args = socket.get_arguments(2);
+          if (args.size() < 2)
+            socket.send_and_close(0);
+          const Client_State* client_state = global_reading_state.get_client_state(
+              ((uint64_t)args[0] | ((uint64_t)args[1]<<32)), tsec);
+          int target_fd = (client_state && !client_state->reading.empty()) ? client_state->reading.back() : 0;
+          if (target_fd > 0 && (decltype(clients.size()))target_fd < clients.size())
+            socket.send_and_close(clients[target_fd].client_pid);
+          else
+            socket.send_and_close(0);
         }
         else
           std::cout<<"Request with invalid command dropped: 0x"<<std::hex<<command<<'\n';
@@ -455,7 +480,7 @@ int main(int argc, char* args[])
         ++it;
       else
       {
-        if (!it->second.last_answer)
+        if (!it->second.is_answered)
           std::cout<<"Answer lost for fd "<<it->first<<'\n';
         else if (it->second.last_answer == RATE_LIMITED)
           ++http_429[it->second.arguments[0]>>28];
@@ -475,6 +500,13 @@ int main(int argc, char* args[])
           std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was WRITE_START"<<'\n';
         else if (it->second.last_answer == MIGRATE_START)
           std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was MIGRATE_START"<<'\n';
+        else if (it->second.client_pid == 1920000000)
+        {
+          if (it->second.last_answer)
+            std::cout<<"Found by token: pid "<<std::dec<<it->second.last_answer<<'\n';
+          else
+            ++no_query_found_by_token;
+        }
         else
           std::cout<<"Last answer for fd "<<std::dec<<it->first<<" was 0x"<<std::hex<<it->second.last_answer<<'\n';
         available_fd.push_back(it->first);
@@ -519,6 +551,7 @@ int main(int argc, char* args[])
   std::cout<<"Migrate commit:\t"<<std::dec<<sock_migrate_commit<<'\n';
   std::cout<<"Write rollback:\t"<<std::dec<<sock_write_rollback<<'\n';
   std::cout<<"Migrate rollback:\t"<<std::dec<<sock_migrate_rollback<<'\n';
+  std::cout<<"No query found by token:\t"<<std::dec<<no_query_found_by_token<<'\n';
 
   return 0;
 }

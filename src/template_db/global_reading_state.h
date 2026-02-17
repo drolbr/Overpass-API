@@ -12,6 +12,7 @@
 
 static const uint32_t TERMINATE = 0x100;
 static const uint32_t HANGUP = 0x300;
+static const uint32_t QUERY_BY_TOKEN = 0x1601;
 
 static const uint32_t REQUEST_READ_AND_IDX = 0x20106;
 static const uint32_t READ_IDX_FINISHED = 0x20200;
@@ -77,10 +78,12 @@ struct Socket_To_Client
     else if (arg == READ_IDX_FINISHED)
       commands_to_send = { READ_FINISHED };
     last_answer = arg;
+    is_answered = true;
   }
   void send_and_close(uint32_t arg)
   {
     last_answer = arg;
+    is_answered = true;
     is_open = false;
   }
 
@@ -90,6 +93,7 @@ struct Socket_To_Client
   uint32_t last_answer = 0;
   pid_t client_pid = 0;
   bool is_open = true;
+  bool is_answered = false;
   bool has_write_semaphore = false;
   static uint64_t global_runtime;
 };
