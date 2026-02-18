@@ -1,5 +1,6 @@
-
 #include "global_reading_state.h"
+
+#include "dispatcher_logger.h"
 
 
 void Global_Reading_State::Statistics::measure(
@@ -80,7 +81,8 @@ void Global_Reading_State::request_read_and_idx(int fd, time_t now, Socket_To_Cl
 }
 
 
-bool Global_Reading_State::poll_reading_requests(std::unordered_map< int, Socket_To_Client >& clients, time_t now)
+bool Global_Reading_State::poll_reading_requests(
+    std::unordered_map< int, Socket_To_Client >& clients, time_t now, const Dispatcher_Reading_Logger& logger)
 {
   bool some_state_changed = false;
   
@@ -92,6 +94,7 @@ bool Global_Reading_State::poll_reading_requests(std::unordered_map< int, Socket
     uint32_t command = socket.get_command();
     if (command == READ_IDX_FINISHED)
     {
+      logger.read_idx_finished(socket.client_pid);
       socket.send(command);
       reading_idx.erase(it->first);
       some_state_changed = true;
@@ -99,6 +102,7 @@ bool Global_Reading_State::poll_reading_requests(std::unordered_map< int, Socket
     else if (command == READ_FINISHED)
     {
       finish_request(*it, now);
+      logger.read_finished(socket.client_pid);
       socket.send_and_close(command);
       reading_idx.erase(it->first);
       it = reading.erase(it);
@@ -108,6 +112,7 @@ bool Global_Reading_State::poll_reading_requests(std::unordered_map< int, Socket
     else if (command == HANGUP)
     {
       finish_request(*it, now);
+      logger.read_aborted(socket.client_pid);
       reading_idx.erase(it->first);
       it = reading.erase(it);
       some_state_changed = true;

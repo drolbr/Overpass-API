@@ -1,4 +1,5 @@
 
+#include "dispatcher_logger.h"
 #include "global_reading_state.h"
 #include "types.h"
 
@@ -107,12 +108,12 @@ void trigger_new_requests(
     new_connections.push_back(fd);
   }
 
-  if (j % 100 == 81 && tsec % 30 == 12)
+  if (j % 100 == 31 && tsec % 30 == 26)
   {
     int fd = dispense_fd(next_fd, available_fd);
     Socket_To_Client& socket = clients[fd];
     socket.commands_to_send = { QUERY_BY_TOKEN };
-    socket.arguments[0] = 192u*16777216u + j/5 - 8;
+    socket.arguments[0] = 192u*16777216u + j/5 + 2;
     socket.client_pid = 1920000000;
     new_connections.push_back(fd);
   }
@@ -416,8 +417,12 @@ int main(int argc, char* args[])
   Writing_State writing_state;
   bool terminate = false;
 
+  remove("database.log");
+  Logger logger(1080000, "./", "database.log");
+
   for (time_t tsec = 1080000; tsec <= 1166400; ++tsec)
   {
+    logger.set_now(tsec);
     if (tsec % 3600 == 0)
       std::cout<<"Nominal time: "<<std::dec<<tsec/3600<<
           ", Avg_Time "<<global_reading_state.get_statistics().average_used_time()<<
@@ -431,7 +436,7 @@ int main(int argc, char* args[])
           clients, new_connections, next_fd, available_fd, next_pid, client_token, client_token_large, tsec, j);
       // Everything else in the loop is actual dispatcher work
 
-      global_reading_state.poll_reading_requests(clients, tsec);
+      global_reading_state.poll_reading_requests(clients, tsec,  Dispatcher_Reading_Logger(logger));
       writing_state.poll_writing_process(clients, global_reading_state.is_reading_idx());
       
       for (int fd : new_connections)
@@ -458,7 +463,7 @@ int main(int argc, char* args[])
           const Client_State* client_state = global_reading_state.get_client_state(
               ((uint64_t)args[0] | ((uint64_t)args[1]<<32)), tsec);
           int target_fd = (client_state && !client_state->reading.empty()) ? client_state->reading.back() : 0;
-          if (target_fd > 0 && (decltype(clients.size()))target_fd < clients.size())
+          if (target_fd > 0)
             socket.send_and_close(clients[target_fd].client_pid);
           else
             socket.send_and_close(0);

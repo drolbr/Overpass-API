@@ -99,6 +99,8 @@ struct Socket_To_Client
 };
 
 
+struct Dispatcher_Reading_Logger;
+
 // started_connections: accept, then wait for pid, one per round
 
 struct Global_Reading_State
@@ -128,7 +130,8 @@ struct Global_Reading_State
   Global_Reading_State(Resource_State global_state_)
     : global_state(global_state_), request_queue(client_register) {}
 
-  bool poll_reading_requests(std::unordered_map< int, Socket_To_Client >& clients, time_t now);
+  bool poll_reading_requests(
+      std::unordered_map< int, Socket_To_Client >& clients, time_t now,  const Dispatcher_Reading_Logger& logger);
   void request_read_and_idx(int fd, time_t now, Socket_To_Client& socket);
   void grant_and_purge(std::unordered_map< int, Socket_To_Client >& clients, bool pending_commit, time_t now);
 
