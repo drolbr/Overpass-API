@@ -46,6 +46,7 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = ++client_token;
     socket.req_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
+    socket.client_pid = client_token;
     new_connections.push_back(fd);
   }
   
@@ -56,6 +57,7 @@ void trigger_new_requests(
     socket.arguments[0] = ++client_token_large;
     socket.arguments[3] = 1024*1024*1024;
     socket.req_runtime = (client_token % 3) + 10*std::max(5*client_token % 61, (uint32_t)40) - 397;
+    socket.client_pid = client_token_large;
     new_connections.push_back(fd);
   }
   
@@ -65,6 +67,7 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 144u*16777216u + j/5 + 100*(tsec%60);
     socket.req_runtime = 140 + (2*j)%13;
+    socket.client_pid = 1440000000u + tsec*20 + j/5;
     new_connections.push_back(fd);
   }
   
@@ -86,6 +89,7 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 160u*16777216u + j/5 + 100*(tsec%5);
     socket.req_runtime = 160 + (3*j)%17;
+    socket.client_pid = 1600000000u + tsec*20 + j/5;
     new_connections.push_back(fd);
   }
 
@@ -95,6 +99,7 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 176u*16777216u + j/5;
     socket.req_runtime = 200 + (7*j)%11;
+    socket.client_pid = 2000000000u + tsec*20 + j/5;
     new_connections.push_back(fd);
   }
   
@@ -104,7 +109,7 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.arguments[0] = 192u*16777216u + j/5;
     socket.req_runtime = 1500 + 500*(tsec % 60 / 30);
-    socket.client_pid = tsec / 30 + 1920000000;
+    socket.client_pid = tsec / 30 + 1920000000u;
     new_connections.push_back(fd);
   }
 
@@ -114,7 +119,7 @@ void trigger_new_requests(
     Socket_To_Client& socket = clients[fd];
     socket.commands_to_send = { QUERY_BY_TOKEN };
     socket.arguments[0] = 192u*16777216u + j/5 + 2;
-    socket.client_pid = 1920000000;
+    socket.client_pid = 1920000000u;
     new_connections.push_back(fd);
   }
 
@@ -436,7 +441,8 @@ int main(int argc, char* args[])
           clients, new_connections, next_fd, available_fd, next_pid, client_token, client_token_large, tsec, j);
       // Everything else in the loop is actual dispatcher work
 
-      global_reading_state.poll_reading_requests(clients, tsec,  Dispatcher_Reading_Logger(logger));
+      Dispatcher_Reading_Logger reading_logger(logger);
+      global_reading_state.poll_reading_requests(clients, tsec,  reading_logger);
       writing_state.poll_writing_process(clients, global_reading_state.is_reading_idx());
       
       for (int fd : new_connections)
@@ -444,7 +450,7 @@ int main(int argc, char* args[])
         Socket_To_Client& socket = clients[fd];
         auto command = socket.get_command();
         if (command == REQUEST_READ_AND_IDX)
-          global_reading_state.request_read_and_idx(fd, tsec, socket);
+          global_reading_state.request_read_and_idx(fd, tsec, socket, reading_logger);
         else if (command == WRITE_START)
           writing_state.try_write_start(fd, socket);
         else if (command == MIGRATE_START)
@@ -475,7 +481,7 @@ int main(int argc, char* args[])
       if (terminate)
         break;
 
-      global_reading_state.grant_and_purge(clients, writing_state.has_pending_commit(), tsec);
+      global_reading_state.grant_and_purge(clients, writing_state.has_pending_commit(), tsec, reading_logger);
     }
 
     auto it = clients.begin();
@@ -508,7 +514,7 @@ int main(int argc, char* args[])
         else if (it->second.client_pid == 1920000000)
         {
           if (it->second.last_answer)
-            std::cout<<"Found by token: pid "<<std::dec<<it->second.last_answer<<'\n';
+            logger.annotated_log("Found by token: pid " + std::to_string(it->second.last_answer));
           else
             ++no_query_found_by_token;
         }

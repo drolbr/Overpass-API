@@ -132,8 +132,10 @@ struct Global_Reading_State
 
   bool poll_reading_requests(
       std::unordered_map< int, Socket_To_Client >& clients, time_t now,  const Dispatcher_Reading_Logger& logger);
-  void request_read_and_idx(int fd, time_t now, Socket_To_Client& socket);
-  void grant_and_purge(std::unordered_map< int, Socket_To_Client >& clients, bool pending_commit, time_t now);
+  void request_read_and_idx(int fd, time_t now, Socket_To_Client& socket, const Dispatcher_Reading_Logger& logger);
+  void grant_and_purge(
+      std::unordered_map< int, Socket_To_Client >& clients, bool pending_commit, time_t now,
+      const Dispatcher_Reading_Logger& logger);
 
   const Client_State* get_client_state(Client_Token t, time_t now)
   { return client_register.get_client_state(t, now); }

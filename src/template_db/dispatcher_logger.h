@@ -25,7 +25,8 @@ struct Dispatcher_Reading_Logger
 {
   Dispatcher_Reading_Logger(Logger& logger_) : logger(&logger_) {}
 
-  void request_read_and_idx(pid_t pid, uint32_t max_allowed_time, uint64_t max_allowed_space) const;
+  void request_enqueued(pid_t pid, uint32_t max_allowed_time, uint64_t max_allowed_space) const;
+  void read_idx_started(pid_t pid) const;
   void read_idx_finished(pid_t pid) const;
   void read_finished(pid_t pid) const;
   void read_aborted(pid_t pid) const;

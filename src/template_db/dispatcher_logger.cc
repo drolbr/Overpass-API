@@ -5,12 +5,20 @@
 #include <sstream>
 
 
-void Dispatcher_Reading_Logger::request_read_and_idx(
+void Dispatcher_Reading_Logger::request_enqueued(
     pid_t pid, uint32_t max_allowed_time, uint64_t max_allowed_space) const
 {
   std::ostringstream out;
-  out<<"request_read_and_idx of process "<<pid<<" timeout "<<max_allowed_time
+  out<<"request_enqueued "<<pid<<" timeout "<<max_allowed_time
   <<" space "<<max_allowed_space<<'.';
+  logger->annotated_log(out.str());
+}
+
+
+void Dispatcher_Reading_Logger::read_idx_started(pid_t pid) const
+{
+  std::ostringstream out;
+  out<<"read_idx_started "<<pid<<'.';
   logger->annotated_log(out.str());
 }
 
@@ -35,14 +43,6 @@ void Dispatcher_Reading_Logger::read_aborted(pid_t pid) const
 {
   std::ostringstream out;
   out<<"read_aborted of process "<<pid<<'.';
-  logger->annotated_log(out.str());
-}
-
-
-void Dispatcher_Reading_Logger::purge(pid_t pid) const
-{
-  std::ostringstream out;
-  out<<"purge of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
 

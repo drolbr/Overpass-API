@@ -66,16 +66,23 @@ uint64_t Global_Reading_State::Statistics::average_used_size() const
 }
 
 
-void Global_Reading_State::request_read_and_idx(int fd, time_t now, Socket_To_Client& socket)
+void Global_Reading_State::request_read_and_idx(
+    int fd, time_t now, Socket_To_Client& socket, const Dispatcher_Reading_Logger& logger)
 {
   std::vector< uint32_t > args = socket.get_arguments(5);
   if (args.size() < 5)
+  {
+    logger.arguments_mismatch(socket.client_pid, 5, args.size());
     socket.send_and_close(PROTOCOL_INVALID);
+  }
 
   Request_State request_state{
       ((uint64_t)args[0] | ((uint64_t)args[1]<<32)), args[2], ((uint64_t)args[3] | ((uint64_t)args[4]<<32)) };
   if (request_queue.accept(fd, request_state, global_state.rate_limit, now))
+  {
+    logger.request_enqueued(socket.client_pid, request_state.maxtime, request_state.maxsize);
     queued.insert({ fd, request_state });
+  }
   else
     socket.send_and_close(RATE_LIMITED);
 }
@@ -126,7 +133,8 @@ bool Global_Reading_State::poll_reading_requests(
 
 
 void Global_Reading_State::grant_and_purge(
-    std::unordered_map< int, Socket_To_Client >& clients, bool pending_commit, time_t now)
+    std::unordered_map< int, Socket_To_Client >& clients, bool pending_commit, time_t now,
+    const Dispatcher_Reading_Logger& logger)
 {
   if (!pending_commit)
   {
@@ -140,8 +148,10 @@ void Global_Reading_State::grant_and_purge(
       queued.erase(fd);
       reading_it->second.start_time = now;
 
+      Socket_To_Client& socket = clients[fd];
+      logger.read_idx_started(socket.client_pid);
       reading_idx.insert(fd);
-      clients[fd].send(REQUEST_READ_AND_IDX);
+      socket.send(REQUEST_READ_AND_IDX);
     }
   }
 
