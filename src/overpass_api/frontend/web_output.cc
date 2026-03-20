@@ -102,7 +102,7 @@ void Web_Output::runtime_error(const std::string& error)
   {
     std::ostringstream out;
     out<<"runtime error: "<<error;
-    display_error(out.str(), 200);
+    display_error(out.str(), 500);
   }
 }
 
