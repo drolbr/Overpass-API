@@ -787,25 +787,56 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
 class Mmap
 {
 public:
+  // Backed by pread into a heap buffer rather than mmap+munmap. Each
+  // compressed block is read once, decompressed into a separate buffer,
+  // and never revisited -- the memory mapping provides no reuse benefit.
+  //
+  // On macOS every mmap syscall takes ~0.25 ms of kernel overhead
+  // (virtual-range allocation, page-table setup, fault-in, teardown on
+  // munmap). File_Blocks::read_block_ creates one Mmap per compressed
+  // block; across thousands of block reads per minute-diff that
+  // overhead dominates wall time -- profiling showed 97% of
+  // update_from_dir's on-CPU samples inside __mmap.
+  //
+  // Replacing with pread keeps ptr() pointer-compatible with every
+  // callsite (Zlib/LZ4 Inflate) and is no slower on Linux, where pread
+  // hits the same page cache that mmap would have.
   Mmap(int fd, off_t offset, size_t length_, const std::string& file_name, const std::string& origin)
-      : addr(0), length(length_)
+      : buffer(0), length(length_)
   {
     if (length > 0)
-      addr = mmap(0, length, PROT_READ, MAP_PRIVATE, fd, offset);
-    if (addr == (void*)(-1))
-      throw File_Error(errno, file_name, origin);
-    posix_madvise(addr, length, POSIX_MADV_WILLNEED);
+    {
+      buffer = new uint8_t[length];
+      size_t got = 0;
+      while (got < length)
+      {
+        ssize_t n = pread(fd, buffer + got, length - got, offset + got);
+        if (n < 0)
+        {
+          int err = errno;
+          delete[] buffer;
+          buffer = 0;
+          throw File_Error(err, file_name, origin);
+        }
+        if (n == 0)
+        {
+          delete[] buffer;
+          buffer = 0;
+          throw File_Error(0, file_name, origin);
+        }
+        got += (size_t)n;
+      }
+    }
   }
   ~Mmap()
-  { 
-    if (addr)
-      munmap(addr, length);
+  {
+    delete[] buffer;
   }
-  
-  uint64* ptr() { return (uint64*)addr; }
-  
+
+  uint64* ptr() { return (uint64*)buffer; }
+
 private:
-  void* addr;
+  uint8_t* buffer;
   size_t length;
 };
 
