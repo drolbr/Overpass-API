@@ -120,7 +120,9 @@ void Unix_Socket::open(const std::string& socket_name)
   else
     throw File_Error(0, socket_name, "Unix_Socket::3");
 #ifdef __APPLE__
-  local.sun_len = socket_name.size() + 1;
+  // SUN_LEN = sizeof(sockaddr_un) - sizeof(sun_path) + strlen(sun_path).
+  // On Darwin this is strlen(path) + 2 (1 byte sun_len + 1 byte sun_family).
+  local.sun_len = SUN_LEN(&local);
 #endif
 
   if (max_num_reading_processes > 0)
