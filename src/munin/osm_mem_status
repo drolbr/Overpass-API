@@ -1,15 +1,128 @@
 #!/usr/bin/env bash
+#
+# Munin plugin: Overpass dispatcher claimed memory, from dispatcher status.
+#
+# Fields:
+#   osm_mem_current    current claimed space for the osm-base dispatcher
+#   osm_mem_status     query-weighted average claimed space for the osm-base dispatcher
+#   osm_areas_current  current claimed space for the areas dispatcher
+#   osm_areas_status   query-weighted average claimed space for the areas dispatcher
+#
+# Place this file in the munin plugin library (e.g., /usr/share/munin/plugins)
+# and symlink it into /etc/munin/plugins. Supply the Overpass binary directory
+# in /etc/munin/plugin-conf.d, e.g.:
+#   [osm_mem_status]
+#   env.OVERPASS_BIN_DIR /opt/overpass/bin
+#
+# Optional threshold overrides (bytes):
+#   env.base_warning <bytes>
+#   env.base_critical <bytes>
+#   env.areas_warning <bytes>
+#   env.areas_critical <bytes>
+#
+# Without overrides, warning and critical are set to 50% and 90% of each
+# dispatcher's total available space, learned from the previous data fetch.
+#
+# Set overrides to the dispatcher limits to disable warning/critical alarms.
+
+if [[ "$1" = "autoconf" ]]; then
+  if [[ -n "$OVERPASS_BIN_DIR" && -x "$OVERPASS_BIN_DIR/dispatcher" ]]; then
+    echo yes
+  else
+    echo "no (dispatcher not found; set env.OVERPASS_BIN_DIR)"
+  fi
+  exit 0
+fi
+
+if [[ -z "$OVERPASS_BIN_DIR" ]]; then
+  echo "OVERPASS_BIN_DIR is not set" >&2
+  exit 1
+fi
+if [[ ! -x "$OVERPASS_BIN_DIR/dispatcher" ]]; then
+  echo "$OVERPASS_BIN_DIR/dispatcher is not executable" >&2
+  exit 1
+fi
+
+for _var in base_warning base_critical areas_warning areas_critical; do
+  _val="${!_var}"
+  if [[ -n "$_val" && ! "$_val" =~ ^[0-9]+$ ]]; then
+    echo "$_var must be a positive integer, got: '$_val'" >&2
+    exit 1
+  fi
+done
 
 if [[ "$1" = "config" ]]; then
-{
-  echo 'graph_title Dispatcher granted memory'
-  echo 'graph_vlabel bytes'
-  echo "osm_mem_status.label osm_base"
-  echo "osm_mem_status.warning 8000000000"
-  echo "osm_mem_status.critical 16000000000"
+  base_limit="" areas_limit=""
+  if [[ -f "$MUNIN_STATEFILE" ]]; then
+    while IFS='=' read -r key val; do
+      case "$key" in
+        base_limit)  base_limit="$val" ;;
+        areas_limit) areas_limit="$val" ;;
+      esac
+    done < "$MUNIN_STATEFILE"
+  fi
+
+  base_warn="${base_warning:-${base_limit:+$(( base_limit / 2 ))}}"
+  base_crit="${base_critical:-${base_limit:+$(( base_limit * 9 / 10 ))}}"
+  areas_warn="${areas_warning:-${areas_limit:+$(( areas_limit / 2 ))}}"
+  areas_crit="${areas_critical:-${areas_limit:+$(( areas_limit * 9 / 10 ))}}"
+
+  mem_current_warn="${base_warn:+osm_mem_current.warning $base_warn}"
+  mem_current_crit="${base_crit:+osm_mem_current.critical $base_crit}"
+  mem_status_warn="${base_warn:+osm_mem_status.warning $base_warn}"
+  mem_status_crit="${base_crit:+osm_mem_status.critical $base_crit}"
+  areas_current_warn="${areas_warn:+osm_areas_current.warning $areas_warn}"
+  areas_current_crit="${areas_crit:+osm_areas_current.critical $areas_crit}"
+  areas_status_warn="${areas_warn:+osm_areas_status.warning $areas_warn}"
+  areas_status_crit="${areas_crit:+osm_areas_status.critical $areas_crit}"
+
+  cat <<CONFIG
+graph_title Dispatcher granted memory
+graph_vlabel bytes
+graph_args --base 1024
+graph_info Current and query-weighted average memory claimed by running queries, for both the osm-base and areas dispatchers. The query-weighted average is a 15-second trailing window updated only when queries complete; it persists after load clears.
+osm_mem_current.label base current
+osm_mem_current.type GAUGE
+osm_mem_current.draw LINE2
+$mem_current_warn
+$mem_current_crit
+osm_mem_status.label base query-weighted avg
+osm_mem_status.type GAUGE
+osm_mem_status.draw LINE1
+$mem_status_warn
+$mem_status_crit
+osm_areas_current.label areas current
+osm_areas_current.type GAUGE
+osm_areas_current.draw LINE2
+$areas_current_warn
+$areas_current_crit
+osm_areas_status.label areas query-weighted avg
+osm_areas_status.type GAUGE
+osm_areas_status.draw LINE1
+$areas_status_warn
+$areas_status_crit
+CONFIG
   exit 0
-}; fi
+fi
 
-GRANTED=`$(/OVERPASS_EXEC_DIR/bin/dispatcher --osm-base --status | grep -E "^Average claimed space:" | awk '{ print $4; }')
+STATUS=$("$OVERPASS_BIN_DIR/dispatcher" --osm-base --status)
+STATUS_AREAS=$("$OVERPASS_BIN_DIR/dispatcher" --areas --status)
 
-echo "osm_mem_status.value $GRANTED"
+base_current=$(awk '/^Total claimed space:/ { print $4 }' <<<"$STATUS")
+base_avg=$(awk '/^Average claimed space:/ { print $4 }' <<<"$STATUS")
+base_limit=$(awk '/^Total available space:/ { print $4 }' <<<"$STATUS")
+
+areas_current=$(awk '/^Total claimed space:/ { print $4 }' <<<"$STATUS_AREAS")
+areas_avg=$(awk '/^Average claimed space:/ { print $4 }' <<<"$STATUS_AREAS")
+areas_limit=$(awk '/^Total available space:/ { print $4 }' <<<"$STATUS_AREAS")
+
+cat <<OUTPUT
+osm_mem_current.value ${base_current:-U}
+osm_mem_status.value ${base_avg:-U}
+osm_areas_current.value ${areas_current:-U}
+osm_areas_status.value ${areas_avg:-U}
+OUTPUT
+
+if [[ -n "$MUNIN_STATEFILE" && -n "$base_limit" && -n "$areas_limit" ]]; then
+  printf 'base_limit=%s\nareas_limit=%s\n' "$base_limit" "$areas_limit" > "$MUNIN_STATEFILE"
+fi
