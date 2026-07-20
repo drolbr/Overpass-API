@@ -19,32 +19,58 @@
 
 
 CACHE_DIR="/tmp/osm3s_augmented_diffs_cache/"
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+TIMESTAMP_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
+WS='[[:space:]]*'
+TOKEN='[!#$%&'"'"'*+.^_`|~[:alnum:]-]+'
+HEADERS_RE="^${WS}${TOKEN}(${WS},${WS}${TOKEN})*${WS}\$"
 
+print_cors_headers()
+{
+  if [[ -n $HTTP_ACCESS_CONTROL_REQUEST_HEADERS && $HTTP_ACCESS_CONTROL_REQUEST_HEADERS =~ $HEADERS_RE ]]; then
+    echo "Access-Control-Allow-Headers: $HTTP_ACCESS_CONTROL_REQUEST_HEADERS"
+  fi
+  if [[ -n $HTTP_ORIGIN ]]; then
+    echo "Access-Control-Allow-Origin: *"
+  fi
+}
 
-# Do HTTP headers with respect to CORS
-echo "Content-Type: text/plain; charset=utf-8"
-if [[ -n $HTTP_ACCESS_CONTROL_REQUEST_HEADERS ]]; then
-  echo "Access-Control-Allow-Headers: $HTTP_ACCESS_CONTROL_REQUEST_HEADERS"
-fi
-if [[ -n $HTTP_ORIGIN ]]; then
-  echo "Access-Control-Allow-Origin: *"
-fi
-if [[ $REQUEST_METHOD == "OPTIONS" ]]; then {
+internal_error()
+{
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo "Status: 500 Internal Server Error"
+  print_cors_headers
+  echo
+  echo "$1"
+  exit 0
+}
+
+if [[ $REQUEST_METHOD == "OPTIONS" ]]; then
+  echo "Content-Type: text/plain; charset=utf-8"
+  print_cors_headers
   echo "Access-Control-Allow-Methods: GET, POST, OPTIONS"
   echo "Content-Length: 0"
   echo
   exit 0
-}; fi
-echo
+fi
 
 if [[ -r "$CACHE_DIR/newest" ]]; then
+  echo "Content-Type: text/plain; charset=utf-8"
+  print_cors_headers
+  echo
   cat "$CACHE_DIR/newest"
   exit 0
 fi
 
-TIMESTAMP=`./timestamp | tail -n 1`
+TIMESTAMP=$("$EXEC_DIR"/timestamp | tail -n 1)
 
-if [[ ${TIMESTAMP:0:1} == "2" ]]; then
-  EPOCHSECS=`date --date=$TIMESTAMP '+%s'`
-  echo $(( ( $EPOCHSECS - 1347432960 ) / 60 ))
+if [[ ! $TIMESTAMP =~ $TIMESTAMP_RE ]]; then
+  internal_error "Invalid timestamp from backend"
 fi
+
+EPOCHSECS=$(date --date="$TIMESTAMP" '+%s')
+
+echo "Content-Type: text/plain; charset=utf-8"
+print_cors_headers
+echo
+echo $(( ( EPOCHSECS - 1347432960 ) / 60 ))

@@ -22,50 +22,61 @@
 fetch_file()
 {
   wget -q -O "$2" "$1"
-};
+}
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+fetch_and_output_result()
 {
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+  if fetch_file "$1" "$PING_FILE"; then
+    "$BIN_DIR"/escape_xml <"$PING_FILE"
+  else
+    echo "Fetch failed."
+  fi
+}
 
-BIN_DIR="$EXEC_DIR/../bin"
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 
 # Set BASE_URL to your own server's external name
 BASE_URL="http://localhost/api"
 
+PING_FILE=$(mktemp /tmp/osm3s_ping_XXXXXX) || exit 1
+trap 'rm -f "$PING_FILE"' EXIT
+
 echo "Content-Type: text/html; charset=utf-8"
 echo
-echo -e "\
-<html>\n\
-<head>\n\
-  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
-  <title>Server status</title>\n\
-</head>\n\
-<body>\n\
-  <h1>Outside view on the server</h1>\n\
-  <h2>Empty, simple request</h2>\n\
-<pre>\n"
+cat <<EOF
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>Server status</title>
+</head>
+<body>
+  <h1>Outside view on the server</h1>
+  <h2>Empty, simple request</h2>
+<pre>
 
-fetch_file "$BASE_URL/interpreter?data=<print/>" "/tmp/ping.xml"
-$BIN_DIR/escape_xml <"/tmp/ping.xml"
+EOF
 
-echo -e "</pre>\
-  <h2>Meta request</h2>\n\
-<pre>\n"
+fetch_and_output_result "$BASE_URL/interpreter?data=<print/>"
 
-fetch_file "$BASE_URL/interpreter?data=<query type='way'><has-kv k='name' v='Lipkenskothen'/></query><print mode='meta'/><recurse type='way-node'/><print mode='meta'/>" "/tmp/ping.xml"
-$BIN_DIR/escape_xml <"/tmp/ping.xml"
+cat <<EOF
+</pre>  <h2>Meta request</h2>
+<pre>
 
-echo -e "</pre>\
-  <h2>Area request</h2>\n\
-<pre>\n"
+EOF
 
-fetch_file "$BASE_URL/interpreter?data=<coord-query lat='51.25' lon='7.15'/><print mode='ids_only'/>" "/tmp/ping.xml"
-$BIN_DIR/escape_xml <"/tmp/ping.xml"
+fetch_and_output_result "$BASE_URL/interpreter?data=<query type='way'><has-kv k='name' v='Lipkenskothen'/></query><print mode='meta'/><recurse type='way-node'/><print mode='meta'/>"
 
-echo -e "</pre>\
-</body>\n\
-</html>\n"
+cat <<EOF
+</pre>  <h2>Area request</h2>
+<pre>
+
+EOF
+
+fetch_and_output_result "$BASE_URL/interpreter?data=<coord-query lat='51.25' lon='7.15'/><print mode='ids_only'/>"
+
+cat <<EOF
+</pre></body>
+</html>
+
+EOF

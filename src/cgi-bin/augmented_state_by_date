@@ -17,75 +17,120 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-BUF="$QUERY_STRING&"
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
+LOCAL_DIR="/var/www/augmented_diffs"
 
-STATE=
-EXECBASE="`dirname $0`/../"
-BIN_DIR="${EXECBASE}bin"
+TIME_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
+INTEGER_RE='^(0|[1-9][0-9]*)$'
+WS='[[:space:]]*'
+TOKEN='[!#$%&'"'"'*+.^_`|~[:alnum:]-]+'
+HEADERS_RE="^${WS}${TOKEN}(${WS},${WS}${TOKEN})*${WS}\$"
 
-IFS=$'&'
-for KEY_VAL in $QUERY_STRING; do
+print_cors_headers()
 {
-  if [[ ${KEY_VAL:0:9} == "osm_base=" ]]; then
-    STATE="${KEY_VAL:9}"
+  if [[ -n $HTTP_ACCESS_CONTROL_REQUEST_HEADERS && $HTTP_ACCESS_CONTROL_REQUEST_HEADERS =~ $HEADERS_RE ]]; then
+    echo "Access-Control-Allow-Headers: $HTTP_ACCESS_CONTROL_REQUEST_HEADERS"
   fi
-}; done
-unset IFS
+  if [[ -n $HTTP_ORIGIN ]]; then
+    echo "Access-Control-Allow-Origin: *"
+  fi
+}
 
-
-TARGET_TIME="`echo "$STATE" | $BIN_DIR/uncgi`"
-LOWER="0"
-UPPER="`cat /var/www/augmented_diffs/state.txt`"
-LOCAL_DIR="/var/www/augmented_diffs/"
-
-get_replicate_filename()
+bad_request()
 {
-  printf -v TDIGIT3 %03u $(($TARGET % 1000))
-  ARG=$(($TARGET / 1000))
-  printf -v TDIGIT2 %03u $(($ARG % 1000))
-  ARG=$(($ARG / 1000))
-  printf -v TDIGIT1 %03u $ARG
-  LOCAL_PATH="$LOCAL_DIR/$TDIGIT1/$TDIGIT2"
-  REPLICATE_FILENAME="$LOCAL_PATH/$TDIGIT3"
-};
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo "Status: 400 Bad Request"
+  print_cors_headers
+  echo
+  echo "$1"
+  exit 0
+}
 
-update_state()
+internal_error()
 {
-  get_replicate_filename
-  if [[ -s "$REPLICATE_FILENAME.state.txt" ]]; then {
-    TIMESTAMP_LINE=`cat "$REPLICATE_FILENAME.state.txt"`
-    DATA_VERSION=${TIMESTAMP_LINE:9}
-  }; fi
-};
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo "Status: 500 Internal Server Error"
+  print_cors_headers
+  echo
+  echo "$1"
+  exit 0
+}
 
-while [[ $(($LOWER + 1)) -lt $UPPER ]]; do
-{
-  TARGET=$((($LOWER + $UPPER) / 2))
-  update_state
-  #echo "$TARGET - $TIMESTAMP_LINE"
-  if [[ -s "$REPLICATE_FILENAME.state.txt" && "$DATA_VERSION" < "$TARGET_TIME" ]]; then
-  {
-    LOWER=$TARGET
-  }; else
-  {
-    UPPER=$TARGET
-  }; fi
-}; done
-
-# Do HTTP headers with respect to CORS
-echo "Content-Type: text/plain; charset=utf-8"
-if [[ -n $HTTP_ACCESS_CONTROL_REQUEST_HEADERS ]]; then
-  echo "Access-Control-Allow-Headers: $HTTP_ACCESS_CONTROL_REQUEST_HEADERS"
-fi
-if [[ -n $HTTP_ORIGIN ]]; then
-  echo "Access-Control-Allow-Origin: *"
-fi
-if [[ $REQUEST_METHOD == "OPTIONS" ]]; then {
+if [[ $REQUEST_METHOD == "OPTIONS" ]]; then
+  echo "Content-Type: text/plain; charset=utf-8"
+  print_cors_headers
   echo "Access-Control-Allow-Methods: GET, POST, OPTIONS"
   echo "Content-Length: 0"
   echo
   exit 0
-}; fi
+fi
+
+STATE=
+
+set -f
+IFS=$'&'
+for KEY_VAL in $QUERY_STRING; do
+{
+  if [[ $KEY_VAL == *=* ]]; then
+    RAW_VAL="${KEY_VAL#*=}"
+  else
+    RAW_VAL=
+  fi
+  KEY=$(printf '%s' "${KEY_VAL%%=*}" | "$BIN_DIR"/uncgi) || bad_request "Malformed query string"
+  VAL=$(printf '%s' "$RAW_VAL" | "$BIN_DIR"/uncgi) || bad_request "Malformed query string"
+  case "$KEY" in
+    osm_base)
+      STATE="$VAL"
+      ;;
+  esac
+}; done
+unset IFS
+set +f
+
+if [[ ! $STATE =~ $TIME_RE ]]; then
+  bad_request "Invalid osm_base parameter"
+fi
+TARGET_TIME="$STATE"
+
+LOWER="0"
+UPPER=$(cat "$LOCAL_DIR/state.txt")
+if [[ ! $UPPER =~ $INTEGER_RE ]]; then
+  internal_error "Invalid state file"
+fi
+
+get_replicate_filename()
+{
+  printf -v TDIGIT3 %03u $((TARGET % 1000))
+  ARG=$((TARGET / 1000))
+  printf -v TDIGIT2 %03u $((ARG % 1000))
+  ARG=$((ARG / 1000))
+  printf -v TDIGIT1 %03u $ARG
+  LOCAL_PATH="$LOCAL_DIR/$TDIGIT1/$TDIGIT2"
+  REPLICATE_FILENAME="$LOCAL_PATH/$TDIGIT3"
+}
+
+update_state()
+{
+  get_replicate_filename
+  if [[ -s "$REPLICATE_FILENAME.state.txt" ]]; then
+    TIMESTAMP_LINE=$(cat "$REPLICATE_FILENAME.state.txt")
+    DATA_VERSION=${TIMESTAMP_LINE:9}
+  fi
+}
+
+while [[ $((LOWER + 1)) -lt $UPPER ]]; do
+  TARGET=$(((LOWER + UPPER) / 2))
+  update_state
+  if [[ -s "$REPLICATE_FILENAME.state.txt" && "$DATA_VERSION" < "$TARGET_TIME" ]]; then
+    LOWER=$TARGET
+  else
+    UPPER=$TARGET
+  fi
+done
+
+echo "Content-Type: text/plain; charset=utf-8"
+print_cors_headers
 echo
 
 echo "$LOWER"

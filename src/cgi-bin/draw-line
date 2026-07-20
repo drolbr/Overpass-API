@@ -17,107 +17,118 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PT_Diagrams.  If not, see <http://www.gnu.org/licenses/>.
 
-BUF="$QUERY_STRING&"
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 
+NUMBER_RE='-?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]+)?'
+NUMERIC_RE="^${NUMBER_RE}\$"
+
+NETWORK_=
+REF_=
 SKETCH_PARAMS=
-BRIM_PARAMS=
+DEBUG=
+BASEDIR=
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+fail()
 {
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo
+  echo "$1"
+  [[ -n $BASEDIR ]] && rm -rf "$BASEDIR"
+  exit 0
+}
 
-BIN_DIR="$EXEC_DIR/../bin"
-
+set -f
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
 {
-  if [[ ${KEY_VAL:0:8} == "network=" ]]; then
-  {
-    NETWORK="${KEY_VAL:8}"
-    NETWORK_=`echo "${KEY_VAL:8}" | $BIN_DIR/uncgi`
-  };
-  elif [[ ${KEY_VAL:0:4} == "ref=" ]]; then
-  {
-    REF="${KEY_VAL:4}"
-    REF_=`echo "${KEY_VAL:4}" | $BIN_DIR/uncgi`
-  };
-  elif [[ ${KEY_VAL:0:10} == "pivot-lon=" ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --pivot-lon=${KEY_VAL:10}"
-  elif [[ ${KEY_VAL:0:6} == "scale=" ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --scale=${KEY_VAL:6}"
-  elif [[ ${KEY_VAL:0:10} == "font-size=" ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=${KEY_VAL:10}"
-  elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
-    DEBUG="${KEY_VAL:6}"
+  if [[ $KEY_VAL == *=* ]]; then
+    RAW_VAL="${KEY_VAL#*=}"
+  else
+    RAW_VAL=
   fi
+  KEY=$(printf '%s' "${KEY_VAL%%=*}" | "$BIN_DIR"/uncgi) || fail "Malformed query string"
+  VAL=$(printf '%s' "$RAW_VAL" | "$BIN_DIR"/uncgi) || fail "Malformed query string"
+  case "$KEY" in
+    network)
+      NETWORK_=$(printf '%s' "$VAL" | "$BIN_DIR"/escape_xml)
+      ;;
+    ref)
+      REF_=$(printf '%s' "$VAL" | "$BIN_DIR"/escape_xml)
+      ;;
+    pivot-lon)
+      if [[ $VAL =~ $NUMERIC_RE ]]; then
+        SKETCH_PARAMS="$SKETCH_PARAMS --pivot-lon=$VAL"
+      else
+        fail "Invalid pivot-lon parameter."
+      fi
+      ;;
+    scale)
+      if [[ $VAL =~ $NUMERIC_RE ]]; then
+        SKETCH_PARAMS="$SKETCH_PARAMS --scale=$VAL"
+      else
+        fail "Invalid scale parameter."
+      fi
+      ;;
+    font-size)
+      if [[ $VAL =~ $NUMERIC_RE ]]; then
+        SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=$VAL"
+      else
+        fail "Invalid font-size parameter."
+      fi
+      ;;
+    debug)
+      DEBUG="$VAL"
+      ;;
+  esac
 }; done
 unset IFS
+set +f
 
-BASEDIR=`mktemp -d /tmp/osm3s_draw_line_XXXXXX`
+if [[ -z $REF_ ]]; then
+  fail "An empty value for ref is not allowed."
+fi
 
-echo -e "\
-<osm-script> \
- \
-<union> \
-  <query type=\"relation\"> \
-    <has-kv k=\"network\" v=\"$NETWORK_\"/> \
-    <has-kv k=\"ref\" v=\"$REF_\"/> \
-  </query> \
-  <recurse type=\"relation-node\" into=\"__\"/> \
-  <recurse type=\"relation-way\"/> \
-  <recurse type=\"way-node\"/> \
-</union> \
-<print mode=\"body\"/> \
- \
+BASEDIR=$(mktemp -d /tmp/osm3s_draw_line_XXXXXX) || fail "Could not create temporary directory."
+
+cat >"$BASEDIR/request.1" <<EOF
+<osm-script>
+<union>
+  <query type="relation">
+    <has-kv k="network" v="$NETWORK_"/>
+    <has-kv k="ref" v="$REF_"/>
+  </query>
+  <recurse type="relation-node" into="__"/>
+  <recurse type="relation-way"/>
+  <recurse type="way-node"/>
+</union>
+<print mode="body"/>
 </osm-script>
-" >$BASEDIR/request.1
+EOF
 
-if [[ -z $REF ]]; then
-{                     
-  echo "Content-Type: text/plain; charset=utf-8"
-  echo                                          
-  echo "An empty value for ref is not allowed."  
-
-  exit 0
-};    
-fi      
-
-CORRESPONDENCES= #`$BIN_DIR/bbox_brim_query --only-corrs $BRIM_PARAMS`
+CORRESPONDENCES= #$("$BIN_DIR"/bbox_brim_query --only-corrs $BRIM_PARAMS)
 
 if [[ $CORRESPONDENCES -gt 0 ]]; then
-{
+  fail "Correspondences are for the geographical map currently not supported."
+fi
+
+export REQUEST_METHOD=
+if [[ $DEBUG == "full-query" ]]; then
   echo "Content-Type: text/plain; charset=utf-8"
-  echo                                          
-  echo "Correspondences are for the geographical map currently not supported."  
-
-  exit 0
-};
-else
-{
-  if [[ $DEBUG == "full-query" ]]; then
-  {
-    echo "Content-Type: text/plain; charset=utf-8"
-    echo
-
-    REQUEST_METHOD=
-    $BIN_DIR/osm3s_query <$BASEDIR/request.1 2>&1
-
-    echo
-    echo "$BIN_DIR/draw_route_svg $SKETCH_PARAMS"
-  };
-  else
-  {
-    REQUEST_METHOD=
-    $BIN_DIR/osm3s_query --quiet <$BASEDIR/request.1 >$BASEDIR/answer.1
-  };
-  fi;
-
-  echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  $BIN_DIR/draw_route_svg $SKETCH_PARAMS <$BASEDIR/answer.1
-};
+  "$BIN_DIR"/osm3s_query <"$BASEDIR/request.1" 2>&1
+
+  echo
+  echo "$BIN_DIR/draw_route_svg $SKETCH_PARAMS"
+else
+  "$BIN_DIR"/osm3s_query --quiet <"$BASEDIR/request.1" >"$BASEDIR/answer.1"
 fi
+
+echo "Content-Type: image/svg+xml; charset=utf-8"
+echo
+
+# shellcheck disable=SC2086 # SKETCH_PARAMS holds space-separated, regex-validated numeric flags
+"$BIN_DIR"/draw_route_svg $SKETCH_PARAMS <"$BASEDIR/answer.1"
+
+rm -rf "$BASEDIR"

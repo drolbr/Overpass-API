@@ -17,38 +17,39 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-BASE_DIR="/var/www/"
+shopt -s nullglob
+
+BASE_DIR="/var/www"
 
 echo "Content-Type: application/xml; charset=utf-8"
 echo
-echo -e "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"\n\
-  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\
-  xsi:schemaLocation=\"http://www.sitemaps.org/schemas/sitemap/0.9\n\
-      http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd\">\n\
-\n\
-  <url>\n\
-    <loc>http://overpass-api.de/</loc>\n\
-    <lastmod>`date -r $BASE_DIR/index.html +%F`</lastmod>\n\
-    <changefreq>monthly</changefreq>\n\
-  </url>"
+cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+      http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <url>
+    <loc>http://overpass-api.de/</loc>
+    <lastmod>$(date -r "$BASE_DIR/index.html" +%F)</lastmod>
+    <changefreq>monthly</changefreq>
+  </url>
+EOF
 
 for I in "$BASE_DIR"/*.html; do
-{
-  if [[ $I != "$BASE_DIR"/index.html && $I != "$BASE_DIR"/google271f53434c229fc4.html ]]; then
-  {
-    echo -e "\
-\n\
-  <url>\n\
-    <loc>http://overpass-api.de/`basename $I`</loc>\n\
-    <lastmod>`date -r $I +%F`</lastmod>\n\
-    <changefreq>monthly</changefreq>\n\
-  </url>"
+  if [[ $I != "$BASE_DIR/index.html" && $I != "$BASE_DIR/google271f53434c229fc4.html" ]]; then
+    cat <<EOF
 
-  }; fi
-}; done
+  <url>
+    <loc>http://overpass-api.de/$(basename "$I")</loc>
+    <lastmod>$(date -r "$I" +%F)</lastmod>
+    <changefreq>monthly</changefreq>
+  </url>
+EOF
+  fi
+done
 
-echo -e "\n\
-</urlset>\n\
-"
+echo
+echo "</urlset>"
+echo

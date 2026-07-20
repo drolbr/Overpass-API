@@ -17,64 +17,82 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PT_Diagrams.  If not, see <http://www.gnu.org/licenses/>.
 
-BUF="$QUERY_STRING&"
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 
-# echo "Content-Type: text/plain; charset=utf-8"
-# echo
+STYLE_DIR=/opt/pt_diagrams
+STYLE_RE='[/ ]'
 
-SKETCH_PARAMS=
 ACTION=
 STYLE=
 DATA=
-STYLE_DIR=/opt/pt_diagrams/
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+fail()
 {
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo
+  echo "$1"
+  exit 0
+}
 
-pushd "$EXEC_DIR" >/dev/null
-
+set -f
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
 {
-  if [[ ${KEY_VAL:0:7} == "action=" ]]; then
-    ACTION="${KEY_VAL:7}"
-  elif [[ ${KEY_VAL:0:6} == "style=" ]]; then
-    STYLE="${KEY_VAL:6}"
-  elif [[ ${KEY_VAL:0:5} == "data=" ]]; then
-    DATA="${KEY_VAL:5}"
+  if [[ $KEY_VAL == *=* ]]; then
+    RAW_VAL="${KEY_VAL#*=}"
+  else
+    RAW_VAL=
   fi
+  KEY=$(printf '%s' "${KEY_VAL%%=*}" | "$BIN_DIR"/uncgi) || fail "Malformed query string"
+  VAL=$(printf '%s' "$RAW_VAL" | "$BIN_DIR"/uncgi) || fail "Malformed query string"
+  case "$KEY" in
+    action)
+      ACTION="$VAL"
+      ;;
+    style)
+      STYLE="$VAL"
+      ;;
+    data)
+      DATA="$VAL"
+      ;;
+  esac
 }; done
 unset IFS
+set +f
 
-echo "Content-Type: text/html; charset=utf-8\n"
+if [[ $STYLE =~ $STYLE_RE ]]; then
+  fail "Invalid style parameter"
+fi
+
+STYLE_ESCAPED=$(printf '%s' "$STYLE" | "$BIN_DIR"/escape_xml)
+
+echo "Content-Type: text/html; charset=utf-8"
 echo
 
 if [[ $ACTION == "edit" ]]; then
-{
-  echo -e "
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
-<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\
-    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\
-<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">
-<head/>\
-<body>\
+  cat <<EOF
 
-<h1>Edit style \"$STYLE\"</h1>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head/>
+<body>
 
-<form action=\"sketch-options\" method=\"get\" accept-charset=\"UTF-8\">
-  <textarea name=\"data\" rows=\"10\" cols=\"80\">"
-  if [[ -r $STYLE_DIR/sketch-line.$STYLE ]]; then
-    ../bin/escape_xml <$STYLE_DIR/sketch-line.$STYLE
+<h1>Edit style "$STYLE_ESCAPED"</h1>
+
+<form action="sketch-options" method="get" accept-charset="UTF-8">
+  <textarea name="data" rows="10" cols="80">
+EOF
+  if [[ -r "$STYLE_DIR/sketch-line.$STYLE" ]]; then
+    "$BIN_DIR"/escape_xml <"$STYLE_DIR/sketch-line.$STYLE"
   fi
-  echo -e "\
+  cat <<EOF
 </textarea>
-  <input type=\"hidden\" name=\"style\" value=\"$STYLE\"/>
-  <input type=\"hidden\" name=\"action\" value=\"commit\"/>
-  <input type=\"submit\"/>
+  <input type="hidden" name="style" value="$STYLE_ESCAPED"/>
+  <input type="hidden" name="action" value="commit"/>
+  <input type="submit"/>
 </form>
 
 <h2>Example file:</h2>
@@ -115,7 +133,7 @@ of street.
 &lt;max-correspondences per-line=&quot;6&quot; below=&quot;0&quot;/&gt;</pre>
 
 These correspond to the options that can be directly passed to sketch-line. They are
-explained at the <a href=\"../public_transport.html\">public transport page</a>.
+explained at the <a href="../public_transport.html">public transport page</a>.
 
 <pre>&lt;correspondences limit=&quot;100&quot;/&gt;</pre>
 
@@ -132,26 +150,24 @@ the text &quot;bank&quot;. A node is nearby if it is less than the corredpondenc
 
 The necessary footer.
 
-</body>\
-"
-};
+</body>
+EOF
 elif [[ $ACTION == "commit" ]]; then
-{
-  echo $DATA | ../bin/uncgi >$STYLE_DIR/sketch-line.$STYLE
-  
-  echo -e "
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
-<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\
-    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\
-<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">
-<head/>\
-<body>\
+  printf '%s' "$DATA" >"$STYLE_DIR/sketch-line.$STYLE"
 
-<h1>Edit style \"$STYLE\"</h1>
+  cat <<EOF
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head/>
+<body>
+
+<h1>Edit style "$STYLE_ESCAPED"</h1>
 
 The style has successfully been saved.
 
-</body>\
-"
-};
+</body>
+EOF
 fi

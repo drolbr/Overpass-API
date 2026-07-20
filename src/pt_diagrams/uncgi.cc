@@ -43,25 +43,25 @@ char hex_digit(char c)
   return 16;
 }
 
-string decode_cgi_to_plain(const string& raw)
+bool decode_cgi_to_plain(const string& raw, string& result)
 {
-  string result;
+  result.clear();
   string::size_type pos(0);
 
   while (pos < raw.size())
   {
     if (raw[pos] == '%')
     {
-      if (pos >= raw.size()+2)
-	return (result + raw.substr(0, pos));
+      if (pos + 2 >= raw.size())
+        return false;
       char a(hex_digit(raw[pos+1])), b(hex_digit(raw[pos+2]));
       if ((a < 16) && (b < 16))
       {
-	result += (char)(a*16 + b);
-	pos += 3;
+        result += (char)(a*16 + b);
+        pos += 3;
       }
       else
-	result += raw[pos++];
+        return false;
     }
     else if (raw[pos] == '+')
     {
@@ -74,20 +74,21 @@ string decode_cgi_to_plain(const string& raw)
       result += raw[pos++];
   }
 
-  return result;
+  return true;
 }
 
 int main(int argc, char *argv[])
 {
   char c;
   string buf;
-  while (!cin.eof())
-  {
-    cin.get(c);
+  while (cin.get(c))
     buf += c;
-  }
 
-  cout<<decode_cgi_to_plain(buf);
+  string result;
+  if (!decode_cgi_to_plain(buf, result))
+    return 1;
+
+  cout<<result;
 
   return 0;
 }

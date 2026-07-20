@@ -17,47 +17,41 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 
-BIN_DIR="$EXEC_DIR/../bin"
+DEBUG=
 
-BUF="`echo "$QUERY_STRING" | $BIN_DIR/uncgi`"
-if [[ "${BUF:0:5}" == "debug" ]]; then
-{
-  DEBUG=yes
-  echo "Content-Type: text/plain; charset=utf-8"
-  echo
-  BUF="${BUF:6}"
-  echo "[$BUF]"
-};
-fi
-
-# No mkdir - directory should be created and made world-writeable
-# by the maintainer to allow periodic cleanups.
-XML_REQUEST="`$BIN_DIR/translate_xapi \"${BUF}\"`"
-EXITCODE=$?
-if [[ $EXITCODE -ne 0 ]]; then
+bad_request()
 {
   echo "Content-Type: text/plain; charset=utf-8"
   echo "Status: 400 Bad Request"
   echo
   echo "Error in [$BUF]:"
-  echo "$XML_REQUEST"
-};
-else
-{
-  if [[ $DEBUG == "yes" ]]; then
-  {
-    echo "$XML_REQUEST"
-    echo
-  };
-  fi
-  REQUEST_METHOD=
-  echo "$XML_REQUEST" | ./interpreter
-};
+  echo "$1"
+  exit 0
+}
+
+BUF=$(printf '%s' "$QUERY_STRING" | "$BIN_DIR"/uncgi) || bad_request "Malformed query string"
+if [[ "${BUF:0:5}" == "debug" ]]; then
+  DEBUG=yes
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo
+  BUF="${BUF:6}"
+  echo "[$BUF]"
 fi
+
+# No mkdir - directory should be created and made world-writeable
+# by the maintainer to allow periodic cleanups.
+XML_REQUEST=$("$BIN_DIR"/translate_xapi "$BUF")
+EXITCODE=$?
+if [[ $EXITCODE -ne 0 ]]; then
+  bad_request "$XML_REQUEST"
+fi
+
+if [[ $DEBUG == "yes" ]]; then
+  printf '%s\n' "$XML_REQUEST"
+  echo
+fi
+export REQUEST_METHOD=
+printf '%s' "$XML_REQUEST" | "$EXEC_DIR"/interpreter
