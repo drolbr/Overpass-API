@@ -16,6 +16,7 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -61,14 +62,21 @@ std::string cgi_get_to_text()
   return "";
 }
 
-std::string cgi_post_to_text()
+std::string cgi_post_to_text(std::string::size_type max_input_size)
 {
-  std::string raw, buf;
-  while (!std::cin.eof())
+  std::string raw;
+  const std::streamsize chunk_size = 65536;
+  char chunk[chunk_size];
+
+  while (raw.size() <= max_input_size)
   {
-    getline(std::cin, buf);
-    raw += buf + '\n';
+    std::cin.read(chunk, chunk_size);
+    std::streamsize count = std::cin.gcount();
+    if (count <= 0)
+      break;
+    raw.append(chunk, count);
   }
+
   return raw;
 }
 
@@ -79,10 +87,8 @@ std::string replace_cgi(const std::string& raw)
 
   while (pos < raw.size())
   {
-    if (raw[pos] == '%')
+    if (raw[pos] == '%' && pos + 2 < raw.size())
     {
-      if (pos >= raw.size()+2)
-	return (result + raw.substr(0, pos));
       char a(hex_digit(raw[pos+1])), b(hex_digit(raw[pos+2]));
       if ((a < 16) && (b < 16))
       {
@@ -115,8 +121,8 @@ std::map< std::string, std::string > decode_cgi_to_plain(const std::string& raw)
     if (delim_pos == std::string::npos)
       delim_pos = raw.size();
 
-    std::string::size_type middle_pos = raw.find('=', pos);
-    if (middle_pos != std::string::npos && middle_pos < delim_pos)
+    std::string::size_type middle_pos = std::find(raw.begin() + pos, raw.begin() + delim_pos, '=') - raw.begin();
+    if (middle_pos != delim_pos)
     {
       std::string::size_type end_pos = delim_pos;
       while (end_pos > 0 && isspace(raw[end_pos-1]))

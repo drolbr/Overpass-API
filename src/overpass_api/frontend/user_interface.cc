@@ -29,6 +29,7 @@
 
 #include "cgi-helper.h"
 #include "../../expat/expat_justparse_interface.h"
+#include "../data/utils.h"
 #include "user_interface.h"
 
 
@@ -37,7 +38,7 @@ namespace
   std::string autocomplete
       (std::string& input, Error_Output* error_output, uint32 max_input_size)
   {
-    unsigned int pos(0), line_number(1);
+    std::size_t pos(0), line_number(1);
     while ((pos < input.size()) && (isspace(input[pos])))
     {
       if (input[pos] == '\n')
@@ -124,10 +125,10 @@ std::map< std::string, std::string > get_xml_cgi(
   char* origin = getenv("HTTP_ORIGIN");
   has_origin = ((origin) && strnlen(origin, 1) > 0);
 
-  int line_number(1);
+  std::size_t line_number(1);
   // If there is nonempty input from GET method, use GET
   std::string input(cgi_get_to_text());
-  unsigned int pos(0);
+  std::size_t pos(0);
   while ((pos < input.size()) && (isspace(input[pos])))
   {
     if (input[pos] == '\n')
@@ -159,7 +160,7 @@ std::map< std::string, std::string > get_xml_cgi(
 	error_output->add_encoding_remark("Only whitespace found from GET method. Trying to retrieve input by POST method.");
     }
 
-    input = cgi_post_to_text();
+    input = cgi_post_to_text(max_input_size);
     pos = 0;
     line_number = 1;
     while ((pos < input.size()) && (isspace(input[pos])))
@@ -217,20 +218,44 @@ std::map< std::string, std::string > get_xml_cgi(
       }
       coords.push_back(lonlat.substr(pos));
 
-      if (coords.size() == 4)
+      bool numeric = coords.size() == 4;
+      for (std::size_t i = 0; numeric && i < coords.size(); ++i)
       {
-	std::string latlon = coords[1] + "," + coords[0] + "," + coords[3] + "," + coords[2];
+        double value = 0;
+        if (try_double(coords[i], value))
+          coords[i] = to_string(value);
+        else
+          numeric = false;
+      }
 
-	pos = input.find("(bbox)");
-	while (pos != std::string::npos)
-	{
-	  input = input.substr(0, pos) + "(" + latlon + ")" + input.substr(pos + 6);
-	  pos = input.find("(bbox)");
-	}
+      if (numeric)
+      {
+        std::string bbox_global = "[bbox:" + coords[1] + ',' + coords[0] + ',' + coords[3] + ',' + coords[2] + ']';
+        std::string bbox_filter = '(' + coords[1] + ',' + coords[0] + ',' + coords[3] + ',' + coords[2] + ')';
 
-	pos = input.find("[bbox]");
-	if (pos != std::string::npos)
-	  input = input.substr(0, pos) + "[bbox:" + latlon + "]" + input.substr(pos + 6);
+        std::string modified;
+        std::string::size_type last = 0;
+        std::string::size_type paren = input.find("(bbox)");
+        std::string::size_type bracket = input.find("[bbox]");
+        while (paren != std::string::npos || bracket != std::string::npos)
+        {
+          if (bracket < paren)
+          {
+            modified.append(input, last, bracket - last);
+            modified += bbox_global;
+            last = bracket + 6;
+            bracket = std::string::npos;
+          }
+          else
+          {
+            modified.append(input, last, paren - last);
+            modified += bbox_filter;
+            last = paren + 6;
+            paren = input.find("(bbox)", last);
+          }
+        }
+        modified.append(input, last);
+        input.swap(modified);
       }
     }
   }
@@ -253,7 +278,7 @@ std::string get_xml_console(Error_Output* error_output, uint32 max_input_size)
 
   // If there is nonempty input from GET method, use GET
   std::string input("");
-  input = cgi_post_to_text();
+  input = cgi_post_to_text(max_input_size);
   input = autocomplete(input, error_output, max_input_size);
   return input;
 }

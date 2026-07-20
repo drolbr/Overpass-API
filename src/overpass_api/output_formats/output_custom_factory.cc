@@ -53,6 +53,13 @@ Output_Handler* Output_Custom_Generator::new_output_handler(const std::map< std:
       error_output->add_encoding_error("Parameter \"template\" must not contain slashes.");
     template_name = "";
   }
+  // sanity check for url
+  if (url.find('\r') != std::string::npos || url.find('\n') != std::string::npos)
+  {
+    if (error_output)
+      error_output->add_encoding_error("Parameter \"url\" must not contain line breaks.");
+    url = "";
+  }
 
   return new Output_Custom(redirect_it == input_params.end() || redirect_it->second != "no",
       template_name, url);

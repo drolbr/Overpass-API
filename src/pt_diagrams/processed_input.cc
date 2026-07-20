@@ -765,20 +765,20 @@ void start(const char *el, const char **attr)
       is_route = true;
     if ((key == "route") && (value == "ferry"))
       is_route = true;
-    if (key == "operates_Mo_Fr")
+    if (key == "operates_Mo_Fr" && value.size() >= 9)
     {
       for (unsigned int i(0); i < 5; ++i)
 	relation.opening_hours.push_back(Timespan
 	    (i, atoi(value.substr(0, 2).c_str()), atoi(value.substr(2, 2).c_str()),
 	     i, atoi(value.substr(5, 2).c_str()), atoi(value.substr(7, 2).c_str())));
     }
-    if (key == "operates_Sa")
+    if (key == "operates_Sa" && value.size() >= 9)
     {
       relation.opening_hours.push_back(Timespan
 	(5, atoi(value.substr(0, 2).c_str()), atoi(value.substr(2, 2).c_str()),
 	 5, atoi(value.substr(5, 2).c_str()), atoi(value.substr(7, 2).c_str())));
     }
-    if (key == "operates_Su")
+    if (key == "operates_Su" && value.size() >= 9)
     {
       relation.opening_hours.push_back(Timespan
 	(6, atoi(value.substr(0, 2).c_str()), atoi(value.substr(2, 2).c_str()),
