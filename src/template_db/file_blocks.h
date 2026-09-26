@@ -784,6 +784,49 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
 }
 
 
+#ifdef __APPLE__
+// On macOS, mapping and unmapping a region of a large file per block costs milliseconds in the kernel,
+// about 100 times more than reading the same block with pread. Hence read into a buffer there.
+class Mmap
+{
+public:
+  Mmap(int fd, off_t offset, size_t length_, const std::string& file_name, const std::string& origin)
+      : addr(0), length(length_)
+  {
+    if (length == 0)
+      return;
+    addr = new uint64[(length + sizeof(uint64) - 1) / sizeof(uint64)];
+    size_t done = 0;
+    while (done < length)
+    {
+      ssize_t result = pread(fd, ((uint8*)addr) + done, length - done, offset + done);
+      if (result < 0)
+      {
+        int error = errno;
+        delete[] addr;
+        throw File_Error(error, file_name, origin);
+      }
+      if (result == 0)
+      {
+        // Like a mapping beyond the end of file, the missing tail reads as zeros.
+        memset(((uint8*)addr) + done, 0, length - done);
+        break;
+      }
+      done += result;
+    }
+  }
+  ~Mmap()
+  {
+    delete[] addr;
+  }
+
+  uint64* ptr() { return addr; }
+
+private:
+  uint64* addr;
+  size_t length;
+};
+#else
 class Mmap
 {
 public:
@@ -808,6 +851,7 @@ private:
   void* addr;
   size_t length;
 };
+#endif
 
 
 template< typename TIndex, typename TIterator >
