@@ -113,15 +113,20 @@ void Transaction_Insulator::read_finished(pid_t pid)
 }
 
 
-void Transaction_Insulator::copy_shadows_to_mains()
+void Transaction_Insulator::swap_shadows_to_mains()
 {
   for (auto it = controlled_files.begin(); it != controlled_files.end(); ++it)
   {
-    copy_file(
+    // The shadow index files are swapped into place by renaming, so that
+    // readers which already opened the main index files keep their (old,
+    // complete) inodes while new readers see the new generation without
+    // any gap. This also avoids re-copying the whole database at commit
+    // time.
+    rename_file(
         db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix() + (*it)->get_index_suffix()
         + (*it)->get_shadow_suffix(),
         db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix() + (*it)->get_index_suffix());
-    copy_file(
+    rename_file(
         db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix() + (*it)->get_index_suffix()
         + (*it)->get_shadow_suffix(),
         db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix() + (*it)->get_index_suffix());

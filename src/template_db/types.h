@@ -373,6 +373,7 @@ void millisleep(uint32 milliseconds);
 
 void copy_file(const std::string& source, const std::string& dest);
 void force_link_file(const std::string& source, const std::string& dest);
+void rename_file(const std::string& source, const std::string& dest);
 
 
 #endif

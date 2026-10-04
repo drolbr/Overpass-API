@@ -20,6 +20,7 @@
 #include <sys/un.h>
 #include "types.h"
 
+#include <cstdio>
 #include <cstring>
 
 
@@ -59,6 +60,18 @@ void force_link_file(const std::string& source, const std::string& dest)
 
   if (link(source.c_str(), dest.c_str()))
     throw File_Error(errno, source, "force_link_file:2");
+}
+
+
+void rename_file(const std::string& source, const std::string& dest)
+{
+  // The absence of the source is not an error: a partially completed
+  // commit must be completable idempotently on recovery.
+  if (!file_exists(source))
+    return;
+
+  if (rename(source.c_str(), dest.c_str()))
+    throw File_Error(errno, source, "rename_file:1");
 }
 
 

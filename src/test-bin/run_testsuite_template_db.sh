@@ -178,6 +178,7 @@ date +%T
 perform_test_loop random_file 8
 date +%T
 perform_test_loop test_dispatcher 20
+perform_serial_test test_dispatcher 28
 
 dispatcher_client_server 21
 dispatcher_client_server 22

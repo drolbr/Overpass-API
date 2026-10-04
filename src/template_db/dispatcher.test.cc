@@ -24,6 +24,8 @@
 #include "random_file.h"
 #include "transaction.h"
 
+#include <sys/stat.h>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -1536,5 +1538,133 @@ int main(int argc, char* args[])
       std::cout<<"File error catched: "
           <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
+  }
+
+  if ((test_to_execute == "") || (test_to_execute == "28"))
+  {
+    // The commit must swap the shadow index files into place by renaming
+    // them over the main index files (i.e. the main files' inodes become
+    // the former shadow files' inodes) instead of byte-copying them.
+    Test_File test_file("Test_File");
+
+    std::vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+        BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY, "",
+        5, 500, 180, 1024*1024*1024, 1024*1024, file_properties);
+
+    // First write cycle: produce a main DB (data and id files).
+    dispatcher.write_start(480);
+    put_elem(0, 1, test_file);
+    {
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
+      Test_File tf("Test_File");
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
+    }
+    dispatcher.write_commit(0);
+
+    const std::string main_file_names[4] = {
+      "Test_File.bin", "Test_File.bin.idx", "Test_File.map", "Test_File.map.idx" };
+    struct stat main_files_before[4];
+    for (int i = 0; i < 4; ++i)
+    {
+      if (stat(main_file_names[i].c_str(), &main_files_before[i]))
+      {
+        std::cout<<"Swap test FAILED: cannot stat "<<main_file_names[i]<<".\n";
+        return 1;
+      }
+    }
+
+    // Second write cycle: prepare a new generation in the shadows.
+    dispatcher.write_start(481);
+    put_elem(0, 2, test_file);
+    {
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
+      Test_File tf("Test_File");
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 2);
+    }
+
+    // The shadow index files must exist and be separate from the main files.
+    struct stat shadow_data_idx, shadow_id_idx;
+    if (stat("Test_File.bin.idx.shadow", &shadow_data_idx))
+    {
+      std::cout<<"Swap test FAILED: cannot stat Test_File.bin.idx.shadow.\n";
+      return 1;
+    }
+    if (stat("Test_File.map.idx.shadow", &shadow_id_idx))
+    {
+      std::cout<<"Swap test FAILED: cannot stat Test_File.map.idx.shadow.\n";
+      return 1;
+    }
+    if ((shadow_data_idx.st_ino == main_files_before[1].st_ino)
+        || (shadow_id_idx.st_ino == main_files_before[3].st_ino))
+    {
+      std::cout<<"Swap test FAILED: shadow index files are not separate files.\n";
+      return 1;
+    }
+
+    dispatcher.write_commit(0);
+
+    // After the commit, each main index file must carry the inode of the
+    // corresponding shadow index file from before the commit.
+    bool failed = false;
+    struct stat main_files_after[4];
+    for (int i = 0; i < 4; ++i)
+    {
+      if (stat(main_file_names[i].c_str(), &main_files_after[i]))
+      {
+        std::cout<<"Swap test FAILED: cannot stat "<<main_file_names[i]<<" after commit.\n";
+        failed = true;
+      }
+    }
+    if (!failed && (main_files_after[1].st_ino != shadow_data_idx.st_ino))
+    {
+      std::cout<<"Swap test FAILED: Test_File.bin.idx inode is "
+          <<main_files_after[1].st_ino<<" but the shadow file's inode was "
+          <<shadow_data_idx.st_ino<<" (the shadow was copied instead of renamed).\n";
+      failed = true;
+    }
+    if (!failed && (main_files_after[3].st_ino != shadow_id_idx.st_ino))
+    {
+      std::cout<<"Swap test FAILED: Test_File.map.idx inode is "
+          <<main_files_after[3].st_ino<<" but the shadow file's inode was "
+          <<shadow_id_idx.st_ino<<" (the shadow was copied instead of renamed).\n";
+      failed = true;
+    }
+    // The data files are patched in place; their inodes must not change.
+    if (!failed && (main_files_after[0].st_ino != main_files_before[0].st_ino))
+    {
+      std::cout<<"Swap test FAILED: Test_File.bin inode changed on commit.\n";
+      failed = true;
+    }
+    if (!failed && (main_files_after[2].st_ino != main_files_before[2].st_ino))
+    {
+      std::cout<<"Swap test FAILED: Test_File.map inode changed on commit.\n";
+      failed = true;
+    }
+    // All shadow files must be gone after the commit.
+    for (int i = 0; i < 4; ++i)
+    {
+      if (file_exists(main_file_names[i] + ".shadow"))
+      {
+        std::cout<<"Swap test FAILED: "<<main_file_names[i]<<".shadow still exists.\n";
+        failed = true;
+      }
+    }
+    if (failed)
+    {
+      std::cout<<"Swap test FAILED.\n";
+      return 1;
+    }
+
+    std::cout<<"Swap test passed.\n";
+    data_read_test(test_file);
+    map_read_test();
+    remove("Test_File.bin");
+    remove("Test_File.bin.idx");
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
   }
 }
