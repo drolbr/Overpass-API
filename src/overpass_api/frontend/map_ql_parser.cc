@@ -80,10 +80,13 @@ std::vector< TStatement* > collect_substatements(typename TStatement::Factory& s
   ++token;
   while (token.good() && *token != closing_token)
   {
+    std::pair< uint, uint > pos_before = token.line_col();
     TStatement* substatement = parse_statement< TStatement >
 	(stmt_factory, parsed_query, token, error_output, depth+1);
     if (substatement)
       substatements.push_back(substatement);
+    else if (token.line_col() == pos_before)
+      break;
   }
   if (token.good())
     ++token;
@@ -127,10 +130,13 @@ std::vector< TStatement* > collect_substatements_and_probe
   }
   while (token.good() && *token != ")")
   {
+    std::pair< uint, uint > pos_before = token.line_col();
     TStatement* substatement = parse_statement< TStatement >
 	(stmt_factory, parsed_query, token, error_output, depth+1);
     if (substatement)
       substatements.push_back(substatement);
+    else if (token.line_col() == pos_before)
+      break;
   }
   if (token.good())
     ++token;
@@ -1397,9 +1403,12 @@ void generic_parse_and_validate_map_ql
 
   while (token.good())
   {
+    std::pair< uint, uint > pos_before = token.line_col();
     TStatement* statement = parse_statement< TStatement >(stmt_factory, parsed_query, token, error_output, 0);
     if (statement)
       base_statement->add_statement(statement, "");
+    else if (token.line_col() == pos_before)
+      break;
   }
 
   stmt_seq.push_back(base_statement);
