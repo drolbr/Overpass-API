@@ -17,94 +17,116 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 
-BIN_DIR="$EXEC_DIR/../bin"
-DB_DIR=`../bin/dispatcher --show-dir`
+NAME_RE='^Template:[^/&<>]*$'
+
 ACTION=
 NAME=
 
+bad_request()
+{
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo "Status: 400 Bad Request"
+  echo
+  echo "$1"
+  exit 0
+}
+
+internal_error()
+{
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo "Status: 500 Internal Server Error"
+  echo
+  echo "$1"
+  exit 0
+}
+
+set -f
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
 {
-  if [[ ${KEY_VAL:0:7} == "action=" ]]; then
-    ACTION="${KEY_VAL:7}"
-  elif [[ ${KEY_VAL:0:5} == "name=" ]]; then
-    NAME=`echo "${KEY_VAL:5}" | $BIN_DIR/uncgi`
+  if [[ $KEY_VAL == *=* ]]; then
+    RAW_VAL="${KEY_VAL#*=}"
+  else
+    RAW_VAL=
   fi
+  KEY=$(printf '%s' "${KEY_VAL%%=*}" | "$BIN_DIR"/uncgi) || bad_request "Malformed query string"
+  VAL=$(printf '%s' "$RAW_VAL" | "$BIN_DIR"/uncgi) || bad_request "Malformed query string"
+  case "$KEY" in
+    action)
+      ACTION="$VAL"
+      ;;
+    name)
+      NAME="$VAL"
+      ;;
+  esac
 }; done
 unset IFS
+set +f
 
-REQUEST_METHOD=
+if [[ ! $NAME =~ $NAME_RE ]]; then
+  bad_request "Invalid name parameter \"$NAME\": name must start with \"Template:\" and must not contain '/', '&', '<', or '>'"
+fi
+
+DB_DIR=$("$BIN_DIR"/dispatcher --show-dir)
+DB_DIR="$(realpath "$DB_DIR")"
+if [[ ! -d "$DB_DIR" ]]; then
+  internal_error "Could not determine database directory"
+fi
+
+if [[ ! -d "$DB_DIR/templates" ]]; then
+  internal_error "Templates directory is missing; ask the operator to install the default templates"
+fi
+
+NAME_ESCAPED=$(printf '%s' "$NAME" | "$BIN_DIR"/escape_xml)
+
 echo "Content-Type: text/html; charset=utf-8"
 echo
-if [[ ! ${NAME:0:9} == "Template:" ]]; then
-{
-  echo -e "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
-	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n\
-<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\
-<head>\n\
-  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
-  <title>OSM3S Template</title>\n\
-</head>\n\
-<body>\n\
-\n\
-<p>Template name &quot;$NAME&quot; doesn't start with &quot;Template:&quot;.</p>\n\
-"
-  exit 0
-}; fi
 
 if [[ $ACTION == "show" ]]; then
-{
-  echo -e "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
-	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n\
-<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\
-<head>\n\
-  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
-  <title>OSM3S Template</title>\n\
-</head>\n\
-<body>\n\
-\n\
-<h1>Template &quot;$NAME&quot;</h1>\n\
-<pre>\n\
-"
-../bin/escape_xml <"$DB_DIR/templates/$NAME"
-echo -e "\
-</pre>\n\
-</body>\n\
-</html>\n\
-\n"
-};
+  cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S Template</title>
+</head>
+<body>
+
+<h1>Template "$NAME_ESCAPED"</h1>
+<pre>
+EOF
+  "$BIN_DIR"/escape_xml <"$DB_DIR/templates/$NAME"
+  cat <<EOF
+</pre>
+</body>
+</html>
+
+EOF
 elif [[ $ACTION == "fetch" ]]; then
-{
-  echo -e "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
-	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n\
-<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\
-<head>\n\
-  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
-  <title>OSM3S Template</title>\n\
-</head>\n\
-<body>\n\
-\n\
-<h1>Template &quot;$NAME&quot;</h1>\n\
-<pre>\n\
-"
+  cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S Template</title>
+</head>
+<body>
+
+<h1>Template "$NAME_ESCAPED"</h1>
+<pre>
+EOF
   wget -O "$DB_DIR/templates/$NAME" "http://wiki.openstreetmap.org/w/index.php?action=raw&title=$NAME"
-  echo -e "\
-</pre>\n\
-</body>\n\
-</html>\n\
-\n"
-};
+  cat <<EOF
+</pre>
+</body>
+</html>
+
+EOF
 fi

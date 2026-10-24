@@ -20,27 +20,63 @@
 
 ID=0
 BBOX=
-INFO=
 DEBUG=
-EXECBASE="`dirname $0`/../"
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 CACHE_DIR="/tmp/osm3s_augmented_diffs_cache/"
+NUMBER_RE='-?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]+)?'
+WS='[[:space:]]*'
+BBOX_RE="^${WS}${NUMBER_RE}${WS},${WS}${NUMBER_RE}${WS},${WS}${NUMBER_RE}${WS},${WS}${NUMBER_RE}${WS}\$"
+ID_RE='^(0|[1-9][0-9]{0,11})$'
 
+bad_request()
+{
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo "Status: 400 Bad Request"
+  echo
+  echo "$1"
+  exit 0
+}
+
+set -f
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
 {
-  if [[ ${KEY_VAL:0:3} == "id=" ]]; then
-    ID="${KEY_VAL:3}"
-  elif [[ ${KEY_VAL:0:5} == "bbox=" && ${KEY_VAL:0:9} != "bbox=-180" ]]; then
-    BBOX=`echo "${KEY_VAL:5}" | $EXECBASE/bin/uncgi`
-  elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
-    DEBUG=`echo "${KEY_VAL:6}" | $EXECBASE/bin/uncgi`
+  if [[ $KEY_VAL == *=* ]]; then
+    RAW_VAL="${KEY_VAL#*=}"
+  else
+    RAW_VAL=
   fi
+  KEY=$(printf '%s' "${KEY_VAL%%=*}" | "$BIN_DIR"/uncgi) || bad_request "Malformed query string"
+  VAL=$(printf '%s' "$RAW_VAL" | "$BIN_DIR"/uncgi) || bad_request "Malformed query string"
+  case "$KEY" in
+    id)
+      if [[ $VAL =~ $ID_RE ]]; then
+        ID="$VAL"
+      else
+        bad_request "Invalid id parameter"
+      fi
+      ;;
+    bbox)
+      if [[ $VAL =~ $BBOX_RE ]]; then
+        if [[ ${VAL:0:4} != "-180" ]]; then
+          BBOX="$VAL"
+        fi
+      else
+        bad_request "Invalid bbox parameter"
+      fi
+      ;;
+    debug)
+      DEBUG="$VAL"
+      ;;
+  esac
 }; done
 unset IFS
+set +f
 
-EPOCHSECS=$(($ID * 60 + 1347432900))
-SINCE=`date --utc --date="@$EPOCHSECS" '+%FT%H:%M:%SZ'`
-UNTIL=`date --utc --date="@$(($EPOCHSECS + 60))" '+%FT%H:%M:%SZ'`
+EPOCHSECS=$((ID * 60 + 1347432900))
+SINCE=$(date --utc --date="@$EPOCHSECS" '+%FT%H:%M:%SZ')
+UNTIL=$(date --utc --date="@$((EPOCHSECS + 60))" '+%FT%H:%M:%SZ')
 
 if [[ -z $BBOX ]]; then
 
@@ -60,9 +96,9 @@ fi
 #REQUEST_METHOD=GET
 
 if [[ -z $DEBUG ]]; then
-  ./interpreter
+  "$EXEC_DIR"/interpreter
 else
   echo "Content-Type: text/plain"
   echo
-  echo $QUERY_STRING
+  echo "$QUERY_STRING"
 fi

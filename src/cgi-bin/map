@@ -17,13 +17,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+EXEC_DIR="$(dirname "$(realpath "$0")")"
 
 QUERY_STRING="data=[bbox];(node(bbox);way(bn);node(w););(._;(rel(bn)->.a;rel(bw)->.a;);rel(br););out meta;&$QUERY_STRING"
 
-./interpreter
+"$EXEC_DIR"/interpreter

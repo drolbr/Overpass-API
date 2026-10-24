@@ -17,297 +17,285 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
-
-BIN_DIR="$EXEC_DIR/../bin"
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 DEBUG=
 DATA=
-TARGET=
-ZOOM="6"
-LAT="50.722"
-LON="7.092"
+OUTPUT_TYPE=
 
+set -f
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
 {
-  if [[ ${KEY_VAL:0:7} == "target=" ]]; then
-  {
-    OUTPUT_TYPE="${KEY_VAL:7}"
-  };
-  elif [[ ${KEY_VAL:0:5} == "data=" ]]; then
-  {
-    DATA=`echo "${KEY_VAL:5}" | $BIN_DIR/uncgi`
-  };
-  elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
-    DEBUG="${KEY_VAL:6}"
-  elif [[ ${KEY_VAL:0:5} == "zoom=" ]]; then
-    ZOOM="${KEY_VAL:5}"
-  elif [[ ${KEY_VAL:0:4} == "lat=" ]]; then
-    LAT="${KEY_VAL:4}"
-  elif [[ ${KEY_VAL:0:4} == "lon=" ]]; then
-    LON="${KEY_VAL:4}"
+  if [[ $KEY_VAL == *=* ]]; then
+    RAW_VAL="${KEY_VAL#*=}"
+  else
+    RAW_VAL=
   fi
+  KEY=$(printf '%s' "${KEY_VAL%%=*}" | "$BIN_DIR"/uncgi) || continue
+  VAL=$(printf '%s' "$RAW_VAL" | "$BIN_DIR"/uncgi) || continue
+  case "$KEY" in
+    target)
+      OUTPUT_TYPE="$VAL"
+      ;;
+    data)
+      DATA="$VAL"
+      ;;
+    debug)
+      DEBUG="$VAL"
+      ;;
+  esac
 }; done
 unset IFS
+set +f
 
 if [[ -n $DEBUG ]]; then
-{
-  DEBUG=yes
   echo "Content-Type: text/plain; charset=utf-8"
   echo
   echo "[$DATA]"
-};
 fi
 
-REQUEST_METHOD=
+export REQUEST_METHOD=
 echo "Content-Type: text/html; charset=utf-8"
 echo
 if [[ $OUTPUT_TYPE == "ol_fixed" || $OUTPUT_TYPE == "openlayers" ]]; then
-{
-echo -e "\
-<html>\n\
-<head>\n\
-  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
-  <title>OSM3S on Mapnik via Open Layers</title>\n\
-  <script src=\"http://openlayers.org/api/2.11/OpenLayers.js\"></script>\n\
-  <script src=\"http://openstreetmap.org/openlayers/OpenStreetMap.js\"></script>\n\
-  <script src=\"http://overpass-api.de/overpass.js\"></script>\n\
-  <script type=\"text/javascript\">\n\
-      var lat = 53.86;\n\
-      var lon = 8.44;\n\
-      var zoom = 18;\n\
-      var data_url = \"/api/interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-ql --concise | ../bin/tocgi `\";\n\
-      var map;\n\
-\n\
-      DetectBoundsOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {\n\
-\n\
-          min_lat: 180.0,\n\
-          max_lat: -180.0,\n\
-          min_lon: 90.0,\n\
-          max_lon: -90.0,\n\
-          zoom: 0,\n\
-\n\
-          getNodes: function(doc)\n\
-          {\n\
-            var node_list = doc.getElementsByTagName(\"node\");\n\
-            var nodes = {};\n\
-            for (var i = 0; i < node_list.length; i++)\n\
-            {\n\
-              var node = node_list[i];\n\
-              var id = node.getAttribute(\"id\");\n\
-              nodes[id] = {\n\
-                'lat': node.getAttribute(\"lat\"),\n\
-                'lon': node.getAttribute(\"lon\"),\n\
-                'node': node\n\
-              };\n\
-\n\
-              if (nodes[id].lat < this.min_lat)\n\
-                this.min_lat = nodes[id].lat;\n\
-              if (nodes[id].lat > this.max_lat)\n\
-                this.max_lat = nodes[id].lat;\n\
-              if (nodes[id].lon < this.min_lon)\n\
-                this.min_lon = nodes[id].lon;\n\
-              if (nodes[id].lon > this.max_lon)\n\
-                this.max_lon = nodes[id].lon;\n\
-            }\n\
-\n\
-            if (this.min_lat == 180.0)\n\
-            {\n\
-                this.min_lat = 0;\n\
-                this.max_lat = 0;\n\
-            }\n\
-            if (this.min_lon == 90.0)\n\
-            {\n\
-                this.min_lon = 0;\n\
-                this.max_lon = 0;\n\
-            }\n\
-\n\
-            setStatusText(\"Result contains no nodes.\");\n\
-            return nodes;\n\
-          },          \n\
-\n\
-          CLASS_NAME: \"DetectBoundsOSMFormat\"\n\
-      });\n\
-\n\
-      var osm_format = new DetectBoundsOSMFormat();\n\
-      var layer = \"\";\n\
-\n\
-      function make_features_added_closure() {\n\
-          return function(evt) {\n\
-\n\
-              var lonLat = new OpenLayers.LonLat(\n\
-                  (Number(osm_format.min_lon) + Number(osm_format.max_lon))/2.0,\n\
-                  (Number(osm_format.min_lat) + Number(osm_format.max_lat))/2.0)\n\
-                  .transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
-\n\
-              var southwest = new OpenLayers.LonLat(\n\
-                  Number(osm_format.min_lon), Number(osm_format.min_lat))\n\
-                  .transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
-\n\
-              var northeast = new OpenLayers.LonLat(\n\
-                  Number(osm_format.max_lon), Number(osm_format.max_lat))\n\
-                  .transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
-\n\
-            map.setCenter(lonLat);\n\
-\n\
-            var extent = map.getExtent();\n\
-            extent.extend(southwest);\n\
-            extent.extend(northeast);\n\
-            map.zoomToExtent(extent);\n\
-\n\
-            setStatusText(\"Found \" + layer.features.length + \" features.\");\n\
-          };\n\
-      }\n\
-\n\
-      function init(){\n\
-          map = new OpenLayers.Map (\"map\", {\n\
-          controls:[\n\
-              new OpenLayers.Control.Navigation(),\n\
-              new OpenLayers.Control.PanZoomBar(),\n\
-              new OpenLayers.Control.LayerSwitcher(),\n\
-              new OpenLayers.Control.Attribution()],\n\
-              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),\n\
-              maxResolution: 156543.0399,\n\
-              numZoomLevels: 19,\n\
-              units: 'm',\n\
-              projection: new OpenLayers.Projection(\"EPSG:900913\"),\n\
-              displayProjection: new OpenLayers.Projection(\"EPSG:4326\")\n\
-          } );\n\
-\n\
-          layerMapnik = new OpenLayers.Layer.OSM.Mapnik(\"Mapnik\");\n\
-          map.addLayer(layerMapnik);\n\
-\n\
-          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
-\n\
-          map.setCenter (lonLat, zoom);\n\
-\n\
-          //Initialise the vector layer using OpenLayers.Format.OSM\n\
-          var styleMap = new OpenLayers.StyleMap({\n\
-              strokeColor: \"blue\",\n\
-              strokeOpacity: 0.5,\n\
-              strokeWidth: 6,\n\
-              pointRadius: 10,\n\
-              fillColor: \"blue\",\n\
-              fillOpacity: 0.25\n\
-          });\n\
-\n\
-          layer = new OpenLayers.Layer.Vector(\"Polygon\", {\n\
-              strategies: [new OpenLayers.Strategy.Fixed()],\n\
-              protocol: new OpenLayers.Protocol.HTTP({\n\
-                  url: data_url,\n\
-                  format: osm_format\n\
-              }),\n\
-              styleMap: styleMap,\n\
-              projection: new OpenLayers.Projection(\"EPSG:4326\")\n\
-          });\n\
-\n\
-          layer.events.register(\"featuresadded\", layer, make_features_added_closure(map, layer));\n\
-\n\
-          map.addLayers([layer]);\n\
-          setStatusText(\"Searching ...\");\n\
-      }\n\
-  </script>\n\
-</head>\n\
-<body onload=\"init()\">\n\
-  <div id=\"statusline\" style=\"font-size:24pt; font-weight:bold; font-family:sans-serif\">No status set yet.</div>\n\
-  <div id=\"map\" class=\"smallmap\"></div>"
-};
+  DATA_URL="/api/interpreter?data=$(printf '%s' "$DATA" | "$BIN_DIR"/osm3s_query --dump-compact-ql --concise | "$BIN_DIR"/tocgi)"
+  cat <<EOF
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S on Mapnik via Open Layers</title>
+  <script src="http://openlayers.org/api/2.11/OpenLayers.js"></script>
+  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script src="http://overpass-api.de/overpass.js"></script>
+  <script type="text/javascript">
+      var lat = 53.86;
+      var lon = 8.44;
+      var zoom = 18;
+      var data_url = "$DATA_URL";
+      var map;
+
+      DetectBoundsOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
+
+          min_lat: 180.0,
+          max_lat: -180.0,
+          min_lon: 90.0,
+          max_lon: -90.0,
+          zoom: 0,
+
+          getNodes: function(doc)
+          {
+            var node_list = doc.getElementsByTagName("node");
+            var nodes = {};
+            for (var i = 0; i < node_list.length; i++)
+            {
+              var node = node_list[i];
+              var id = node.getAttribute("id");
+              nodes[id] = {
+                'lat': node.getAttribute("lat"),
+                'lon': node.getAttribute("lon"),
+                'node': node
+              };
+
+              if (nodes[id].lat < this.min_lat)
+                this.min_lat = nodes[id].lat;
+              if (nodes[id].lat > this.max_lat)
+                this.max_lat = nodes[id].lat;
+              if (nodes[id].lon < this.min_lon)
+                this.min_lon = nodes[id].lon;
+              if (nodes[id].lon > this.max_lon)
+                this.max_lon = nodes[id].lon;
+            }
+
+            if (this.min_lat == 180.0)
+            {
+                this.min_lat = 0;
+                this.max_lat = 0;
+            }
+            if (this.min_lon == 90.0)
+            {
+                this.min_lon = 0;
+                this.max_lon = 0;
+            }
+
+            setStatusText("Result contains no nodes.");
+            return nodes;
+          },
+
+          CLASS_NAME: "DetectBoundsOSMFormat"
+      });
+
+      var osm_format = new DetectBoundsOSMFormat();
+      var layer = "";
+
+      function make_features_added_closure() {
+          return function(evt) {
+
+              var lonLat = new OpenLayers.LonLat(
+                  (Number(osm_format.min_lon) + Number(osm_format.max_lon))/2.0,
+                  (Number(osm_format.min_lat) + Number(osm_format.max_lat))/2.0)
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+              var southwest = new OpenLayers.LonLat(
+                  Number(osm_format.min_lon), Number(osm_format.min_lat))
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+              var northeast = new OpenLayers.LonLat(
+                  Number(osm_format.max_lon), Number(osm_format.max_lat))
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+            map.setCenter(lonLat);
+
+            var extent = map.getExtent();
+            extent.extend(southwest);
+            extent.extend(northeast);
+            map.zoomToExtent(extent);
+
+            setStatusText("Found " + layer.features.length + " features.");
+          };
+      }
+
+      function init(){
+          map = new OpenLayers.Map ("map", {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.PanZoomBar(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          map.setCenter (lonLat, zoom);
+
+          //Initialise the vector layer using OpenLayers.Format.OSM
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: "blue",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "blue",
+              fillOpacity: 0.25
+          });
+
+          layer = new OpenLayers.Layer.Vector("Polygon", {
+              strategies: [new OpenLayers.Strategy.Fixed()],
+              protocol: new OpenLayers.Protocol.HTTP({
+                  url: data_url,
+                  format: osm_format
+              }),
+              styleMap: styleMap,
+              projection: new OpenLayers.Projection("EPSG:4326")
+          });
+
+          layer.events.register("featuresadded", layer, make_features_added_closure(map, layer));
+
+          map.addLayers([layer]);
+          setStatusText("Searching ...");
+      }
+  </script>
+</head>
+<body onload="init()">
+  <div id="statusline" style="font-size:24pt; font-weight:bold; font-family:sans-serif">No status set yet.</div>
+  <div id="map" class="smallmap"></div>
+EOF
 elif [[ $OUTPUT_TYPE == "ol_bbox" ]]; then
-{
-echo -e "\
-<html>\n\
-<head>\n\
-  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
-  <title>OSM3S on Mapnik via Open Layers</title>\n\
-  <script src=\"http://openlayers.org/api/OpenLayers.js\"></script>\n\
-  <script src=\"http://openstreetmap.org/openlayers/OpenStreetMap.js\"></script>\n\
-  <script src=\"http://overpass-api.de/overpass.js\"></script>\n\
-  <script type=\"text/javascript\">\n\
-      var lat = 51.0;\n\
-      var lon = 10.5;\n\
-      var zoom = 6;\n\
-      var map;\n\
-\n\
-      function init(){\n\
-          map = new OpenLayers.Map (\"map\", {\n\
-          controls:[\n\
-              new OpenLayers.Control.Navigation(),\n\
-              new OpenLayers.Control.PanZoomBar(),\n\
-              new OpenLayers.Control.LayerSwitcher(),\n\
-              new OpenLayers.Control.Attribution()],\n\
-              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),\n\
-              maxResolution: 156543.0399,\n\
-              numZoomLevels: 19,\n\
-              units: 'm',\n\
-              projection: new OpenLayers.Projection(\"EPSG:900913\"),\n\
-              displayProjection: new OpenLayers.Projection(\"EPSG:4326\")\n\
-          } );\n\
-\n\
-          layerMapnik = new OpenLayers.Layer.OSM.Mapnik(\"Mapnik\");\n\
-          map.addLayer(layerMapnik);\n\
-\n\
-          var lonLat = new OpenLayers.LonLat(lon, lat)\n\
-              .transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
-\n\
-          map.setCenter (lonLat, zoom);\n\
-\n\
-          map.addLayers([\n\
-              make_layer(\"/api/interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-bbox-ql --concise | ../bin/tocgi `\", \"blue\")\n\
-          ]);\n\
-      }\n\
-  </script>\n\
-</head>\n\
-<body onload=\"init()\">\n\
-  <div id=\"statusline\" style=\"font-size:24pt; font-weight:bold; font-family:sans-serif\">No status set yet.</div>\n\
-  <div id=\"map\" class=\"smallmap\"></div>"
-};
+  DATA_URL="/api/interpreter?data=$(printf '%s' "$DATA" | "$BIN_DIR"/osm3s_query --dump-bbox-ql --concise | "$BIN_DIR"/tocgi)"
+  cat <<EOF
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S on Mapnik via Open Layers</title>
+  <script src="http://openlayers.org/api/OpenLayers.js"></script>
+  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script src="http://overpass-api.de/overpass.js"></script>
+  <script type="text/javascript">
+      var lat = 51.0;
+      var lon = 10.5;
+      var zoom = 6;
+      var map;
+
+      function init(){
+          map = new OpenLayers.Map ("map", {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.PanZoomBar(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat)
+              .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          map.setCenter (lonLat, zoom);
+
+          map.addLayers([
+              make_layer("$DATA_URL", "blue")
+          ]);
+      }
+  </script>
+</head>
+<body onload="init()">
+  <div id="statusline" style="font-size:24pt; font-weight:bold; font-family:sans-serif">No status set yet.</div>
+  <div id="map" class="smallmap"></div>
+EOF
 else
-{
-  echo -e "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
-	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n\
-<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\
-<head>\n\
-  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
-  <title>OSM3S Converted Query</title>\n\
-</head>\n\
-<body>\n\
-\n\
-<h1>Overpass API Converted Query</h1>\n\
-"
+  cat <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S Converted Query</title>
+</head>
+<body>
+
+<h1>Overpass API Converted Query</h1>
+
+EOF
 
   if [[ $OUTPUT_TYPE == "xml" ]]; then
-  {
     echo "<p>Your query in pretty XML:</p>"
     echo "<pre>"
-    echo "$DATA" | ../bin/osm3s_query --dump-xml --concise | ../bin/escape_xml
+    printf '%s\n' "$DATA" | "$BIN_DIR"/osm3s_query --dump-xml --concise | "$BIN_DIR"/escape_xml
     echo "</pre>"
-  };
   elif [[ $OUTPUT_TYPE == "mapql" ]]; then
-  {
     echo "<p>Your query in pretty Overpass QL:</p>"
     echo "<pre>"
-    echo -n "$DATA" | ../bin/osm3s_query --dump-pretty-ql --concise | ../bin/escape_xml
+    printf '%s' "$DATA" | "$BIN_DIR"/osm3s_query --dump-pretty-ql --concise | "$BIN_DIR"/escape_xml
     echo "</pre>"
-  };
   elif [[ $OUTPUT_TYPE == "compact" ]]; then
-  {
     echo "<p>Your query in compact Overpass QL:</p>"
-    echo "<a href=\"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-ql --concise | ../bin/tocgi `\"><pre>"
-    echo -n "$DATA" | ../bin/osm3s_query --dump-compact-ql --concise | ../bin/escape_xml 
+    DATA_HREF="$(printf '%s' "$DATA" | "$BIN_DIR"/osm3s_query --dump-compact-ql --concise | "$BIN_DIR"/tocgi)"
+    echo "<a href=\"interpreter?data=$DATA_HREF\"><pre>"
+    printf '%s' "$DATA" | "$BIN_DIR"/osm3s_query --dump-compact-ql --concise | "$BIN_DIR"/escape_xml
     echo "</pre></a>"
-  };
   fi
-};
 fi
 
-echo -e "\n\
-</body>\n\
-</html>\n\
-\n"
+cat <<'EOF'
+
+</body>
+</html>
+
+
+EOF

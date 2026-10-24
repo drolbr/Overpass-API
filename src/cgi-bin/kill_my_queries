@@ -17,33 +17,31 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 
-BIN_DIR="$EXEC_DIR/../bin"
+PID_RE='^[0-9]+$'
 
 echo "Content-Type: text/plain; charset=utf-8"
 echo 'Access-Control-Allow-Origin: *'
 echo
 
 COUNTER=16
-PID=`$BIN_DIR/dispatcher --query_token`
+PID=$("$BIN_DIR"/dispatcher --query_token)
 
-if [[ $PID == 0 ]]; then
+if [[ -z $PID ]]; then
   echo "No query running from IP $REMOTE_ADDR"
 fi
 
-while [[ $PID -ne 0 && $COUNTER -gt 0 ]]; do
-{
+while [[ $PID =~ $PID_RE && $COUNTER -gt 0 ]]; do
   echo "Killing query (pid $PID) from IP $REMOTE_ADDR ..."
-  kill -9 $PID
+  kill -9 "$PID"
   echo "Done!"
-  
-  COUNTER=$(($COUNTER - 1))
-  PID=`$BIN_DIR/dispatcher --query_token`
-};
+
+  COUNTER=$((COUNTER - 1))
+  PID=$("$BIN_DIR"/dispatcher --query_token)
 done
+
+if [[ -n $PID && ! $PID =~ $PID_RE ]]; then
+  echo "Could not query dispatcher: $PID"
+fi

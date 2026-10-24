@@ -17,86 +17,67 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+EXEC_DIR="$(dirname "$(realpath "$0")")"
+BIN_DIR="$(realpath "$EXEC_DIR/../bin")"
 
-BIN_DIR="$EXEC_DIR/../bin"
+report_error()
+{
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo
+  echo "Error in [$BUF]:"
+  printf '%s\n' "$1"
+  [[ -n $REQUEST_FILE ]] && rm -f "$REQUEST_FILE"
+  exit 1
+}
 
 OUTPUT_TYPE="xml"
-BUF="`echo "$QUERY_STRING" | $BIN_DIR/uncgi`"
+BUF=$(printf '%s' "$QUERY_STRING" | "$BIN_DIR"/uncgi) || report_error "Malformed query string"
 if [[ "${BUF:0:5}" == "debug" ]]; then
-{
   DEBUG=yes
   echo "Content-Type: text/plain; charset=utf-8"
   echo
   BUF="${BUF:6}"
   echo "[$BUF]"
-};
 elif [[ "${BUF:0:3}" == "xml" ]]; then
-{
-  OTUPUT_TYPE="xml"
+  OUTPUT_TYPE="xml"
   BUF="${BUF:4}"
-};
 elif [[ "${BUF:0:5}" == "mapql" ]]; then
-{
-  OTUPUT_TYPE="mapql"
+  OUTPUT_TYPE="mapql"
   BUF="${BUF:6}"
-};
 elif [[ "${BUF:0:7}" == "compact" ]]; then
-{
-  OTUPUT_TYPE="compact"
+  OUTPUT_TYPE="compact"
   BUF="${BUF:8}"
-};
 fi
 
 # No mkdir - directory should be created and made world-writeable
 # by the maintainer to allow periodic cleanups.
-REQUEST_FILE=`mktemp /tmp/translate_xapi/XXXXXX`
-$BIN_DIR/translate_xapi "${BUF}" >$REQUEST_FILE
+REQUEST_FILE=$(mktemp /tmp/translate_xapi/XXXXXX) || report_error "Could not create temporary file"
+"$BIN_DIR"/translate_xapi "$BUF" >"$REQUEST_FILE"
 EXITCODE=$?
 if [[ $EXITCODE -ne 0 ]]; then
-{
-  echo "Content-Type: text/plain; charset=utf-8"
-  echo
-  echo "Error in [$BUF]:"
-  cat <$REQUEST_FILE
-};
-else
-{
-  if [[ $DEBUG == "yes" ]]; then
-  {
-    cat <$REQUEST_FILE
-    echo
-  };
-  fi
-  REQUEST_METHOD=
-  echo "Content-Type: text/plain; charset=utf-8"
-  echo
-  if [[ $OUTPUT_TYPE == "xml" ]]; then
-  {
-    echo "Your query in pretty XML:"
-    echo
-    ../bin/osm3s_query --dump-xml <$REQUEST_FILE
-  };
-  elif [[ $OUTPUT_TYPE == "mapql" ]]; then
-  {
-    echo "Your query in pretty OverpassQL:"
-    echo
-    ../bin/osm3s_query --dump-pretty-ql <$REQUEST_FILE
-  };
-  elif [[ $OUTPUT_TYPE == "compact" ]]; then
-  {
-    echo "Your query in compact OverpassQL:"
-    echo
-    ../bin/osm3s_query --dump-compact-ql <$REQUEST_FILE
-    echo
-  };
-  fi
-};
+  report_error "$(cat "$REQUEST_FILE")"
 fi
 
-rm $REQUEST_FILE
+if [[ $DEBUG == "yes" ]]; then
+  cat "$REQUEST_FILE"
+  echo
+fi
+export REQUEST_METHOD=
+echo "Content-Type: text/plain; charset=utf-8"
+echo
+if [[ $OUTPUT_TYPE == "xml" ]]; then
+  echo "Your query in pretty XML:"
+  echo
+  "$BIN_DIR"/osm3s_query --dump-xml <"$REQUEST_FILE"
+elif [[ $OUTPUT_TYPE == "mapql" ]]; then
+  echo "Your query in pretty OverpassQL:"
+  echo
+  "$BIN_DIR"/osm3s_query --dump-pretty-ql <"$REQUEST_FILE"
+elif [[ $OUTPUT_TYPE == "compact" ]]; then
+  echo "Your query in compact OverpassQL:"
+  echo
+  "$BIN_DIR"/osm3s_query --dump-compact-ql <"$REQUEST_FILE"
+  echo
+fi
+
+rm -f "$REQUEST_FILE"
